@@ -123,7 +123,7 @@ export async function getRequestViewData( oRequestId:string ) {
 
 export async function getRequestFormsAndItemsData( oId:string ) {
 
-    const currentFormAndItems = await client.models.Organization.list({
+/*    const currentFormAndItems = await client.models.Organization.list({
         filter: {
             id: { eq: oId },
         },
@@ -135,7 +135,8 @@ export async function getRequestFormsAndItemsData( oId:string ) {
         ]
     });
 
-    return currentFormAndItems.data;
+    return currentFormAndItems.data;*/
+    return 'test'
 
 };
 
