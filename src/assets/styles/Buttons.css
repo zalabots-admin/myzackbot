@@ -1,0 +1,102 @@
+
+
+button.standard:hover, button.small:hover, button.document:hover, button.icon:hover, button.mini:hover {
+  background-color: #D58936;
+  border-color: #D58936;
+  color: #FFFFFF;
+  cursor: pointer; 
+}
+
+
+/******************** NAVIGATION ********************/
+
+
+button.navigation-button.active {
+  color: #D58936;
+}
+
+/*button.navigation-button {
+  background-color: transparent;
+  border: none;
+  box-shadow: 0 0 5px #F4F4F4;
+  color:#A7A9AC;
+  font-size:18px;
+  height: 100px;
+  width: 100%;
+}
+
+button.navigation-button:hover:not(.active) {
+  color: #4E6E5D;
+  cursor: pointer;  
+}*/
+
+
+/******************** STANDARD ********************/
+
+
+button.icon {
+  border: solid 1px #0E2841;
+  border-radius: 20px;
+  color:#0E2841;
+  height: 40px;
+  margin: 0 5px 0 5px;
+  width: 40px;
+}
+
+button.mini {
+  border: solid 1px #0E2841;
+  border-radius: 20px;
+  color:#0E2841;
+  height: 40px;
+  margin: 0 5px 0 5px;
+  width: 75px;
+}
+
+button.small {
+  border: solid 1px #0E2841;
+  border-radius: 20px;
+  color:#0E2841;
+  height: 40px;
+  margin: 0 5px 0 5px;
+  width: 125px;
+}
+
+button.standard {
+  border: solid 1px #0E2841;
+  border-radius: 20px;
+  color:#0E2841;
+  height: 40px;
+  width: 200px;
+}
+
+button.standard.notSelectable  {
+  border: solid 1px #A9A9A9;
+  border-radius: 20px;
+  color:#A9A9A9;
+  height: 40px;
+  pointer-events: none;
+  width: 200px;
+}
+
+
+/******************** DOCUMENTS ********************/
+
+
+button.document {
+  border: solid 1px #0E2841;
+  border-radius: 20px;
+  color:#0E2841;
+  height: 40px;
+  margin: 20px;
+  width: 125px;    
+}
+
+button.document.notSelectable {
+  border: solid 1px #A9A9A9;
+  border-radius: 20px;
+  color:#A9A9A9;
+  height: 40px;
+  margin-right: 20px;
+  pointer-events: none;
+  width: 125px;    
+}

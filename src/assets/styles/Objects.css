@@ -1,0 +1,69 @@
+
+
+input[type=text], input[type=date], input[type=tel], input[type=number], input[type=email], select {
+  background-color: #FFFFFF;
+  border: 1px solid #DADADA; 
+  border-radius: 5px;
+  box-sizing: border-box;
+  color: #000000;
+  font-family:"Poppins", sans-serif;  
+  outline: none;
+  padding: 5px 5px;
+  width: 100%;
+}
+
+input[type="color"] {
+  outline: none;
+  height: 35px;
+  width: 100%;
+}
+
+.input-label {
+color: #000000;
+font-size: 11pt;
+}
+
+.input-label-required {
+color: #D58936;
+font-size: 9pt;
+}
+
+.input-description {
+color: #A9A9A9;
+font-size: 9pt;
+font-style: italic;
+}
+
+
+.input-container {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 5px;
+  margin-bottom: 5px;
+}
+
+input:read-only{
+border: none;
+border-bottom: 1px solid #DADADA; 
+border-radius: 0;
+color: #000000;
+font-family:"Work Sans", sans-serif;  
+}
+
+select:disabled {
+  border: none;
+  border-bottom: 1px solid #DADADA; 
+  border-radius: 0;
+  color: #000000;
+  font-family:"Work Sans", sans-serif;  
+  height: 35px
+}
+
+.input-document {
+    border: 1px dashed #A9A9A9;
+    border-radius: 10px;
+    height: 75px;
+    width: 100%
+}
