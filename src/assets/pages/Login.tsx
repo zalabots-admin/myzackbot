@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Authenticator } from "@aws-amplify/ui-react";
-//import { signUp } from "aws-amplify/auth"
-import App from "../../App";
+import App from "./App";
 import ParticleBackground from "../components/Background";
 
 import '../styles/Main.css'

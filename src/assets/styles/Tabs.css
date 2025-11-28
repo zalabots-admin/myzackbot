@@ -1,0 +1,31 @@
+
+.react-tabs {
+  height: 100%;
+  max-height: 800px;
+  width: 100%;
+}
+
+.react-tabs__tab-panel {
+  height: 99%;
+}
+
+.tab-icon {
+  color: #4E6E5D;
+  margin: 0 0 0 20px;
+}
+
+.react-tabs__tab {
+  /*border-top: 1px solid #4E6E5D;
+  border-left: solid 1px #4E6E5D;
+  border-right: solid 1px #4E6E5D;*/
+
+  border-radius: 8px 8px 0 0;
+}
+
+/*.react-tabs__tab--selected {
+  background-color: #4E6E5D;
+  color: white;
+  font-weight: bold;
+}*/
+
+
