@@ -1,0 +1,65 @@
+
+
+  .progress-line {
+    background-color: #DCDCDC;
+    height: 100%;
+    width: 8px
+}
+
+  .progress-line-complete {
+    background-color: #4E6E5DAA;
+    height: 100%;
+    width: 8px
+}
+
+.progress-step {
+    align-items: center;
+    background-color: #DCDCDC;
+    border: solid 1px #A7A9AC;
+    border-radius: 25px;
+    color: #FFFFFF;
+    display:flex;
+    font-size: 18pt;
+    font-weight: 900;
+    height: 50px;
+    justify-content: center;
+    width: 50px;
+}
+
+.progress-step-complete {
+    align-items: center;
+    background-color: #4E6E5DAA;
+    border: solid 1px #4E6E5D;
+    border-radius: 25px;
+    color: #FFFFFF;
+    display: flex;
+    font-size: 18pt;
+    font-weight: 900;
+    height: 50px;
+    justify-content: center;
+    width: 50px;
+}
+
+.progress-step-error {
+    align-items: center;
+    background-color: #D52941AA;
+    border: solid 1px #D52941;
+    border-radius: 25px;
+    color: #FFFFFF;
+    display: flex;
+    font-size: 18pt;
+    font-weight: 900;
+    height: 50px;
+    justify-content: center;
+    width: 50px;
+}
+
+  .progress-line-error {
+    background-color: #D52941AA;
+    height: 100%;
+    width: 8px
+}
+
+.progress-step-detail {
+    color: #A7A9AC;
+}

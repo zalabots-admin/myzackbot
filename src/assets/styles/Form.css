@@ -1,0 +1,178 @@
+
+
+@import url("https://fonts.googleapis.com/css2?family=Work Sans");
+@import url("https://fonts.googleapis.com/css2?family=Playfair Display");
+@import url("https://fonts.googleapis.com/css2?family=Poppins");
+@import url("https://fonts.googleapis.com/css2?family=Roboto");
+
+:root {
+
+  --gridRows: '';
+  --gridColumns: '';
+  --formPrimaryColor: '';
+  --formSecondaryColor: '';
+  --formTertiaryColor: #FFFFFF;
+
+}
+
+body {
+  border-collapse: collapse;
+  font-family: 'Work Sans';
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  scrollbar-gutter: stable;
+}
+
+@media (min-width: 640px) {
+.col1 {width: 8.33%;}
+.col2 {width: 16.66%;}
+.col3 {width: 25%;}
+.col4 {width: 33.33%;}
+.col5 {width: 41.66%;}
+.col6 {width: 50%;}
+.col7 {width: 58.33%;}
+.col8 {width: 66.66%;}
+.col9 {width: 75%;}
+.col10 {width: 83.33%;}
+.col11 {width: 91.66%;}
+.col12 {width: 100%;}
+}
+
+.col1 {width: 95%;}
+.col2 {width: 95%;}
+.col3 {width: 95%;}
+.col4 {width: 95%;}
+.col5 {width: 95%;}
+.col6 {width: 95%;}
+.col7 {width: 95%;}
+.col8 {width: 95%;}
+.col9 {width: 95%;}
+.col10 {width: 95%;}
+.col11 {width: 95%;}
+.col12 {width: 100%;}
+
+.align-top-left { align-content: flex-start; display: flex; flex-wrap: wrap; height: 100%; justify-content: flex-start; }
+.align-top-center { align-content: flex-start; display: flex; flex-wrap: wrap; height: 100%; justify-content: center; }
+.align-top-right { align-content: flex-start; display: flex; flex-wrap: wrap; height: 100%; justify-content: flex-end; }
+.align-center-left { align-content: center; display: flex; flex-wrap: wrap; height: 100%; justify-content: flex-start; }
+.align-center-center { align-items: center; display: flex; flex-wrap: wrap; height: 100%; justify-content: center; }
+.align-center-right { align-content: center; display: flex; flex-wrap: wrap; height: 100%;  justify-content: flex-end; }
+.align-bottom-left { align-content: flex-end; display: flex; flex-wrap: wrap; height: 100%; justify-content: flex-start; }
+.align-bottom-center { align-content: flex-end; display: flex; flex-wrap: wrap; height: 100%; justify-content: center; }
+.align-bottom-right { align-content: flex-end; display: flex; flex-wrap: wrap; height: 100%; justify-content: flex-end; }
+
+.action-menu {
+  align-items: center;
+  background-color: var(--formPrimaryColor);
+  box-shadow: 0 0.3rem 0.5rem #A9A9A9;
+  color: var(--formTertiaryColor);
+  display: flex;
+  height: 75px;
+  justify-content: flex-start;
+  padding: 0 2.5% 0 2.5%;
+  position: fixed;
+  top: 100px;
+  left: 2.5%;
+  width: 95%;
+  z-index: 1;
+}
+
+.action-menu-preview {
+  align-items: center;
+  background-color: var(--formPrimaryColor);
+  box-shadow: 0 0.3rem 0.5rem #A9A9A9;
+  color: var(--formTertiaryColor);
+  display: flex;
+  height: 75px;
+  justify-content: flex-start;
+  padding: 0 2.5% 0 2.5%;
+  position: absolute;
+  margin-top: 100px;
+  left: 5%;
+  width: 90%;
+  z-index: 1;
+}
+
+button.form {
+  background-color: var(--formPrimaryColor);
+  border: solid 1px var(--formTertiaryColor);
+  border-radius: 20px;
+  color: var(--formTertiaryColor);
+  height: 40px;
+  margin: 0 10px 0 10px;
+  width: 125px;
+}
+
+button.form:hover {
+  background-color: var(--formTertiaryColor);
+  color: var(--formPrimaryColor);
+  cursor: pointer; 
+}
+
+.emailHeader {
+  background-color: #FFFFFF;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 43px;
+  color: var(--formPrimaryColor);
+  text-align: center;
+}
+
+.emailText {
+  background-color: #FFFFFF;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 18px;
+  color: #000000;
+  text-align: center;
+}
+
+.emailButton {
+  background-color: var(--formPrimaryColor);
+  border:1px solid var(--formPrimaryColor);
+  border-color:var(--formPrimaryColor);
+  border-radius:0px; 
+  border-width:1px; color:#FFFFFF;
+  display:inline-block;
+  font-size:14px;
+  font-weight:normal;
+  letter-spacing:0px;
+  line-height:normal;
+  padding:12px 40px 12px 40px;
+  text-align:center;
+  text-decoration:none;
+  border-style:solid;
+  font-family:inherit;
+}
+
+.header {
+  align-items: center;
+  display: flex;
+  justify-content: flex-start;
+  padding-left: 5%;
+}
+
+.form-body {
+  background-color: #F5F5F5;
+  height: calc(100vh - 125px);
+  padding: 100px 10% 0 10%;
+}
+
+.section-header {
+  border-bottom: solid 1px var(--formPrimaryColor);
+  color: var(--formSecondaryColor);
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: bold;
+  margin: 15px 0 15px 0;
+}
+
+.form-closed {
+  align-items: center;
+  color: var(--formSecondaryColor);
+  display: flex;
+  font-family: 'Roboto', serif;
+  font-size: 18pt;
+  height: 100vh;
+  justify-content: center;
+  width: 100vw;
+}
