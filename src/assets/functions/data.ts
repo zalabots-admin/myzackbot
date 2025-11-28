@@ -136,7 +136,7 @@ export async function getRequestFormsAndItemsData( oId:string ) {
     });
 
     return currentFormAndItems.data;*/
-    return 'test'
+    return oId
 
 };
 
