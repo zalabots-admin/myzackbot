@@ -130,8 +130,8 @@ export async function getRequestFormsAndItemsData( oId:string ) {
         selectionSet: [
             'id', 'Name', 'PrimaryColor',
             'Items.id', 'Items.Name', 'Items.Type', 'Items.Description', 'Items.Label', 'Items.Options', 'Items.Layout', 'Items.DocumentId',
-            'Forms.id', 'Forms.Name', 'Forms.Description', 'Forms.Order', 'Forms.Status',
-            'Forms.Items.id', 'Forms.Items.Name', 'Forms.Items.Description', 'Forms.Items.Label', 'Forms.Items.Order', 'Forms.Items.Options', 'Forms.Items.Type'
+            'Forms.id', 'Forms.Name', 'Forms.Description', 'Forms.Type',
+            'FormItems.id', 'FormItems.Name', 'FormItems.Description', 'FormItems.Label', 'FormItems.Order', 'FormItems.Options', 'FormItems.Type'
         ]
     });
 
