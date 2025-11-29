@@ -27,7 +27,7 @@ function FormList ( props:Prop ) {
     
     function createNewItem() {
 
-        props.oSetFormData( (prevItems:any) => [...prevItems, { Name: '', Type: 'form', Description: '', Organization: props.oUserOrg }] );
+        props.oSetFormData( (prevItems:any) => [...prevItems, { Name: '', Type: 'form', Description: '', OrganizationID: props.oUserOrg }] );
         props.oSetIsEditMode( true );
         props.oSetNewForm( true );
         props.oSetActiveForm( props.oForms.length );

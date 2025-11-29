@@ -194,8 +194,13 @@ export default function CopyAndSortDemo( props:Prop ) {
   return (
     <>
       <SideBar isOpen={sidebarOpen}>
-          <h3 style={{marginBottom:'20px'}}>Item Builder</h3>
-          {props.oFormItems.length > 0 ? (
+        <div className="flex flex-col h-full">
+          <div className="flex flex-col h-[125px] w-full">
+              <div className='font-bold mb-2 text-[#005566] text-4xl'>Form Item Manager</div>
+              <div className='font-bold text-[#005566] text-xl'>Edit Item Details</div>
+          </div>
+          <div className="flex-1">
+            {props.oFormItems.length > 0 && (
               <>
                   <Select oKey='Type' oLabel='Data Type' oOptions={typeSelect}  oSize='col12' isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, props.oSetFormItemData, activeItem)} oData={props.oFormItems[activeItem].Type} />
                   <Input oKey='Name' oType='text' oLabel='Name' oSize='col12' oDescription='Internal reference only in the Request Builder' isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, props.oSetFormItemData, activeItem)} oData={props.oFormItems[activeItem].Name} />
@@ -211,11 +216,15 @@ export default function CopyAndSortDemo( props:Prop ) {
                       <div className="col12 align-top-center">
                           <DataInputs oData={props.oFormItems[activeItem]} oChange='' oEditable={true} />
                       </div>
-                  </div>
+                    </div>
+                
               </>
-          ) : (   
-          <></>
-          )}
+            )}
+          </div>
+          <div className="flex h-[100px] items-center justify-center w-full">
+              <button className="standard" style={{bottom:'25'}} onClick={handleViewSidebar}>Save & Close</button>
+          </div>
+        </div>
       </SideBar>
       <DndContext sensors={sensors} modifiers={[restrictToWindowEdges]} onDragEnd={handleDragEnd}>
         {props.oActiveForm >= 0 && (
