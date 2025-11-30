@@ -74,7 +74,7 @@ function ItemDetails ( props:Props ) {
     };
 
     return (
-
+        
         <div className="col8 component-layout-rows" style={{ '--gridRows': '75px 1fr' } as React.CSSProperties} >
             <div className="align-top-center">
                 {props.oIsEditMode ? (

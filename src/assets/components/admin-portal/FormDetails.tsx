@@ -135,10 +135,12 @@ export default function CopyAndSortDemo( props:Prop ) {
 
     const currentFormItems = props.oFormItems;
     for (const [index, item] of currentFormItems.entries()) {
+console.log(item);
       item.Order = index + 1;
       if (item.id.toString().startsWith( 'T' )) {
         item.id = undefined;
         const result = await client.models.FormItems.create( item );
+console.log(result);
         item.id = result.data?.id;
       } else if ( item.deleted ) {
         await client.models.FormItems.delete({ id: item.id });
@@ -177,6 +179,7 @@ export default function CopyAndSortDemo( props:Prop ) {
       item.id = undefined; 
       item.FormID = formResult.data?.id;
       const result = await client.models.FormItems.create( item );
+console.log(result);
       item.id = result.data?.id;
     }
 

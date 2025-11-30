@@ -16,7 +16,7 @@ function FormBuilder ( props:Prop ) {
 
     const [loading, setLoading] = useState( true );
     const [formData, setFormData] = useState<any[]>([]);
-    const [itemData, setItemData] = useState<any[]>([{id:'1', Name:'Custom Item', Type:'custom', Organization: props.oUserOrg}]);
+    const [itemData, setItemData] = useState<any[]>([{id:'1', Name:'Custom Item', Type:'custom'}]);
     const [formItemData, setFormItemData] = useState<any[]>([]);
     const [noForms, setNoForms] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
