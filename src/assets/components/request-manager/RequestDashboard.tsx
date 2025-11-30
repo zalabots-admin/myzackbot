@@ -37,7 +37,7 @@ function RequestDashboard ( props:Prop ) {
             {props.oOpenTabs.map(( item:any, index:number ) => (
               <Tab>
                 {item.name}
-                <i className={"fa-sharp fa-thin fa-xmark text-3xl m-4 cursor-pointer hover:text-[#D58936]"} onClick={() => {props.oCloseTab( index )}}></i>
+                <i className={"fa-sharp fa-thin fa-xmark text-sm ml-5 cursor-pointer hover:text-[#D58936]"} onClick={() => {props.oCloseTab( index )}}></i>
               </Tab>
             ))}
           </TabList>

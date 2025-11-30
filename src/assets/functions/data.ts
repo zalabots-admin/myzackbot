@@ -123,20 +123,16 @@ export async function getRequestViewData( oRequestId:string ) {
 
 export async function getRequestFormsAndItemsData( oId:string ) {
 
-/*    const currentFormAndItems = await client.models.Organization.list({
-        filter: {
-            id: { eq: oId },
-        },
+    const currentFormAndItems = await client.models.Organization.get({ id: oId }, {
         selectionSet: [
-            'id', 'Name', 'PrimaryColor',
-            'Items.id', 'Items.Name', 'Items.Type', 'Items.Description', 'Items.Label', 'Items.Options', 'Items.Layout', 'Items.DocumentId',
-            'Forms.id', 'Forms.Name', 'Forms.Description', 'Forms.Type',
-            'FormItems.id', 'FormItems.Name', 'FormItems.Description', 'FormItems.Label', 'FormItems.Order', 'FormItems.Options', 'FormItems.Type'
-        ]
+            'id', 'Name',
+            'Items.id', 'Items.Name', 'Items.Type', 'Items.Label', 'Items.Description', 'Items.Options', 'Items.Layout', 'Items.DocumentId',
+            'Forms.id', 'Forms.Name', 'Forms.Type', 'Forms.Description',
+            'Forms.FormItems.id', 'Forms.FormItems.Name', 'Forms.FormItems.Type', 'Forms.FormItems.Label', 'Forms.FormItems.Description', 'Forms.FormItems.Options', 'Forms.FormItems.Layout', 'Forms.FormItems.DocumentId', 'Forms.FormItems.Order'
+            ]
     });
 
-    return currentFormAndItems.data;*/
-    return oId
+    return currentFormAndItems.data;
 
 };
 

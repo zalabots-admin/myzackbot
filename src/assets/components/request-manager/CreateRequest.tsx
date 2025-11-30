@@ -51,10 +51,13 @@ function CreateRequest(props: Prop) {
     async function getItems() {
 
         const allRequestItems: any = await getRequestFormsAndItemsData( props.oUser.OrgId );
-
         const RequestItems: any[] = [...itemData]
-        allRequestItems.data.RequestItems.map( ( item: any ) => {
-            RequestItems.push( JSON.parse(item) );
+
+        allRequestItems.Items.map( ( item: any ) => {
+            RequestItems.push( item );
+        });
+        allRequestItems.Forms.map( ( form: any ) => {
+            RequestItems.push( form );
         });
 
         const sortedItems = RequestItems.filter((item: any) => item.Type != 'custom').sort((a: any, b: any) => a['Name'].localeCompare(b['Name']));
@@ -71,6 +74,9 @@ function CreateRequest(props: Prop) {
             setFollowUp( true );
         }*/
 
+        if ( currentRequest.data.AutoComplete ) {
+            setAutoComplete( true );
+        }
         if ( currentRequest.data.EmailResponse ) {
             setEmailResponse( true );
         }
@@ -91,8 +97,9 @@ function CreateRequest(props: Prop) {
             const original = itemData.find((item) => item.id === active.id);
             if (original) {
                 if (original.Type === 'form') {
+console.log('form added', original);
                     const formItems:any = [...requestQuestions];
-                    original.Items.sort((a: any, b: any) => a['Order'] - b['Order']).map((formItem: any) => {
+                    original.FormItems.sort((a: any, b: any) => a['Order'] - b['Order']).map((formItem: any) => {
                         clone = {
                             id: 'T' + uuidv4(),
                             Name: formItem.Name,
@@ -221,10 +228,9 @@ function CreateRequest(props: Prop) {
 
         var request: string | any = {};
         if (requestData.id === undefined ) {
-            request = await client.models.Request.create({ ...requestData, RequestStatus: oStatus, OrganizationID: props.oUser.OrgId });
-        } else {
-            request = await client.models.Request.update({ ...requestData, RequestStatus: oStatus });
+            request = await client.models.Request.create({ ...requestData, RequestStatus: 'New', OrganizationID: props.oUser.OrgId });
         }
+
         const requestId = request.data?.id;
         const copyParticipants = [...requestParticipants];
         copyParticipants.map( async ( participant ) => {
@@ -272,6 +278,8 @@ function CreateRequest(props: Prop) {
                 return updatedItems;
             });
         }
+
+        await client.models.Request.update({ id: requestId, RequestStatus: oStatus });
 
     }
 
@@ -372,7 +380,7 @@ function CreateRequest(props: Prop) {
                             {requestParticipants.filter(participant => participant.ParticipantRole === 'Recipient').map( ( participant, index ) => (
                                 <div key={index} className='col12 align-center-center' style={{backgroundColor:'#F4F4F4', border:'1px solid #CCCCCC', padding:'10px', marginBottom:'10px', borderRadius:'5px'}}>
                                     <div className='col2 align-center-center' style={{fontSize:'36pt'}}>
-                                        <i className={"fa-sharp fa-thin fa-user text-3xl m-4 cursor-pointer hover:text-[#D58936]"}></i>
+                                        <i className={"fa-classic fa-thin fa-user text-3xl m-4 cursor-pointer hover:text-[#D58936]"}></i>
                                     </div>
                                     <div className='col10 align-center-center'>
                                         <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.FirstName} />
@@ -392,7 +400,7 @@ function CreateRequest(props: Prop) {
                     {requestParticipants.filter(participant => participant.ParticipantRole === 'Receiver').map( ( participant, index ) => (
                                 <div key={index} className='col12 align-center-center' style={{backgroundColor:'#F4F4F4', border:'1px solid #CCCCCC', padding:'10px', marginBottom:'10px', borderRadius:'5px'}}>
                                     <div className='col2 align-center-center' style={{fontSize:'36pt'}}>
-                                        <i className={"fa-sharp fa-thin fa-user text-3xl m-4 cursor-pointer hover:text-[#D58936]"}></i>
+                                        <i className={"fa-classic fa-thin fa-user text-3xl m-4 cursor-pointer hover:text-[#D58936]"}></i>
                                     </div>
                                     <div className='col10 align-center-center'>
                                         <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.FirstName} />

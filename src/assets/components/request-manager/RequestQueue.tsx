@@ -45,37 +45,29 @@ function RequestQueue( props:Prop ) {
 
     };
 
+    const renderIcon = (key:any) => {
 
+        if (sortConfig.key !== key) {
+        return <i className={"fa-sharp fa-thin fa-sort text-gray-400 ml-1"}></i>;
+        }
 
-const renderIcon = (key:any) => {
+        return (
+        <i className={"fa-sharp fa-thin " + (sortConfig.direction === "asc" ? "fa-sort-up" : "fa-sort-down") + " text-gray-500 ml-1"}></i>
+        );
+    };
 
-    if (sortConfig.key !== key) {
-      return <i className={"fa-sharp fa-thin fa-sort text-gray-400 ml-1"}></i>;
-    }
+    const handleSort = (key:any) => {
+        const direction = sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
+        setSortConfig({ key, direction });
 
-    return (
-      <i className={"fa-sharp fa-thin " + (sortConfig.direction === "asc" ? "fa-sort-up" : "fa-sort-down") + " text-gray-500 ml-1"}></i>
-    );
-  };
+        const sortedData = [...filteredData].sort((a, b) => {
+        if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
+        if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
+        return 0;
+        });
 
-
-
-
-  const handleSort = (key:any) => {
-    const direction = sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
-    setSortConfig({ key, direction });
-
-    const sortedData = [...filteredData].sort((a, b) => {
-      if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
-      if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
-      return 0;
-    });
-
-    setFilteredData(sortedData);
-  };
-
-
-
+        setFilteredData(sortedData);
+    };
 
     useEffect(() => { 
 
@@ -108,7 +100,7 @@ const renderIcon = (key:any) => {
     },[searchedValue]);
 
     useEffect(() => {
-console.log( props.oEvent );
+
         if ( props.oEvent != '' && props.oEvent != null && props.oEvent != undefined ) {
             const eventData = JSON.parse( props.oEvent.data );
             if ( props.oEvent.event === 'New') {
@@ -144,56 +136,54 @@ console.log( props.oEvent );
 
     <>
         { loading ? (
-            <div className='align-center-center' style={{height:'600px'}}>
+            <div className='flex h-full items-center justify-center'>
                 <BeatLoader color = "#D58936" />
             </div>
         ) : (
             noRequests ? (
-                <div className='align-center-center' style={{height:'600px'}}>No Current Requests</div>
+                <div className='flex h-full items-center justify-center'>No Current Requests</div>
             ) : (
-                <div className="col12 component-layout-rows" style={{ '--gridRows': '100px 1fr' } as React.CSSProperties} >
-                    <div className='col4 align-center-left'>
+                <div className="flex flex-col h-full" >
+                    <div className='h-[100px] flex items-center w-2/5'>
                         <SearchBar
                             oSearchedValue={searchedValue}
                             oSetSearchedValue={setSearchedValue}
                         />
                     </div>
-                    <div>
-                        <div className="border-b h-[50px] flex items-center p-2">
-                            <div
-                                className="w-[15%] flex items-center gap-1 cursor-pointer"
-                                onClick={() => handleSort("createdAt")}>
-                                {renderIcon("createdAt")} <span className='select-none'>Created On</span>
-                            </div>
-                            <div className="w-[15%] flex items-center gap-1 cursor-pointer"
-                                onClick={() => handleSort("DueDate")}>
-                                {renderIcon("DueDate")} <span className='select-none'>Due Date</span>
-                            </div>
-                            <div className="w-[30%] flex items-center gap-1 cursor-pointer"
-                                onClick={() => handleSort("AccountName")} >
-                                {renderIcon("AccountName")} <span className='select-none'>Account Name</span>
-                            </div>
-                            <div className="w-[30%] flex items-center gap-1 cursor-pointer"
-                                onClick={() => handleSort("RequestedFor")} >
-                                {renderIcon("RequestedFor")} <span className='select-none'>Requested For</span>
-                            </div>
-                            <div className="w-[10%] flex items-center gap-1 cursor-pointer"
-                                onClick={() => handleSort("RequestStatus")} >
-                                {renderIcon("RequestStatus")} <span className='select-none'>Status</span>
-                            </div>
+                    <div className="border-b h-[50px] flex items-center p-2">
+                        <div
+                            className="w-[15%] flex items-center gap-1 cursor-pointer"
+                            onClick={() => handleSort("createdAt")}>
+                            {renderIcon("createdAt")} <span className='select-none'>Created On</span>
                         </div>
-                        <div className='table-body' style={{height:'500px'} as React.CSSProperties}>
-                            {filteredData.map((item:any, index:number) => (
-                                <div className={'flex  cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={index} onClick={() => {props.oOpenRequest( item.id, item.RequestedFor, item.RequestStatus ); props.oEvent();}}>
-                                    <div className='w-[15%] flex items-center h-[40px] p-2'>{formatDate(item.createdAt) + ' ' + formatToLocalTime(item.createdAt)}</div>
-                                    <div className='w-[15%] flex items-center h-[40px] p-2'>{formatDate(item.DueDate)}</div>
-                                    <div className='w-[30%] flex items-center h-[40px] p-2'>{item.AccountName}</div>
-                                    <div className='w-[30%] flex items-center h-[40px] p-2'>{item.RequestedFor}</div>
-                                    <div className='w-[10%] flex items-center h-[40px] p-2'>{item.RequestStatus.toUpperCase()}</div>
-                                </div>
-                            ))}
+                        <div className="w-[15%] flex items-center gap-1 cursor-pointer"
+                            onClick={() => handleSort("DueDate")}>
+                            {renderIcon("DueDate")} <span className='select-none'>Due Date</span>
+                        </div>
+                        <div className="w-[30%] flex items-center gap-1 cursor-pointer"
+                            onClick={() => handleSort("AccountName")} >
+                            {renderIcon("AccountName")} <span className='select-none'>Account Name</span>
+                        </div>
+                        <div className="w-[30%] flex items-center gap-1 cursor-pointer"
+                            onClick={() => handleSort("RequestedFor")} >
+                            {renderIcon("RequestedFor")} <span className='select-none'>Requested For</span>
+                        </div>
+                        <div className="w-[10%] flex items-center gap-1 cursor-pointer"
+                            onClick={() => handleSort("RequestStatus")} >
+                            {renderIcon("RequestStatus")} <span className='select-none'>Status</span>
                         </div>
                     </div>
+                    <div className='flex-1 overflow-y-auto'>
+                        {filteredData.map((item:any, index:number) => (
+                            <div className={'flex  cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={index} onClick={() => {props.oOpenRequest( item.id, item.RequestedFor, item.RequestStatus ); props.oEvent();}}>
+                                <div className='w-[15%] flex items-center h-[40px] p-2'>{formatDate(item.createdAt) + ' ' + formatToLocalTime(item.createdAt)}</div>
+                                <div className='w-[15%] flex items-center h-[40px] p-2'>{formatDate(item.DueDate)}</div>
+                                <div className='w-[30%] flex items-center h-[40px] p-2'>{item.AccountName}</div>
+                                <div className='w-[30%] flex items-center h-[40px] p-2'>{item.RequestedFor}</div>
+                                <div className='w-[10%] flex items-center h-[40px] p-2'>{item.RequestStatus.toUpperCase()}</div>
+                            </div>
+                        ))}
+                    </div> 
                 </div>
             )
         )}
