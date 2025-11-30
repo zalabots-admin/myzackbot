@@ -229,8 +229,9 @@ console.log('form added', original);
         var request: string | any = {};
         if (requestData.id === undefined ) {
             request = await client.models.Request.create({ ...requestData, RequestStatus: 'New', OrganizationID: props.oUser.OrgId });
+        } else {
+            request = await client.models.Request.update({ ...requestData, RequestStatus: 'New' });
         }
-
         const requestId = request.data?.id;
         const copyParticipants = [...requestParticipants];
         copyParticipants.map( async ( participant ) => {
