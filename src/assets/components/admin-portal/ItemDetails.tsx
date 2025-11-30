@@ -17,6 +17,7 @@ interface Props {
     oSetIsEditMode: (value: boolean) => void;
     oSetItemData: (value: any) => void;
     oSetActiveItem: (value: number) => void;
+    oSetNewItem: (value: boolean) => void;
 }
 
 const typeSelect = ['Text Field|text','Date Field|date','Number Field|number','Dropdown Menu|select','Document Upload|file'/*'Single Choice Option|radio','Multiple Choice Option|checkbox','Y/N Question|question','Large Text Field|textarea'*/]
@@ -60,13 +61,15 @@ function ItemDetails ( props:Props ) {
         });
         props.oSetActiveItem( -1 );
         props.oSetIsEditMode( false );
+        props.oSetNewItem( false );
 
     };
 
     function saveNew() {
 
-        client.models.Items.create( { ...props.oItemData[props.oActiveItem], Organization: props.oUserOrg } );
+        client.models.Items.create( { ...props.oItemData[props.oActiveItem], OrganizationID: props.oUserOrg } );
         props.oSetIsEditMode( false );
+        props.oSetNewItem( false );
 
     };
 

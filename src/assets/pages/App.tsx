@@ -75,6 +75,11 @@ function App ( props:Prop ) {
               oTitle="Request Dashboard"
               oIcon="fa-sharp fa-thin fa-comments-question-check"
             />
+            {/*<IconButtonLarge
+              oAction={() => {setActiveItem('menu2')}}
+              oTitle="My Tasks"
+              oIcon="fa-sharp fa-thin fa-list-check"
+            />*/}
             { currentUserDetails.Role === 'admin' && (
               <IconButtonLarge
                 oAction={() => {setActiveItem('menu3')}}
@@ -82,6 +87,7 @@ function App ( props:Prop ) {
                 oIcon="fa-sharp fa-thin fa-screwdriver-wrench"
               />
             )}
+
           </div>
           <div className="flex h-[100px] items-center justify-center w-full">
             <IconButtonLarge

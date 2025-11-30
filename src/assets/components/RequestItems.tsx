@@ -26,25 +26,25 @@ export const ListItem = ( props:ListItem ) => {
       {(() => {
         switch (props.oType) {
           case 'number':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-hashtag " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-hashtag text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
           case 'date':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-calendar-day " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-calendar-day text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
           case 'radio':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-circle-check " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-circle-check text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
           case 'checkbox':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-square-check " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-square-check text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
           case 'select':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-angle-double-down " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-angle-double-down  text-[#005566]" + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
           case 'question':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-angle-double-down " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-angle-double-down text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
           case 'textarea':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-paragraph " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-paragraph text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
           case 'file':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-file-lines " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-file-lines text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
           case 'form':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-angle-double-down " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-file-invoice text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
           default:
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-font " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-font text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
         }
       })()}
     </>
@@ -72,17 +72,17 @@ export const DraggableListItem = ( props:ListItem ) => {
       {(() => {
         switch (props.oType) {
           case 'number':
-            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-hashtag " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
+            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-hashtag text-[#005566] " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
           case 'date':
-            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-calendar-day " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
+            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-calendar-day text-[#005566] " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
           case 'select':
-            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-angle-double-down " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
+            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-angle-double-down text-[#005566] " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
           case 'form':
-            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-file-invoice " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
+            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-file-invoice text-[#005566] " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
           case 'file':
-            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-file-lines " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
+            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-file-lines text-[#005566] " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
             default:
-            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-font " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
+            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-font text-[#005566] " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
         }
       })()}
     </>

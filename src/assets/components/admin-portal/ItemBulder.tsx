@@ -76,6 +76,7 @@ function ItemBuilder ( props:Prop ) {
                 oSetIsEditMode={setIsEditMode}
                 oSetItemData={setItemData}
                 oSetActiveItem={setActiveItem}
+                oSetNewItem={setNewItem}
             />
         </div>
     

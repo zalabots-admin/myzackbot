@@ -5,7 +5,7 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema, } from '../../../amplify/data/resource'
 import { v4 as uuid } from "uuid";
 import RequestDashboard from '../components/request-manager/RequestDashboard'
-//import Reporting from './Reporting'
+import RequestTasks from './RequestTasks'
 import AdminPortal from './admin-portal/AdminPortal'
 
 interface Prop {
@@ -134,7 +134,23 @@ function MainContent ( props:Prop ) {
         />
       </>
     }
-    {/*{props.oActive === "menu2" && <><div className='col12 align-center-center'><div className='col11 align-center-left'><h2>Reporting & Analytics</h2></div></div><Reporting/></>}*/}
+    {props.oActiveNavTab === "menu2" && 
+      <>
+        <div className='col12 align-center-center'>
+          <div className='col11 align-center-left'>
+            <h2>My Request Tasks</h2>
+          </div>
+        </div>
+        <RequestTasks
+        oUser={props.oUser}
+        oOpenTabs={openTabs}
+        oSetOpenTabs={setOpenTabs}
+        oActiveIndex={activeIndex}
+        oSetActiveIndex={setActiveIndex}
+        oCloseTab={closeTab}
+        oOpenRequest={openRequest}
+        oEvent={eventData}
+      /></>}
     {props.oActiveNavTab === 'menu3' && 
       <>
         <div className='col12 align-center-center'>

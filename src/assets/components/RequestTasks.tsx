@@ -1,12 +1,12 @@
 
 
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-import RequestQueue from './RequestQueue'
-import CreateRequest from './CreateRequest'
-import ViewRequest from './ViewRequest';
+import RequestQueue from './request-manager/RequestQueue'
+import CreateRequest from './request-manager/CreateRequest'
+import ViewRequest from './request-manager/ViewRequest';
 
 import 'react-tabs/style/react-tabs.css';
-import '../../styles/Tabs.css'
+import '../styles/Tabs.css'
 
 interface Prop {
   oUser: any;
@@ -20,7 +20,7 @@ interface Prop {
 }
 
 
-function RequestDashboard ( props:Prop ) {
+function RequestTasks ( props:Prop ) {
 
 
   return (
@@ -33,7 +33,7 @@ function RequestDashboard ( props:Prop ) {
           onSelect={index => props.oSetActiveIndex(index)}
         >
           <TabList>
-            <Tab>Request Queue</Tab>
+            <Tab>Tasks Queue</Tab>
             {props.oOpenTabs.map(( item:any, index:number ) => (
               <Tab>
                 {item.name}
@@ -78,4 +78,4 @@ function RequestDashboard ( props:Prop ) {
 
 }
 
-export default RequestDashboard;
+export default RequestTasks;
