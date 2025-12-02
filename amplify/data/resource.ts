@@ -1,8 +1,6 @@
 
 
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
-import { CfnEntity } from "aws-cdk-lib/aws-iottwinmaker";
-
 
 const schema = a.schema({
   Organization: a
