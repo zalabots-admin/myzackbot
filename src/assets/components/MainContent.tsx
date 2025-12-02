@@ -5,7 +5,7 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema, } from '../../../amplify/data/resource'
 import { v4 as uuid } from "uuid";
 import RequestDashboard from '../components/request-manager/RequestDashboard'
-import RequestTasks from './RequestTasks'
+//import RequestTasks from './RequestTasks'
 import AdminPortal from './admin-portal/AdminPortal'
 
 interface Prop {
@@ -111,14 +111,14 @@ function MainContent ( props:Prop ) {
   },[]);
 
   return (
-  <div className='border border-[#0E2841] shadow p-4 mt-4 bg-white h-full rounded-tl-xl rounded-tr-xl content-layout'>
+  <div className='border border-[#0E2841] shadow pt-8 pl-8 pr-8 mt-4 bg-white h-full rounded-tl-xl rounded-tr-xl'>
     {props.oActiveNavTab === 'menu1' && 
       <>
-        <div className='col12 align-center-center'>
-          <div className='col9 align-center-left'>
+        <div className='w-full flex items-center justify-center mb-4'>
+          <div className='w-[80%] flex items-center justify-start mb-4'>
             <h2>Request Dashboard</h2>
           </div>
-          <div className='col2 align-center-right'>
+          <div className='w-[20%] flex items-center justify-end mb-4'>
             <button className='standard' onClick={() => {createNewRequest()}}>Create New Request</button>
           </div>
         </div>
@@ -135,26 +135,11 @@ function MainContent ( props:Prop ) {
       </>
     }
     {props.oActiveNavTab === "menu2" && 
-      <>
-        <div className='col12 align-center-center'>
-          <div className='col11 align-center-left'>
-            <h2>My Request Tasks</h2>
-          </div>
-        </div>
-        <RequestTasks
-        oUser={props.oUser}
-        oOpenTabs={openTabs}
-        oSetOpenTabs={setOpenTabs}
-        oActiveIndex={activeIndex}
-        oSetActiveIndex={setActiveIndex}
-        oCloseTab={closeTab}
-        oOpenRequest={openRequest}
-        oEvent={eventData}
-      /></>}
+      <>My Reqest Tasks</>}
     {props.oActiveNavTab === 'menu3' && 
       <>
-        <div className='col12 align-center-center'>
-          <div className='col11 align-center-left'>
+        <div className='w-full flex items-center justify-center mb-4'>
+          <div className='w-full flex items-center justify-start mb-4'>
             <h2>Administrator's Portal</h2>
           </div>
         </div>

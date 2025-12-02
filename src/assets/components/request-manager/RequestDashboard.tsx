@@ -25,14 +25,13 @@ function RequestDashboard ( props:Prop ) {
 
   return (
 
-    <div className='col12 align-top-center'>
-      <div className='col11 align-top-center'>
-        <Tabs
+
+        <Tabs className="w-full h-full flex flex-col"
           forceRenderTabPanel={true}
           selectedIndex={props.oActiveIndex}
           onSelect={index => props.oSetActiveIndex(index)}
         >
-          <TabList>
+          <TabList className="flex-none border-b border-gray-300 px-4">
             <Tab>Request Queue</Tab>
             {props.oOpenTabs.map(( item:any, index:number ) => (
               <Tab>
@@ -41,7 +40,7 @@ function RequestDashboard ( props:Prop ) {
               </Tab>
             ))}
           </TabList>
-          <TabPanel forceRender={true}>
+          <TabPanel className="flex-1 react-tabs__tab-panel h-full" forceRender={true}>
             <RequestQueue 
               oUserOrg={props.oUser.OrgId}
               oOpenRequest={props.oOpenRequest}
@@ -49,7 +48,7 @@ function RequestDashboard ( props:Prop ) {
             />            
           </TabPanel>
           {props.oOpenTabs.map(( item:any, index:number ) => (
-            <TabPanel key={item.id} forceRender={true}>
+            <TabPanel key={item.id} className="flex-1 react-tabs__tab-panel h-full" forceRender={true}>
               {item.isEditable ? (
                 <>
                   <CreateRequest
@@ -72,8 +71,8 @@ function RequestDashboard ( props:Prop ) {
             </TabPanel>
           ))}
         </Tabs>
-      </div>
-    </div>
+
+
   );
 
 }

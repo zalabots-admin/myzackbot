@@ -1,11 +1,10 @@
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getRequestData, createHistoryEvent, handleDataInputChange, handleGetDataInputChange, handleDataInputChangeFiltered, getRequestFormsAndItemsData } from '../../functions/data'
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../../../amplify/data/resource.ts'
-import { DndContext, DragEndEvent, useSensor, useSensors, MouseSensor, TouchSensor } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, /*useSensor, useSensors, MouseSensor, TouchSensor*/ } from '@dnd-kit/core';
 import { v4 as uuidv4 } from 'uuid';
-import { restrictToFirstScrollableAncestor } from '@dnd-kit/modifiers';
 import { arrayMove, } from '@dnd-kit/sortable';
 import BeatLoader from "react-spinners/BeatLoader";
 import DataInputs from '../data-objects/DataInputs'
@@ -14,10 +13,10 @@ import Select from '../data-objects/Select';
 import { DraggableListItem } from '../RequestItems'
 import Editor from '../admin-portal/Editor.tsx';
 import  SearchBar from '../SearchBar'
-import CollapsibleSection from '../../components/Collapsible';
 import ToggleSwitch from '../../components/Toggle';
 import SideBar from '../SideBar';
-import { IconButtonMedium } from '../../components/Buttons';
+import { IconButtonMedium, SmallButton } from '../../components/Buttons';
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 
 import '../../styles/SideBar.css'
 
@@ -97,7 +96,6 @@ function CreateRequest(props: Prop) {
             const original = itemData.find((item) => item.id === active.id);
             if (original) {
                 if (original.Type === 'form') {
-console.log('form added', original);
                     const formItems:any = [...requestQuestions];
                     original.FormItems.sort((a: any, b: any) => a['Order'] - b['Order']).map((formItem: any) => {
                         clone = {
@@ -199,6 +197,24 @@ console.log('form added', original);
 
     }   
 
+    function handleTaskTypeChange( oId:string, oType:string ) {
+
+        const copyParticipants = [...requestParticipants];
+        const index = copyParticipants.findIndex(participant => participant.id === oId);
+        copyParticipants[index].ParticipantType = oType;
+        setRequestParticipants(copyParticipants);
+
+    }
+
+    function deleteTask( oId:string ) {
+
+        const copyParticipants = [...requestParticipants];
+        const index = copyParticipants.findIndex(participant => participant.id === oId);
+        copyParticipants.splice(index, 1);
+        setRequestParticipants(copyParticipants);
+
+    }
+
     function handleViewSidebar() {
 
         setSideBarOpen(!sidebarOpen);
@@ -208,7 +224,12 @@ console.log('form added', original);
     function addParticipant( oType:string ) {
 
         const copyRequestParticipants = [...requestParticipants];
-        copyRequestParticipants.push( { id:'T' + uuidv4(), FirstName: '', LastName: '', Email: '', ParticipantRole: oType })
+        
+        if ( oType === 'Recipient' ) {
+            copyRequestParticipants.push( { id:'T' + uuidv4(), EntityName: '', Email: '', ParticipantRole: oType, ParticipantType: 'Individual' } )
+        } else {
+            copyRequestParticipants.push( { id:'T' + uuidv4(), FirstName: '', LastName: '', Email: '', ParticipantRole: oType })
+        }
         setRequestParticipants( copyRequestParticipants );
         
         if ( oType === 'Recipient' ) {
@@ -291,7 +312,7 @@ console.log('form added', original);
         
     }
 
-    const sensors = useSensors(
+    /*const sensors = useSensors(
         useSensor(MouseSensor, {
             activationConstraint: {
             distance: 5, // require 5px movement before drag starts
@@ -304,7 +325,7 @@ console.log('form added', original);
             tolerance: 5,   // allow 5px movement during delay
             },
         })
-    );
+    );*/
 
     useEffect(() => { 
         if ( props.oOpenTabs[props.oCurrentTab].status != 'New' ) {
@@ -317,7 +338,7 @@ console.log('form added', original);
 
   return (
     
-    <div className="col12 component-layout-columns" style={{ '--gridColumns': '30% 1fr' } as React.CSSProperties} >
+    <div className="grid grid-cols-[30%_1fr] h-full" >
         <SideBar isOpen={sidebarOpen}>
             <div className="flex flex-col h-full">
                 <div className="flex flex-col h-[125px] w-full">
@@ -350,133 +371,214 @@ console.log('form added', original);
                 </div>
             </div>
         </SideBar>
-        <div>
-            <div className='overflow-scroll' style={{height:'725px', padding:'20px'}}>
-                <CollapsibleSection title="Request Details" defaultOpen>
-                    <Input oKey='AccountName' oType='text' oLabel="Account Name:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.AccountName} />
-                    <Input oKey='RequestedFor' oType='text' oLabel="Information Is Requested For:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.RequestedFor} />
-                    {/*<Input oKey='RequestedForNumber' oType='text' oLabel="Requested For Number" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.RequestedForNumber} />*/}
-                    <Input oKey='DueDate' oType='date' oLabel="Due Date:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.DueDate} />
-                    {/*<ToggleSwitch label='Send Follow-Up Reminder' checked={followUp} onChange={handleToggle} onColor='#4E6E5D' offColor='#CCCCCC' />
-                    { followUp ? (
-                        <Input oKey='FollowUpDate' oType='date' oLabel="Follow Up Date" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.FollowUpDate} />
-                    ) : (
-                        <></>
-                    )}*/}
-                </CollapsibleSection>
-                <CollapsibleSection title="Delivery Options">
-                    <Select oKey='DeliveryMethod' oLabel='Delivery Type:' oOptions={[/*'Manual',*/'Standard']} oSize='col12' isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.DeliveryMethod} />                  
-                    { requestData.DeliveryMethod === 'Standard' ? (
-                        <>
-                            <div className='col12 align-center-left' style={{marginBottom:'15px'}}>
-                                <div className='col10 align-center-left' style={{height:'40px'}}><h4>Request Recipients</h4></div>
-                                <div className='col2 align-center-right'>
-                                    <IconButtonMedium
+        <div className='p-4 h-full'>
+            <section className="w-full bg-white p-6 rounded shadow lg:overflow-y-auto h-fit border border-gray-300 mb-6">
+                <Input oKey='AccountName' oType='text' oLabel="Account Name:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.AccountName} />
+                <Input oKey='RequestedFor' oType='text' oLabel="Information Is Requested For:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.RequestedFor} />
+                <Input oKey='DueDate' oType='date' oLabel="Due Date:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.DueDate} />
+                <Select oKey='DeliveryMethod' oLabel='Delivery Type:' oOptions={['Manual','Standard']} oSize='col12' isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.DeliveryMethod} />
+                <ToggleSwitch label='Email Response on Submit' checked={emailResponse} onChange={handleToggleEmailResponse} onColor='#4E6E5D' offColor='#CCCCCC' />
+                <ToggleSwitch label='Auto Complete Request' checked={autoComplete} onChange={handleToggleAutoComplete} onColor='#4E6E5D' offColor='#CCCCCC' />
+                {/*<ToggleSwitch label='Send Follow-Up Reminder' checked={followUp} onChange={handleToggle} onColor='#4E6E5D' offColor='#CCCCCC' />
+                { followUp ? (
+                    <Input oKey='FollowUpDate' oType='date' oLabel="Follow Up Date" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.FollowUpDate} />
+                ) : (
+                    <></>
+                )}*/}
+            </section>
+        </div>
+        <div className='p-4 h-full'>
+            <section className="grid grid-rows-[50px_1fr] w-full bg-white p-6 rounded shadow h-full border border-gray-300 mb-6">
+                <div className="flex justify-start items-center mb-4">
+            <div className="w-[80%] flex items-center">
+                <h3>Request Builder</h3>
+            </div>
+            <div className="w-[20%] flex justify-end items-center">
+                <IconButtonMedium
+                    oAction={() => {props.oCloseTab( props.oCurrentTab )}}
+                    oTitle="Close Request"
+                    oIcon="fa-sharp fa-thin fa-xmark"
+                />
+                { requestData.RequestStatus === 'Draft' && (
+                    <IconButtonMedium
+                        oAction={deleteDraftRequest}
+                        oTitle="Delete Request"
+                        oIcon="fa-sharp fa-thin fa-trash"
+                    />
+                )}
+                <IconButtonMedium
+                    oAction={() => {saveRequest( 'Draft' )}}
+                    oTitle="Save Request"
+                    oIcon="fa-sharp fa-thin fa-floppy-disk"
+                />
+                <IconButtonMedium
+                    oAction={() => {saveRequest( 'Requested' )}}
+                    oTitle="Send Request"
+                    oIcon="fa-sharp fa-thin fa-paper-plane-top"
+                />
+            </div> 
+                </div>
+                <Tabs className="w-full h-full">
+                    <TabList>
+                        <Tab className="react-tabs__tab w-[150px] text-center">Questions</Tab>
+                        { requestData.DeliveryMethod === 'Standard' && (
+                            <Tab className="react-tabs__tab w-[150px] text-center">Tasks</Tab>
+                        )}
+                        { emailResponse && (
+                            <Tab className="react-tabs__tab w-[150px] text-center">Responses</Tab>
+                        )}
+                    </TabList>
+                    <TabPanel className="react-tabs__tab-panel h-full" forceRender={true}>
+                        <div className='p-4 h-[500px] overflow-y-auto'>
+                            <DndContext onDragEnd={handleDragEnd}>
+                                <div className="grid grid-cols-[35%_1fr] gap-4 h-full" >
+                                    <div>
+                                        { loading ? (
+                                            <div className='h-full w-full flex justify-center items-center'>
+                                                <BeatLoader color = "#D58936" />
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <div className='w-full'>
+                                                    <SearchBar
+                                                        oSearchedValue={searchedValue}
+                                                        oSetSearchedValue={setSearchedValue}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    {itemData.filter((row:any) => row.Name.toString().toLowerCase().includes(searchedValue.toString().toLowerCase())).map(( item:any ) => (
+                                                        <DraggableListItem oKey={item.id} oName={item.Name} oType={item.Type} oActive={true} />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <Editor oItems={requestQuestions} oSetItems={setRequestQuestions} oIsEditable={true} oClick={setRequestQuestions} oSetActive={setActiveItem} oOpenSidePanel={handleViewSidebar} />
+                                    </div>
+                                </div>
+                            </DndContext>
+                        </div>
+                    </TabPanel>
+                    { requestData.DeliveryMethod === 'Standard' && (
+                        <TabPanel className="react-tabs__tab-panel flex-1 h-full">
+                            <div className="grid grid-rows-[75px_1fr] w-full" >
+                                <div className="flex justify-end items-center w-full">
+                                    <SmallButton
                                         oAction={() => addParticipant('Recipient')}
-                                        oTitle="Add Recipient"
-                                        oIcon="fa-classic fa-thin fa-user-circle-plus"
+                                        oText="Add Task"
                                     />
                                 </div>
+                                <div className="p-2 h-[450px] overflow-y-auto">
+                                    {requestParticipants.filter(participant => participant.ParticipantRole === 'Recipient').map( ( participant, index ) => (
+                                        <div key={index} className="w-full flex items-center bg-[#F4F4F4] border border-gray-300 p-2 mb-2 rounded">
+                                            <div className="w-[5%] h-full flex flex-col items-center justify-center">
+                                                <p>Task</p>
+                                                <h2 className="">{index + 1}</h2>
+                                            </div>
+                                            <div className="w-[60%] flex items-center">
+                                                <div className="w-[65%] flex items-center">
+                                                    {participant.ParticipantType === 'Individual' ? (
+                                                        <>
+                                                            <div className="w-[25%] flex flex-row items-center justify-center">
+                                                                <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#005566]"} title="Individual Task"></i>
+                                                                <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#DADADA]  hover:text-[#D58936]"} title="Entity Task" onClick={() => {handleTaskTypeChange(participant.id, 'Entity')}}></i>
+                                                            </div>
+                                                            <div className="w-[75%] flex flex-row items-center justify-center">
+                                                                <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.FirstName} />
+                                                                <Input oKey='LastName' oType='text' oLabel="Last Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.LastName} />
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <div className="w-[25%] flex flex-row items-center justify-center">
+                                                                <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#DADADA] hover:text-[#D58936]"} title="Individual Task" onClick={() => {handleTaskTypeChange(participant.id, 'Individual')}}></i>
+                                                                <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#005566]"} title="Entity Task"></i>
+                                                            </div>
+                                                            <div className="w-[75%] flex flex-row items-center justify-center">
+                                                                <Input oKey='EntityName' oType='text' oLabel="Entity Name" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.EntityName} />
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                                <div className="w-[35%] flex items-center">
+                                                    <Input oKey='Email' oType='text' oLabel="Email" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Email} />
+                                                </div>
+                                            </div>
+                                            <div className="w-[30%] flex items-center justinfy-center">
+                                                 <Input oKey='Instructions' oType='text' oLabel="Instructions" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Instructions} />
+                                            </div>
+                                            <div className="w-[5%] h-full flex flex-col items-center justify-center">
+                                                <i className={"fa-classic fa-thin fa-xmark text-2xl cursor-pointer text-[#005566]  hover:text-[#D58936]"} title="Delete Task" onClick={() => {deleteTask(participant.id)}}></i>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            {requestParticipants.filter(participant => participant.ParticipantRole === 'Recipient').map( ( participant, index ) => (
-                                <div key={index} className='col12 align-center-center' style={{backgroundColor:'#F4F4F4', border:'1px solid #CCCCCC', padding:'10px', marginBottom:'10px', borderRadius:'5px'}}>
-                                    <div className='col2 align-center-center' style={{fontSize:'36pt'}}>
-                                        <i className={"fa-classic fa-thin fa-user text-3xl m-4 cursor-pointer hover:text-[#D58936]"}></i>
-                                    </div>
-                                    <div className='col10 align-center-center'>
-                                        <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.FirstName} />
-                                        <Input oKey='LastName' oType='text' oLabel="Last Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.LastName} />
-                                        <Input oKey='Email' oType='text' oLabel="Email" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Email} />
-                                    </div>
+                        </TabPanel>
+                    )}
+                    { emailResponse && (
+                        <TabPanel className="react-tabs__tab-panel flex-1 h-full">
+                            <div className="grid grid-rows-[75px_1fr] w-full" >
+                                <div className="flex justify-end items-center w-full">
+                                    <SmallButton
+                                        oAction={() => addParticipant('Receiver')}
+                                        oText="Add Recipient"
+                                    />
                                 </div>
-                            ))}
-                        </>
-                    ) : (
-                        <></>
-                    )}                    
-                </CollapsibleSection>
-                <CollapsibleSection title="Response Options">
-                    <ToggleSwitch label='Email Response on Submit' checked={emailResponse} onChange={handleToggleEmailResponse} onColor='#4E6E5D' offColor='#CCCCCC' />
-                    <ToggleSwitch label='Auto Complete Request' checked={autoComplete} onChange={handleToggleAutoComplete} onColor='#4E6E5D' offColor='#CCCCCC' />
-                    {requestParticipants.filter(participant => participant.ParticipantRole === 'Receiver').map( ( participant, index ) => (
-                                <div key={index} className='col12 align-center-center' style={{backgroundColor:'#F4F4F4', border:'1px solid #CCCCCC', padding:'10px', marginBottom:'10px', borderRadius:'5px'}}>
-                                    <div className='col2 align-center-center' style={{fontSize:'36pt'}}>
-                                        <i className={"fa-classic fa-thin fa-user text-3xl m-4 cursor-pointer hover:text-[#D58936]"}></i>
-                                    </div>
-                                    <div className='col10 align-center-center'>
-                                        <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.FirstName} />
-                                        <Input oKey='LastName' oType='text' oLabel="Last Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.LastName} />
-                                        <Input oKey='Email' oType='text' oLabel="Email" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Email} />
-                                    </div>
+                                <div className="p-2 h-[450px] overflow-y-auto">
+                                    {requestParticipants.filter(participant => participant.ParticipantRole === 'Receiver').map( ( participant, index ) => (
+                                        <div key={index} className="w-full flex items-center bg-[#F4F4F4] border border-gray-300 p-2 mb-2 rounded">
+                                            <div className="w-[8%] h-full flex flex-col items-center justify-center">
+                                                <p>Recipient</p>
+                                                <h2 className="">{index + 1}</h2>
+                                            </div>
+                                            <div className="w-[60%] flex items-center">
+                                                <div className="w-[65%] flex items-center">
+                                                    {participant.ParticipantType === 'Individual' ? (
+                                                        <>
+                                                            <div className="w-[25%] flex flex-row items-center justify-center">
+                                                                <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#005566]"} title="Individual Task"></i>
+                                                                <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#DADADA]  hover:text-[#D58936]"} title="Entity Task" onClick={() => {handleTaskTypeChange(participant.id, 'Entity')}}></i>
+                                                            </div>
+                                                            <div className="w-[75%] flex flex-row items-center justify-center">
+                                                                <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.FirstName} />
+                                                                <Input oKey='LastName' oType='text' oLabel="Last Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.LastName} />
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <div className="w-[25%] flex flex-row items-center justify-center">
+                                                                <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#DADADA] hover:text-[#D58936]"} title="Individual Task" onClick={() => {handleTaskTypeChange(participant.id, 'Individual')}}></i>
+                                                                <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#005566]"} title="Entity Task"></i>
+                                                            </div>
+                                                            <div className="w-[75%] flex flex-row items-center justify-center">
+                                                                <Input oKey='EntityName' oType='text' oLabel="Entity Name" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.EntityName} />
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                                <div className="w-[35%] flex items-center">
+                                                    <Input oKey='Email' oType='text' oLabel="Email" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Email} />
+                                                </div>
+                                            </div>
+                                            <div className="w-[30%] flex items-center justinfy-center">
+                                                 <Input oKey='Instructions' oType='text' oLabel="Instructions" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Instructions} />
+                                            </div>
+                                            <div className="w-[3%] h-full flex flex-col items-center justify-center">
+                                                <i className={"fa-classic fa-thin fa-xmark text-2xl cursor-pointer text-[#005566]  hover:text-[#D58936]"} title="Delete Task" onClick={() => {deleteTask(participant.id)}}></i>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                </CollapsibleSection>
-
-            </div>
+                            </div>
+                        </TabPanel>
+                    )}
+                </Tabs>
+            </section>
         </div>
-        <DndContext sensors={sensors} modifiers={[restrictToFirstScrollableAncestor]} onDragEnd={handleDragEnd}>
-            <div className="col12 section-layout component-layout-rows" style={{ '--gridRows': '100px 1fr', height: '725px' } as React.CSSProperties} >
-                <div className='col12 align-top-left'>
-                    
-                    <div className='col4 align-top-left' style={{marginBottom:'15px'}}>
-                        <div style={{marginBottom:'20px'}}><h3>Request Builder</h3></div>
-                        <div className='col12 align-top-center'>
-                            <SearchBar
-                                oSearchedValue={searchedValue}
-                                oSetSearchedValue={setSearchedValue}
-                            />
-                        </div>
-                    </div>
-                        <div className='col8 align-center-right' style={{paddingRight:'20px'}}>
-                            <IconButtonMedium
-                                oAction={() => {props.oCloseTab( props.oCurrentTab )}}
-                                oTitle="Close Request"
-                                oIcon="fa-sharp fa-thin fa-xmark"
-                            />
-                            { requestData.RequestStatus === 'Draft' && (
-                                <IconButtonMedium
-                                    oAction={deleteDraftRequest}
-                                    oTitle="Delete Request"
-                                    oIcon="fa-sharp fa-thin fa-trash"
-                                />
-                            )}
-                            <IconButtonMedium
-                                oAction={() => {saveRequest( 'Draft' )}}
-                                oTitle="Save Request"
-                                oIcon="fa-sharp fa-thin fa-floppy-disk"
-                            />
-                            <IconButtonMedium
-                                oAction={() => {saveRequest( 'Requested' )}}
-                                oTitle="Send Request"
-                                oIcon="fa-sharp fa-thin fa-paper-plane-top"
-                            />
-                        </div> 
-                </div>
-                <div className="col12 component-layout-columns overflow-scroll" style={{ '--gridColumns': '35% 1fr',height: '100%' } as React.CSSProperties} >
-                    <div>
-                        { loading ? (
-                            <div className='col12 align-center-center'>
-                                <BeatLoader color = "#D58936" />
-                            </div>
-                        ) : (
-                            <div>
-                                {itemData.filter((row:any) => row.Name.toString().toLowerCase().includes(searchedValue.toString().toLowerCase())).map(( item:any ) => (
-                                    <DraggableListItem oKey={item.id} oName={item.Name} oType={item.Type} oActive={true} />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    <div className='col12 align-top'>
-                        <Editor oItems={requestQuestions} oSetItems={setRequestQuestions} oIsEditable={true} oClick={setRequestQuestions} oSetActive={setActiveItem} oOpenSidePanel={handleViewSidebar} />
-                    </div>
-                </div>
-                <div className="col12 component-layout-rows" style={{ '--gridRows': '88% 10%' } as React.CSSProperties} >
-
-
-                </div>
-            </div>
-        </DndContext>
     </div>
+    
   );
 }
 

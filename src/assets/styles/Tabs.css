@@ -1,13 +1,4 @@
 
-.react-tabs {
-  height: 100%;
-  max-height: 800px;
-  width: 100%;
-}
-
-.react-tabs__tab-panel {
-  height: 99%;
-}
 
 .tab-icon {
   color: #4E6E5D;
@@ -15,17 +6,15 @@
 }
 
 .react-tabs__tab {
-  /*border-top: 1px solid #4E6E5D;
-  border-left: solid 1px #4E6E5D;
-  border-right: solid 1px #4E6E5D;*/
-
+  background-color: #00556620;
   border-radius: 8px 8px 0 0;
+  color:#4E6E5D;
 }
 
-/*.react-tabs__tab--selected {
-  background-color: #4E6E5D;
-  color: white;
-  font-weight: bold;
-}*/
 
 
+.react-tabs__tab--selected {
+  background-color: #FFFFFF;
+  color:#005566;
+  font-weight: 600;
+} 

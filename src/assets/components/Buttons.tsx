@@ -3,9 +3,10 @@
 import React from "react";
 
 interface ButtonProps {
-  oAction: any;
-  oTitle: string;
-  oIcon: string;
+  oAction?: any;
+  oTitle?: string;
+  oIcon?: string;
+  oText?: string;
 }
 
 export const IconButtonLarge: React.FC<ButtonProps> = ({ oAction, oTitle, oIcon }) => {
@@ -30,5 +31,17 @@ export const IconButtonMedium: React.FC<ButtonProps> = ({ oAction, oTitle, oIcon
             <i className={ oIcon + " text-xl m-4 cursor-pointer hover:text-[#D58936]"}></i>
         </div>
     );
+
+};
+
+export const SmallButton: React.FC<ButtonProps> = ({ oAction, oText }) => {
+  
+    const oClass = "flex items-center justify-center border border-[#4E6E5D] rounded-[20px] text-[#4E6E5D] h-[40px] w-[135px] mx-[5px] hover:border-[#D58936] hover:text-[#D58936] hover:font-bold cursor-pointer";
+
+    return (
+        <div className={oClass} onClick={oAction} >
+            <p>{oText}</p>
+        </div>
+    ); 
 
 };

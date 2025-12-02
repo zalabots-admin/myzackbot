@@ -1,6 +1,7 @@
 
 
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { CfnEntity } from "aws-cdk-lib/aws-iottwinmaker";
 
 
 const schema = a.schema({
@@ -78,6 +79,7 @@ const schema = a.schema({
     RequestTasks: a
     .model({
       RequestID: a.string().required(),
+      Instructions: a.string(),
       RequestTaskStatus: a.string(),
       Request: a.belongsTo('Request', 'RequestID'),
       History: a.hasMany('RequestHistory', 'RequestTaskID'),
@@ -88,9 +90,11 @@ const schema = a.schema({
     .model({
       RequestID: a.string(),
       RequestTaskID: a.string(),
+      EntityName: a.string(),
       FirstName: a.string(),
       LastName: a.string(),
       Email: a.string(),
+      ParticipantType: a.string(),
       ParticipantRole: a.string(),
       Request: a.belongsTo('Request', 'RequestID'),
       RequestTask: a.belongsTo('RequestTasks', 'RequestTaskID'),

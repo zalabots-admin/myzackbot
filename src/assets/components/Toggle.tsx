@@ -20,7 +20,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   offColor = '#CCCCCC',
 }) => {
   return (
-    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0.5rem' }}>
+    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem', marginLeft: '0.5rem' }}>
       {label && <div className='col10'><span>{label}</span></div>}
       <Switch
         onChange={onChange}
