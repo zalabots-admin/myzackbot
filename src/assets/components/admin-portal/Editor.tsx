@@ -13,7 +13,7 @@ interface Prop {
   oOpenSidePanel?: any;
 }
 
-function Editor( props: Prop ) {
+function ZackbotEditor( props: Prop ) {
 
       const { setNodeRef, isOver } = useDroppable({ id: 'canvas' });
     
@@ -44,4 +44,4 @@ function Editor( props: Prop ) {
       );
 
 }
-export default Editor;
+export default ZackbotEditor;

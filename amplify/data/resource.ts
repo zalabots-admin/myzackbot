@@ -17,6 +17,8 @@ const schema = a.schema({
       PrimaryColor: a.string(),
       SecondaryColor: a.string(),
       Logo: a.string(),
+      EmailTemplate: a.string(),
+      EmailContent: a.string(),
       Requests: a.hasMany('Request', 'OrganizationID'),
       Items: a.hasMany('Items', 'OrganizationID'),
       Forms: a.hasMany('Forms', 'OrganizationID'),

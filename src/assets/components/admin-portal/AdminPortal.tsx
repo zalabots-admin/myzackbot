@@ -30,19 +30,19 @@ export function AdminPortal( props:Prop) {
             {/*<Tab style={{ width: '150px' }}>Billing</Tab>*/}
           </TabList>
 
-          <TabPanel>
+          <TabPanel forceRender={true}>
             <ItemBuilder oUserOrg={props.oUserOrg} />
           </TabPanel>
           <TabPanel>
             <FormBuilder oUserOrg={props.oUserOrg} />
           </TabPanel>
-          <TabPanel>
+          <TabPanel forceRender={true}>
             <Organization oUserOrg={props.oUserOrg} />
           </TabPanel>
-          <TabPanel>
+          <TabPanel forceRender={true}>
             <Branding oUserOrg={props.oUserOrg} />
           </TabPanel>
-          <TabPanel>
+          <TabPanel forceRender={true}>
             <ListUsers oUserOrg={props.oUserOrg} />
           </TabPanel>
           {/*<TabPanel>Billing</TabPanel>*/}

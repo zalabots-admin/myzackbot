@@ -8,7 +8,7 @@ import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 import { arrayMove, } from '@dnd-kit/sortable';
 import { v4 as uuidv4 } from 'uuid';
 import { DraggableListItem } from '../RequestItems.tsx';
-import Editor from './Editor.tsx';
+import ZackbotEditor from './Editor.tsx';
 import DataInputs from '../data-objects/DataInputs'
 import Input from '../data-objects/Input'
 import Select from '../data-objects/Select.tsx';
@@ -278,7 +278,7 @@ console.log(result);
                   )}
                   </div>  
                 </div>
-              <Editor oItems={props.oFormItems} oSetItems={props.oSetFormItemData} oIsEditable={props.oIsEditMode} oClick={props.oSetFormItemData} oSetActive={setActiveItem} oOpenSidePanel={handleViewSidebar} />
+              <ZackbotEditor oItems={props.oFormItems} oSetItems={props.oSetFormItemData} oIsEditable={props.oIsEditMode} oClick={props.oSetFormItemData} oSetActive={setActiveItem} oOpenSidePanel={handleViewSidebar} />
             </div>
           </div>
         )}

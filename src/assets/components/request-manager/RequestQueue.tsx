@@ -175,7 +175,7 @@ function RequestQueue( props:Prop ) {
                     </div>
                     <div className='flex-1 overflow-y-auto'>
                         {filteredData.map((item:any, index:number) => (
-                            <div className={'flex  cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={index} onClick={() => {props.oOpenRequest( item.id, item.RequestedFor, item.RequestStatus ); props.oEvent();}}>
+                            <div className={'flex  cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={index} onClick={() => {props.oOpenRequest( item.id, item.RequestedFor, item.RequestStatus ); props.oEvent;}}>
                                 <div className='w-[15%] flex items-center h-[40px] p-2'>{formatDate(item.createdAt) + ' ' + formatToLocalTime(item.createdAt)}</div>
                                 <div className='w-[15%] flex items-center h-[40px] p-2'>{formatDate(item.DueDate)}</div>
                                 <div className='w-[30%] flex items-center h-[40px] p-2'>{item.AccountName}</div>

@@ -36,7 +36,19 @@ export const IconButtonMedium: React.FC<ButtonProps> = ({ oAction, oTitle, oIcon
 
 export const SmallButton: React.FC<ButtonProps> = ({ oAction, oText }) => {
   
-    const oClass = "flex items-center justify-center border border-[#4E6E5D] rounded-[20px] text-[#4E6E5D] h-[40px] w-[135px] mx-[5px] hover:border-[#D58936] hover:text-[#D58936] hover:font-bold cursor-pointer";
+    const oClass = "flex items-center justify-center border border-[#4E6E5D] rounded-[20px] text-[#4E6E5D] h-[40px] w-[135px] mx-[5px] hover:border-[#D58936] hover:text-[#D58936] cursor-pointer";
+
+    return (
+        <div className={oClass} onClick={oAction} >
+            <p>{oText}</p>
+        </div>
+    ); 
+
+};
+
+export const StandardButton: React.FC<ButtonProps> = ({ oAction, oText }) => {
+  
+    const oClass = "flex items-center justify-center border border-[#4E6E5D] rounded-[20px] text-[#4E6E5D] h-[40px] w-[215px] mx-[5px] hover:border-[#D58936] hover:text-[#D58936] cursor-pointer";
 
     return (
         <div className={oClass} onClick={oAction} >

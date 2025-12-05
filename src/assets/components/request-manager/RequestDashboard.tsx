@@ -25,7 +25,6 @@ function RequestDashboard ( props:Prop ) {
 
   return (
 
-
         <Tabs className="w-full h-full flex flex-col"
           forceRenderTabPanel={true}
           selectedIndex={props.oActiveIndex}
@@ -40,38 +39,39 @@ function RequestDashboard ( props:Prop ) {
               </Tab>
             ))}
           </TabList>
-          <TabPanel className="flex-1 react-tabs__tab-panel h-full" forceRender={true}>
-            <RequestQueue 
-              oUserOrg={props.oUser.OrgId}
-              oOpenRequest={props.oOpenRequest}
-              oEvent={props.oEvent}
-            />            
-          </TabPanel>
-          {props.oOpenTabs.map(( item:any, index:number ) => (
-            <TabPanel key={item.id} className="flex-1 react-tabs__tab-panel h-full" forceRender={true}>
-              {item.isEditable ? (
-                <>
-                  <CreateRequest
-                      oUser={props.oUser}
-                      oCloseTab={props.oCloseTab}
-                      oOpenTabs={props.oOpenTabs}
-                      oActiveIndex={props.oActiveIndex}
-                      oCurrentTab={index}
-                      oSetOpenTabs={props.oSetOpenTabs}
-                    />
-                  </>
-              ) : (
-               <>  <ViewRequest
-                    oOpenTabs={props.oOpenTabs}
-                    oCurrentTab={index}
-                    oUser={props.oUser}
-                />
-              </>
-              )}
+          <div className="flex-1">
+            <TabPanel className="react-tabs__tab-panel h-full" forceRender={true}>
+              <RequestQueue 
+                oUserOrg={props.oUser.OrgId}
+                oOpenRequest={props.oOpenRequest}
+                oEvent={props.oEvent}
+              />            
             </TabPanel>
-          ))}
+            {props.oOpenTabs.map(( item:any, index:number ) => (
+              <TabPanel key={item.id} className="react-tabs__tab-panel h-full" forceRender={true}>
+                {item.isEditable ? (
+                  <>
+                    <CreateRequest
+                        oUser={props.oUser}
+                        oCloseTab={props.oCloseTab}
+                        oOpenTabs={props.oOpenTabs}
+                        oActiveIndex={props.oActiveIndex}
+                        oCurrentTab={index}
+                        oSetOpenTabs={props.oSetOpenTabs}
+                      />
+                    </>
+                ) : (
+                <>  <ViewRequest
+                      oOpenTabs={props.oOpenTabs}
+                      oCurrentTab={index}
+                      oUser={props.oUser}
+                  />
+                </>
+                )}
+              </TabPanel>
+            ))}
+          </div>
         </Tabs>
-
 
   );
 

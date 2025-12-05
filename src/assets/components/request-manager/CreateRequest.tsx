@@ -10,13 +10,15 @@ import BeatLoader from "react-spinners/BeatLoader";
 import DataInputs from '../data-objects/DataInputs'
 import Input from '../data-objects/Input';
 import Select from '../data-objects/Select';
+import Document from '../data-objects/Document.tsx';
 import { DraggableListItem } from '../RequestItems'
-import Editor from '../admin-portal/Editor.tsx';
+import ZackbotEditor from '../admin-portal/Editor.tsx';
 import  SearchBar from '../SearchBar'
 import ToggleSwitch from '../../components/Toggle';
 import SideBar from '../SideBar';
 import { IconButtonMedium, SmallButton } from '../../components/Buttons';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+//import { setDocumentUploadText, uploadDocument } from '../../functions/document.ts'
 
 import '../../styles/SideBar.css'
 
@@ -85,6 +87,12 @@ function CreateRequest(props: Prop) {
         const sortedItems = (currentRequest.data as any)?.Questions?.sort((a: any, b: any) => Number(a.Order) - Number(b.Order));
         setRequestQuestions( sortedItems ?? [] );
     }
+
+    function handleViewSidebar() {
+
+        setSideBarOpen(!sidebarOpen);
+
+    };
 
     function handleDragEnd ( event: DragEndEvent ) {
         
@@ -197,7 +205,7 @@ function CreateRequest(props: Prop) {
 
     }   
 
-    function handleTaskTypeChange( oId:string, oType:string ) {
+    function handleParticipantTypeChange( oId:string, oType:string ) {
 
         const copyParticipants = [...requestParticipants];
         const index = copyParticipants.findIndex(participant => participant.id === oId);
@@ -206,30 +214,39 @@ function CreateRequest(props: Prop) {
 
     }
 
-    function deleteTask( oId:string ) {
+    async function handleDocumentChange( event:any ) {
 
-        const copyParticipants = [...requestParticipants];
-        const index = copyParticipants.findIndex(participant => participant.id === oId);
-        copyParticipants.splice(index, 1);
-        setRequestParticipants(copyParticipants);
+        //setOrganizationData({ ...organizationData, Logo: organizationData.id + event.name });
+        //setDocumentData({ ...documentData, UploadText: 'File: ' + organizationData.id + event.name, documentData: event, DocumentLink: URL.createObjectURL(event) });
+        const reader = new FileReader();
+            reader.onloadend = () => {
+            //setImgURL(reader.result as string);
+        };
+        reader.readAsDataURL(event);
 
     }
 
-    function handleViewSidebar() {
+    function deleteParticipant( oId:string ) {
 
-        setSideBarOpen(!sidebarOpen);
+        const copyParticipants = [...requestParticipants];
+        const index = copyParticipants.findIndex(participant => participant.id === oId);
+        if ( copyParticipants[index].id.startsWith('T') ) {
+            setRequestParticipants((prevItems:any) => prevItems.filter((item:any) => item.id !== oId));
+        } else {
+            setRequestParticipants((prevItems:any) =>
+                prevItems.map((item:any) =>
+                item.id === oId ? { ...item, deleted: true } : item
+                )
+            );
+        }
+       // setRequestParticipants(copyParticipants);
 
-    };
+    }
 
     function addParticipant( oType:string ) {
 
         const copyRequestParticipants = [...requestParticipants];
-        
-        if ( oType === 'Recipient' ) {
-            copyRequestParticipants.push( { id:'T' + uuidv4(), EntityName: '', Email: '', ParticipantRole: oType, ParticipantType: 'Individual' } )
-        } else {
-            copyRequestParticipants.push( { id:'T' + uuidv4(), FirstName: '', LastName: '', Email: '', ParticipantRole: oType })
-        }
+        copyRequestParticipants.push( { id:'T' + uuidv4(), FirstName: '', LastName: '', EntityName: '', Email: '', ParticipantRole: oType, ParticipantType: 'Individual' } )
         setRequestParticipants( copyRequestParticipants );
         
         if ( oType === 'Recipient' ) {
@@ -244,6 +261,18 @@ function CreateRequest(props: Prop) {
         }
 
     };
+
+    function duplicateParticipant( oType:string ) {
+
+        const copyRequestParticipants = [...requestParticipants];
+        const requestRecipients = copyRequestParticipants.filter(participant => participant.ParticipantRole === oType);
+
+        const index = requestRecipients.length-1;
+        const newRecipient = { ...requestRecipients[index], id: 'T' + uuidv4() };
+        copyRequestParticipants.push( newRecipient )
+        setRequestParticipants( copyRequestParticipants );
+
+    }
 
     async function saveRequest( oStatus: string) {
 
@@ -260,16 +289,21 @@ function CreateRequest(props: Prop) {
             if ( participant.id.startsWith('T') ) {
                 participant.id = participant.id.slice(1);
                 if ( participant.ParticipantRole === 'Recipient' ) {
-                    const task = await client.models.RequestTasks.create({ RequestID: requestId, RequestTaskStatus: 'New' });
+                    const task = await client.models.RequestTasks.create({ RequestID: requestId, RequestTaskStatus: 'New', Instructions: participant.Instructions });
                     const taskId = task.data?.id;
                     createHistoryEvent('Task', 'ZackBot', 'Task Created', requestId ? requestId : '', taskId ? taskId : '');
-                    await client.models.RequestParticipants.create({ ...participant, RequestID: requestId, RequestTaskID: taskId });
+                    await client.models.RequestParticipants.create({ RequestID: requestId, RequestTaskID: taskId, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
                 } else {
-                    await client.models.RequestParticipants.create({ ...participant, RequestID: requestId });
+                    await client.models.RequestParticipants.create({ RequestID: requestId, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
                 }
-
+            } else if ( participant.deleted ) {
+                if ( participant.ParticipantRole === 'Recipient' ) {
+                    await client.models.RequestTasks.delete({ id: participant.RequestTaskID });
+                };
+                await client.models.RequestParticipants.delete({ id: participant.id });
             } else {
-                await client.models.RequestParticipants.update({...participant});
+                await client.models.RequestParticipants.update({ id: participant.id, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType});
+                await client.models.RequestTasks.update({ id: participant.RequestTaskID, Instructions: participant.Instructions });
             }
         });
 
@@ -338,7 +372,7 @@ function CreateRequest(props: Prop) {
 
   return (
     
-    <div className="grid grid-cols-[30%_1fr] h-full" >
+    <div className="grid grid-cols-[30%_1fr]" >
         <SideBar isOpen={sidebarOpen}>
             <div className="flex flex-col h-full">
                 <div className="flex flex-col h-[125px] w-full">
@@ -371,8 +405,8 @@ function CreateRequest(props: Prop) {
                 </div>
             </div>
         </SideBar>
-        <div className='p-4 h-full'>
-            <section className="w-full bg-white p-6 rounded shadow lg:overflow-y-auto h-fit border border-gray-300 mb-6">
+        <div className='p-4'>
+            <section className="w-full bg-white p-6 rounded shadow lg:overflow-y-auto h-full border border-gray-300 mb-6">
                 <Input oKey='AccountName' oType='text' oLabel="Account Name:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.AccountName} />
                 <Input oKey='RequestedFor' oType='text' oLabel="Information Is Requested For:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.RequestedFor} />
                 <Input oKey='DueDate' oType='date' oLabel="Due Date:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.DueDate} />
@@ -387,36 +421,36 @@ function CreateRequest(props: Prop) {
                 )}*/}
             </section>
         </div>
-        <div className='p-4 h-full'>
+        <div className='p-4'>
             <section className="grid grid-rows-[50px_1fr] w-full bg-white p-6 rounded shadow h-full border border-gray-300 mb-6">
                 <div className="flex justify-start items-center mb-4">
-            <div className="w-[80%] flex items-center">
-                <h3>Request Builder</h3>
-            </div>
-            <div className="w-[20%] flex justify-end items-center">
-                <IconButtonMedium
-                    oAction={() => {props.oCloseTab( props.oCurrentTab )}}
-                    oTitle="Close Request"
-                    oIcon="fa-sharp fa-thin fa-xmark"
-                />
-                { requestData.RequestStatus === 'Draft' && (
-                    <IconButtonMedium
-                        oAction={deleteDraftRequest}
-                        oTitle="Delete Request"
-                        oIcon="fa-sharp fa-thin fa-trash"
-                    />
-                )}
-                <IconButtonMedium
-                    oAction={() => {saveRequest( 'Draft' )}}
-                    oTitle="Save Request"
-                    oIcon="fa-sharp fa-thin fa-floppy-disk"
-                />
-                <IconButtonMedium
-                    oAction={() => {saveRequest( 'Requested' )}}
-                    oTitle="Send Request"
-                    oIcon="fa-sharp fa-thin fa-paper-plane-top"
-                />
-            </div> 
+                    <div className="w-[80%] flex items-center">
+                        <h3>Request Builder</h3>
+                    </div>
+                    <div className="w-[20%] flex justify-end items-center">
+                        <IconButtonMedium
+                            oAction={() => {props.oCloseTab( props.oCurrentTab )}}
+                            oTitle="Close Request"
+                            oIcon="fa-sharp fa-thin fa-xmark"
+                        />
+                        { requestData.RequestStatus === 'Draft' && (
+                            <IconButtonMedium
+                                oAction={deleteDraftRequest}
+                                oTitle="Delete Request"
+                                oIcon="fa-sharp fa-thin fa-trash"
+                            />
+                        )}
+                        <IconButtonMedium
+                            oAction={() => {saveRequest( 'Draft' )}}
+                            oTitle="Save Request"
+                            oIcon="fa-sharp fa-thin fa-floppy-disk"
+                        />
+                        <IconButtonMedium
+                            oAction={() => {saveRequest( 'Requested' )}}
+                            oTitle="Send Request"
+                            oIcon="fa-sharp fa-thin fa-paper-plane-top"
+                        />
+                    </div> 
                 </div>
                 <Tabs className="w-full h-full">
                     <TabList>
@@ -429,9 +463,9 @@ function CreateRequest(props: Prop) {
                         )}
                     </TabList>
                     <TabPanel className="react-tabs__tab-panel h-full" forceRender={true}>
-                        <div className='p-4 h-[500px] overflow-y-auto'>
+                        <div className='p-4 h-[525px] overflow-y-auto'>
                             <DndContext onDragEnd={handleDragEnd}>
-                                <div className="grid grid-cols-[35%_1fr] gap-4 h-full" >
+                                <div className="grid grid-cols-[35%_1fr] gap-4" >
                                     <div>
                                         { loading ? (
                                             <div className='h-full w-full flex justify-center items-center'>
@@ -453,8 +487,8 @@ function CreateRequest(props: Prop) {
                                             </div>
                                         )}
                                     </div>
-                                    <div>
-                                        <Editor oItems={requestQuestions} oSetItems={setRequestQuestions} oIsEditable={true} oClick={setRequestQuestions} oSetActive={setActiveItem} oOpenSidePanel={handleViewSidebar} />
+                                    <div className="h-full">
+                                        <ZackbotEditor oItems={requestQuestions} oSetItems={setRequestQuestions} oIsEditable={true} oClick={setRequestQuestions} oSetActive={setActiveItem} oOpenSidePanel={handleViewSidebar} />
                                     </div>
                                 </div>
                             </DndContext>
@@ -462,19 +496,40 @@ function CreateRequest(props: Prop) {
                     </TabPanel>
                     { requestData.DeliveryMethod === 'Standard' && (
                         <TabPanel className="react-tabs__tab-panel flex-1 h-full">
-                            <div className="grid grid-rows-[75px_1fr] w-full" >
-                                <div className="flex justify-end items-center w-full">
-                                    <SmallButton
-                                        oAction={() => addParticipant('Recipient')}
-                                        oText="Add Task"
-                                    />
+                            <div className="grid grid-rows-[125px_1fr] w-full" >
+                                <div className="p-2">
+                                    <p>Upload Multiple Tasks Using the Upload Template or Individually Add Tasks Using the 'Add Task' Button</p>
+                                    <div className="flex items-center w-full">
+                                        <div className="flex justify-start w-[60%]">
+                                            <Document isRequired={false}  oSize="col12" isEditable={true} oChange={(e) => handleDocumentChange(e)}  oData={{ UploadText: 'Upload File', DocumentId: '1', Label: '',  }}  />
+                                        </div>
+                                        <div className="flex justify-start w-[10%]">
+                                            <IconButtonMedium
+                                                oAction={() => {props.oCloseTab( props.oCurrentTab )}}
+                                                oTitle="Download Template"
+                                                oIcon="fa-sharp fa-thin fa-download"
+                                            />
+                                        </div>
+                                        <div className="flex justify-end items-center w-[30%]">
+                                            { requestParticipants.filter(participant => participant.ParticipantRole === 'Recipient').length > 0 && (
+                                                <SmallButton
+                                                    oAction={() => duplicateParticipant('Recipient')}
+                                                    oText="Duplicate Task"
+                                                />
+                                            )}
+                                            <SmallButton
+                                                oAction={() => addParticipant('Recipient')}
+                                                oText="Add Task"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="p-2 h-[450px] overflow-y-auto">
-                                    {requestParticipants.filter(participant => participant.ParticipantRole === 'Recipient').map( ( participant, index ) => (
+                                <div className="p-2 h-[400px] overflow-y-auto">
+                                    {requestParticipants.filter(participant => participant.ParticipantRole === 'Recipient' && !participant.deleted).map( ( participant, index ) => (
                                         <div key={index} className="w-full flex items-center bg-[#F4F4F4] border border-gray-300 p-2 mb-2 rounded">
-                                            <div className="w-[5%] h-full flex flex-col items-center justify-center">
+                                            <div className="w-[8%] h-full flex flex-col items-center justify-center">
                                                 <p>Task</p>
-                                                <h2 className="">{index + 1}</h2>
+                                                <h2>{index + 1}</h2>
                                             </div>
                                             <div className="w-[60%] flex items-center">
                                                 <div className="w-[65%] flex items-center">
@@ -482,7 +537,7 @@ function CreateRequest(props: Prop) {
                                                         <>
                                                             <div className="w-[25%] flex flex-row items-center justify-center">
                                                                 <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#005566]"} title="Individual Task"></i>
-                                                                <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#DADADA]  hover:text-[#D58936]"} title="Entity Task" onClick={() => {handleTaskTypeChange(participant.id, 'Entity')}}></i>
+                                                                <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#DADADA]  hover:text-[#D58936]"} title="Entity Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Entity')}}></i>
                                                             </div>
                                                             <div className="w-[75%] flex flex-row items-center justify-center">
                                                                 <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.FirstName} />
@@ -492,7 +547,7 @@ function CreateRequest(props: Prop) {
                                                     ) : (
                                                         <>
                                                             <div className="w-[25%] flex flex-row items-center justify-center">
-                                                                <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#DADADA] hover:text-[#D58936]"} title="Individual Task" onClick={() => {handleTaskTypeChange(participant.id, 'Individual')}}></i>
+                                                                <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#DADADA] hover:text-[#D58936]"} title="Individual Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Individual')}}></i>
                                                                 <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#005566]"} title="Entity Task"></i>
                                                             </div>
                                                             <div className="w-[75%] flex flex-row items-center justify-center">
@@ -505,11 +560,11 @@ function CreateRequest(props: Prop) {
                                                     <Input oKey='Email' oType='text' oLabel="Email" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Email} />
                                                 </div>
                                             </div>
-                                            <div className="w-[30%] flex items-center justinfy-center">
-                                                 <Input oKey='Instructions' oType='text' oLabel="Instructions" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Instructions} />
+                                            <div className="w-[28%] flex items-center justinfy-center">
+                                                 <Input oKey='Instructions' oType='text' oLabel="Unique Task Instructions" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Instructions} />
                                             </div>
-                                            <div className="w-[5%] h-full flex flex-col items-center justify-center">
-                                                <i className={"fa-classic fa-thin fa-xmark text-2xl cursor-pointer text-[#005566]  hover:text-[#D58936]"} title="Delete Task" onClick={() => {deleteTask(participant.id)}}></i>
+                                            <div className="w-[4%] h-full flex flex-col items-center justify-center">
+                                                <i className={"fa-classic fa-thin fa-xmark text-2xl cursor-pointer text-[#005566]  hover:text-[#D58936]"} title="Delete Task" onClick={() => {deleteParticipant(participant.id)}}></i>
                                             </div>
                                         </div>
                                     ))}
@@ -531,15 +586,15 @@ function CreateRequest(props: Prop) {
                                         <div key={index} className="w-full flex items-center bg-[#F4F4F4] border border-gray-300 p-2 mb-2 rounded">
                                             <div className="w-[8%] h-full flex flex-col items-center justify-center">
                                                 <p>Recipient</p>
-                                                <h2 className="">{index + 1}</h2>
+                                                <h2>{index + 1}</h2>
                                             </div>
-                                            <div className="w-[60%] flex items-center">
+                                            <div className="w-[88%] flex items-center">
                                                 <div className="w-[65%] flex items-center">
                                                     {participant.ParticipantType === 'Individual' ? (
                                                         <>
                                                             <div className="w-[25%] flex flex-row items-center justify-center">
                                                                 <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#005566]"} title="Individual Task"></i>
-                                                                <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#DADADA]  hover:text-[#D58936]"} title="Entity Task" onClick={() => {handleTaskTypeChange(participant.id, 'Entity')}}></i>
+                                                                <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#DADADA]  hover:text-[#D58936]"} title="Entity Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Entity')}}></i>
                                                             </div>
                                                             <div className="w-[75%] flex flex-row items-center justify-center">
                                                                 <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.FirstName} />
@@ -549,7 +604,7 @@ function CreateRequest(props: Prop) {
                                                     ) : (
                                                         <>
                                                             <div className="w-[25%] flex flex-row items-center justify-center">
-                                                                <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#DADADA] hover:text-[#D58936]"} title="Individual Task" onClick={() => {handleTaskTypeChange(participant.id, 'Individual')}}></i>
+                                                                <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#DADADA] hover:text-[#D58936]"} title="Individual Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Individual')}}></i>
                                                                 <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#005566]"} title="Entity Task"></i>
                                                             </div>
                                                             <div className="w-[75%] flex flex-row items-center justify-center">
@@ -562,11 +617,8 @@ function CreateRequest(props: Prop) {
                                                     <Input oKey='Email' oType='text' oLabel="Email" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Email} />
                                                 </div>
                                             </div>
-                                            <div className="w-[30%] flex items-center justinfy-center">
-                                                 <Input oKey='Instructions' oType='text' oLabel="Instructions" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Instructions} />
-                                            </div>
-                                            <div className="w-[3%] h-full flex flex-col items-center justify-center">
-                                                <i className={"fa-classic fa-thin fa-xmark text-2xl cursor-pointer text-[#005566]  hover:text-[#D58936]"} title="Delete Task" onClick={() => {deleteTask(participant.id)}}></i>
+                                            <div className="w-[4%] h-full flex flex-col items-center justify-center">
+                                                <i className={"fa-classic fa-thin fa-xmark text-2xl cursor-pointer text-[#005566]  hover:text-[#D58936]"} title="Delete Task" onClick={() => {deleteParticipant(participant.id)}}></i>
                                             </div>
                                         </div>
                                     ))}

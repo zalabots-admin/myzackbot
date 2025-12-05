@@ -27,7 +27,6 @@ export function handleDataInputChangeFiltered( event:any, setData:React.Dispatch
       )
     );  
 
-
 };
 
 export function handleFormDataInputChange( event:any, setData:any, item:number ) {
@@ -52,14 +51,24 @@ export function handleGetDataInputChange( event:any, setData:React.Dispatch<Reac
 
 export async function getRequestData( oId:string ) {
 
-    const currentRequest = await client.models.Request.get({ id: oId },
+    var currentRequest = await client.models.Request.get({ id: oId },
     {
         selectionSet: ['id', 'AccountName', 'RequestedFor', 'createdAt', 'DueDate', 'RequestStatus', 'RequestType', 'FollowUpDate', 'DeliveryMethod', 'EmailResponse', 'AutoComplete',
-            'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole',
+            'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole', 'Participants.EntityName', 'Participants.ParticipantType', 'Participants.RequestTask.Instructions',
             'Questions.id', 'Questions.Name', 'Questions.Description', 'Questions.Label', 'Questions.Order', 'Questions.Options', 'Questions.Type',
             'History.Event','History.Date','History.User','History.Description']
     } );
 
+    if ( currentRequest.data && currentRequest.data.Participants !== undefined && currentRequest.data.Participants !== null ) {
+        const participants = currentRequest.data.Participants.map(p => ({ ...p, Instructions: p.RequestTask?.Instructions ?? null}));
+        return {
+            ...currentRequest,
+            data: {
+                ...currentRequest.data,
+                Participants: participants
+            }
+        };
+    }
     return currentRequest;
 }
 

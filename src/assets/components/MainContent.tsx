@@ -7,6 +7,7 @@ import { v4 as uuid } from "uuid";
 import RequestDashboard from '../components/request-manager/RequestDashboard'
 //import RequestTasks from './RequestTasks'
 import AdminPortal from './admin-portal/AdminPortal'
+import { StandardButton } from '../components/Buttons';
 
 interface Prop {
   oActiveNavTab: string;
@@ -119,7 +120,10 @@ function MainContent ( props:Prop ) {
             <h2>Request Dashboard</h2>
           </div>
           <div className='w-[20%] flex items-center justify-end mb-4'>
-            <button className='standard' onClick={() => {createNewRequest()}}>Create New Request</button>
+            <StandardButton
+                oAction={createNewRequest}
+                oText="Create New Request"
+            />
           </div>
         </div>
         <RequestDashboard 
