@@ -82,7 +82,7 @@ function FormBuilder ( props:Prop ) {
     },[formData]);
 
     return (
-        <div className="col12 component-layout-columns" style={{ '--gridColumns': '25% 1fr' } as React.CSSProperties} >
+        <div className="col12 component-layout-columns" style={{ '--gridColumns': '30% 1fr' } as React.CSSProperties} >
             <FormList
                 oUserOrg={props.oUserOrg}
                 oIsEditMode={isEditMode}

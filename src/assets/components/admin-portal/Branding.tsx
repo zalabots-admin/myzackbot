@@ -10,6 +10,7 @@ import { handleGetDataInputChange } from '../../functions/data.ts'
 import { setDocumentUploadText, uploadDocument } from '../../functions/document.ts'
 import { Editor } from '@tinymce/tinymce-react';
 import type { Editor as TinyMCEEditor } from "tinymce";
+import { SmallButton, StandardButton } from '../../components/Buttons';
 
 
 interface Prop {
@@ -35,18 +36,16 @@ function Branding(props: Prop) {
 
         const currentOrganization = await client.models.Organization.get({ id: props.oUserOrg });
         const uploadText = await setDocumentUploadText(currentOrganization.data?.Logo ?? '');
-        setOrganizationData(currentOrganization.data);
         setDocumentData({ UploadText:uploadText, DocumentLink: '', documentData: '' });
+        console.log(import.meta.env.VITE_IMG_URL + currentOrganization.data?.Logo );
         setImgURL( import.meta.env.VITE_IMG_URL + currentOrganization.data?.Logo );
         setIsLoading(false);
+        setOrganizationData(currentOrganization.data);
 
     };
 
     function enableEdit() {
 
-        if (editorRef.current) {
-            editorRef.current.setMode('design');
-        }
         setOriginalOrganizationData( organizationData );
         setIsEditable( true );
         
@@ -68,17 +67,27 @@ function Branding(props: Prop) {
             console.log(html); // <-- Rich HTML from TinyMCE
         }
 
-        //setIsLoading( true );
-        await client.models.Organization.update( { id: organizationData.id, Logo: organizationData.Logo, PrimaryColor: organizationData.PrimaryColor, SecondaryColor: organizationData.SecondaryColor, EmailContent: html } );
+        const copyOrganizationData = { ...organizationData };
+        copyOrganizationData.EmailContent = html;
+        setOrganizationData( copyOrganizationData );
+
+        if ( documentData.DocumentChange ) {
+            await client.models.Organization.update( { id: organizationData.id, Logo: organizationData.Logo, PrimaryColor: organizationData.PrimaryColor, SecondaryColor: organizationData.SecondaryColor, EmailContent: html } );
+            uploadDocument( documentData.documentData, 'organization-logos', organizationData.Logo );
+        } else {
+            await client.models.Organization.update( { id: organizationData.id, PrimaryColor: organizationData.PrimaryColor, SecondaryColor: organizationData.SecondaryColor, EmailContent: html } );
+        }
+
+        setDocumentData({ ...documentData, DocumentChange: false });
         setIsLoading( false );
         setIsEditable( false );
-        uploadDocument( documentData.documentData, 'organization-logos', organizationData.Logo );
+        
     };
 
     async function handleDocumentChange( event:any ) {
 
         setOrganizationData({ ...organizationData, Logo: organizationData.id + event.name });
-        setDocumentData({ ...documentData, UploadText: 'File: ' + organizationData.id + event.name, documentData: event, DocumentLink: URL.createObjectURL(event) });
+        setDocumentData({ ...documentData, UploadText: 'File: ' + organizationData.id + event.name, documentData: event, DocumentLink: URL.createObjectURL(event), DocumentChange: true });
         const reader = new FileReader();
             reader.onloadend = () => {
             setImgURL(reader.result as string);
@@ -86,6 +95,7 @@ function Branding(props: Prop) {
         reader.readAsDataURL(event);
 
     }
+
 
     useEffect(() => {
 
@@ -95,31 +105,31 @@ function Branding(props: Prop) {
 
 
     return (
-        <div className='col12 component-layout-rows' style={{ '--formPrimaryColor': `${organizationData?.PrimaryColor}`, '--formSecondaryColor': `${organizationData?.SecondaryColor}` } as React.CSSProperties} >
+        <div className="w-full h-full p-2">
             { isLoading ? (
-                <div className='col12 align-center-center' style={{height:'100vh'}}>
+                <div className="h-full w-full flex items-center justify-center">
                     <BeatLoader color = "#D58936" />
                 </div>
             ) : (
-                <div className='col12 component-layout-rows' style={{ '--gridRows': '75px 1fr' } as React.CSSProperties} >
-                    <div className="align-center-center">
+                <div className="h-full grid grid-rows-[100px_1fr]" >
+                    <div className="w-full flex justify-end items-center">
                         { 
                         isEditable ? (
-                            <div className="col11 align-center-right">
-                            <button className="small" onClick={() => {cancelEdit()}}>Cancel</button>
-                            <button className="small" onClick={() => {saveEdit()}}>Save</button>
+                            <div className="flex gap-2">
+                                <SmallButton oAction={() => {cancelEdit()}} oText="Cancel" />
+                                <SmallButton oAction={() => {saveEdit()}} oText="Save" />
                             </div>
                         ) : (
-                            <div className="col11 align-center-right">
-                            <button className="standard" onClick={() => {enableEdit()}}>Edit Branding</button>
+                            <div>
+                                <StandardButton oAction={() => {enableEdit()}} oText="Edit Branding" />
                             </div>
                         )
                         }
                     </div>
-                    <div className='col12 component-layout-columns' style={{ '--gridColumns': '50% 50%' } as React.CSSProperties}>
-                        <div className='component-layout-rows' style={{ '--gridRows': '25px 1fr' } as React.CSSProperties}>    
+                    <div  className="w-full h-full flex flex-row gap-4">
+                        <div className="w-[48%] flex flex-col">    
                             <div>
-                                <h3 className="col12">Organization Branding</h3>
+                                <h3>Organization Branding</h3>
                             </div>
                             <div className='w-full flex flex-wrap'>
                                 <div className="w-[20%] flex flex-col justify-center items-center">
@@ -132,84 +142,84 @@ function Branding(props: Prop) {
                                 <div className="w-full">
                                     <p>Email Content:</p>
                                     <Editor
-                                        onInit={(_evt:any, editor: any) => { editorRef.current = editor; editor.setMode('readonly'); }}
+                                        onInit={(_evt:any, editor: any) => editorRef.current = editor }
                                         apiKey='6i6klk4xam8ka7wpzypv1p2avowa3muwe8nxldmqrers2mms'
                                         init={{
-                                            plugins: [
-                                            // Core editing features
-                                            'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
-                                            // Advanced features
-                                            'mergetags', 'typography', 'inlinecss', 'markdown'
+                                        plugins: [
+                                            'mergetags'
+                                        ],
+
+                                        menubar: false,
+                                        toolbar: 'fontfamily fontsize | bold italic underline align | mergetags',
+                                        
+                                        mergetags_list: [
+                                            { value: 'AccountName', title: 'Account Name' },
+                                            { value: 'RequestedFor', title: 'Requested For' },
+                                            { value: 'DueDate', title: 'Due Date' },
+                                            {
+                                            title: 'Request Task',
+                                            menu: [
+                                                { value: 'FirstName', title: 'First Name' },
+                                                { value: 'LastName', title: 'Last Name' },
+                                                { value: 'EntityName', title: 'Entity Name' },
+                                                { value: 'Instructions', title: 'Instructions' }
                                             ],
-                                            menubar: false,
-                                            toolbar: 'fontfamily fontsize | bold italic underline align | mergetags',
-                                            mergetags_list: [
-                                                { value: 'AccountName', title: 'Account Name' },
-                                                { value: 'RequestedFor', title: 'Requested For' },
-                                                { value: 'DueDate', title: 'Due Date' },
-                                                { title: 'Request Task',
-                                                    menu: [
-                                                        { value: 'FirstName', title: 'First Name' },
-                                                        { value: 'LastName', title: 'Last Name' },
-                                                        { value: 'EntityName', title: 'Entity Name' },
-                                                        { value: 'Instructions', title: 'Instructions' }
-                                                    ],
-                                                }
-                                            ]
+                                            }
+                                        ],
+
+                                        // CUSTOM CSS INSIDE EDITOR IFRAME
+                                        content_style: `
+                                            .mce-mergetag {
+                                            display: inline-flex;
+                                            align-items: center;
+                                            background-color: #D5893620;
+                                            color: #D58936;
+                                            font-weight: 600;
+                                            padding: 2px 12px;
+                                            border-radius: 25px;
+                                            border: 1px solid #D58936;
+                                            cursor: default;
+                                            margin-right: 2px;
+                                            white-space: nowrap;
+                                            user-select: none;
+                                            }
+
+                                            .mce-mergetag:hover {
+                                            background-color: #dbeafe;
+                                            }
+                                            .mce-mergetag-affix {
+                                            display: none;
+                                            }
+                                            /* Visual cue for selection/deletion */
+                                            .merge-tag-token.mce-selected {
+                                            outline: 2px solid #60a5fa;
+                                            background-color: #dbeafe;
+                                            }
+                                        `
                                         }}
+                                        disabled={!isEditable}
                                         initialValue={organizationData.EmailContent}
                                     />
                                 </div>
                             </div>
                         </div>
-                        <div>
-                            Request Email Preview
-                            <div className='col12 align-top-center overflow-scroll card-flat' style={{height:'600px', backgroundColor: '#F6F6F6', fontFamily: 'Arial, sans-serif', padding:'40px'}}>
-                                <div className='col11 align-center-center' style={{'height':'150px', backgroundColor: '#FFFFFF'}}>
-                                    <img src={imgURL} style={{maxHeight:'75px', maxWidth:'200px'}}/>
-                                </div>
-                                <div className='col11 align-center-center emailHeader' style={{'height':'150px'}}>New Information Request</div>
-                                <div dangerouslySetInnerHTML={{ __html: organizationData.EmailContent }}></div>
-                                <div className='col11 align-center-center' style={{'height':'100px', backgroundColor: '#FFFFFF'}}><button className="emailButton">Open Request Form</button></div>
-                                <div className='col11 align-center-center' style={{'height':'300px', backgroundColor: '#6E6E6E', color: '#FFFFFF', textAlign: 'center', fontSize:'18px'}}>
-                                    <span style={{fontSize:'24px'}}>What Happens Next?</span><br/>
-                                    Once completed, your response is sent directly back to the requestor.<br/><br/> Please do not reply to this email.
+                        <div className="w-[52%] flex flex-col">
+                            Request Task Email Preview:
+                            <div className="h-[600px] flex items-start overflow-y-auto overflow-x-hidden p-8 rounded shadow border border-gray-300">
+                                <div className="flex flex-col justify-center bg-[#f6f6f6] p-16">
+                                    <div className="flex justify-center bg-white p-8">
+                                        <img data-proportionally-constrained="true" data-responsive="false" width="100" src={imgURL}/>
+                                    </div>
+                                    <div className="flex flex-col items-center justify-center bg-white p-8 text-[43pt] text-center" style={{color: organizationData.PrimaryColor}}><p>New Information</p><p>Request</p></div>
+                                    <div className="bg-white p-8" dangerouslySetInnerHTML={{ __html: organizationData.EmailContent }}></div>
+                                    <div className="flex justify-center bg-white p-12"><button className="w-60 text-white p-4" style={{backgroundColor: organizationData.PrimaryColor}}>Open Request Form</button></div>
+                                    <div className="bg-[#6E6E6E] pt-16 pb-16 pr-8 pl-8 text-white text-center">
+                                        <span style={{fontSize:'24px'}}>What Happens Next?</span><br/>
+                                        Once completed, your response is sent directly back to the requestor.<br/><br/> Please do not reply to this email.
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                       {/* <div>   
-                            Request Form Preview
-                            <div className='col12 overflow-scroll card-flat' style={{height:'600px', position:'relative'}}>
-                                <div className='col11 action-menu-preview' style={{ '--primaryColor': `${organizationData.PrimaryColor}` } as React.CSSProperties}>[Request Status]</div>
-                                <div className='col12 component-layout-rows ' style={{ '--gridRows': '137.5px 1fr' } as React.CSSProperties}>
-                                    <div className='col12 align-top-left header'>
-                                        <img src={imgURL} style={{maxHeight:'75px', maxWidth:'200px'}}/>
-                                        <div style={{marginLeft:'10px'}}>
-                                            <h1>{organizationData.Name}</h1>
-                                            <h3>Information Request Form</h3>
-                                        </div>
-                                    </div>
-                                    <div className='col12 component-layout-columns form-body' style={{ '--gridColumns': '35% 1fr' } as React.CSSProperties}>
-                                        <div className='col12'>
-                                            <div className="col12 card-flat-rounded" style={{marginBottom:'15px', height:'90%'}}>
-                                                <div className='col11 section-header'>Request Details</div>
-                                                <div style={{marginBottom:'10px'}}><strong>Request:</strong> Policy GL-123456789</div>  
-                                                <div style={{marginBottom:'10px'}}><strong>Insured:</strong> Zackbot.com</div>
-                                                <div style={{marginBottom:'10px'}}><strong>Due Date:</strong> </div>
-                                                <div style={{marginBottom:'10px'}}><strong>Sender:</strong> Zack Saeger</div>
-                                                <div className='col11 section-header' style={{marginTop: '30px'}}>Submitter Details</div>
-                                                <Input oKey='SubmitterFirstName' oType='text' oLabel="First Name" oSize="col12" isRequired={true} isEditable={false} oChange={() => {}} oData=''/>
-                                                <Input oKey='SubmitterLastName' oType='text' oLabel="Last Name" oSize="col12" isRequired={true} isEditable={false} oChange={() => {}} oData=''/>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <Input oKey='SampleTextBox' oType='text' oLabel="Sample Text Box" oSize="col12" isRequired={true} isEditable={false} oChange={() => {}} oData=''/>
-                                            <Input oKey='SampleDateField' oType='date' oLabel="Sample Date Field" oSize="col12" isRequired={true} isEditable={false} oChange={() => {}} oData=''/>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>*/}
                     </div>
                 </div>
             )}

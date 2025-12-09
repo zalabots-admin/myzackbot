@@ -59,7 +59,6 @@ function MainContent ( props:Prop ) {
 
   };
 
-
   function createSubscriptions() {
 
     client.models.Request.onCreate().subscribe({
@@ -111,6 +110,7 @@ function MainContent ( props:Prop ) {
 
   },[]);
 
+  
   return (
   <div className='border border-[#0E2841] shadow pt-8 pl-8 pr-8 mt-4 bg-white h-full rounded-tl-xl rounded-tr-xl'>
     {props.oActiveNavTab === 'menu1' && 

@@ -72,7 +72,7 @@ function ViewRequest ( props:Prop ) {
 
   async function handleDownload( oName:string, oId:string ) {
     
-    const fileUrl = import.meta.env.VITE_DOC_URL + oId; // your file URL
+    const fileUrl = import.meta.env.VITE_DOC_URL + 'request-documents/' + oId; // your file URL
     const response = await fetch(fileUrl);
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
@@ -91,7 +91,6 @@ function ViewRequest ( props:Prop ) {
       console.error("Failed to copy: ", err);
     }
   };
-
 
   useEffect(() => {
   

@@ -231,7 +231,7 @@ console.log(result);
       </SideBar>
       <DndContext sensors={sensors} modifiers={[restrictToWindowEdges]} onDragEnd={handleDragEnd}>
         {props.oActiveForm >= 0 && (
-          <div className="col12 component-layout-columns section-layout" style={{ '--gridColumns': '30% 1fr' } as React.CSSProperties} >
+          <div className="col12 component-layout-columns section-layout" style={{ '--gridColumns': '30% 1fr', marginTop:'25px' } as React.CSSProperties} >
             <div className="col12 component-layout-rows" style={{ '--gridRows': '200px 1fr' } as React.CSSProperties} >
               <div>
                 <h3>Form Details</h3>

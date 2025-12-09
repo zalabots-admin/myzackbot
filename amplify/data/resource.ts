@@ -64,6 +64,7 @@ const schema = a.schema({
       RequestedFor: a.string(),
       AccountName: a.string(),
       RequestType: a.string(),
+      FollowUp: a.boolean(),
       EmailResponse: a.boolean(),
       AutoComplete: a.boolean(),
       DeliveryMethod: a.string(),
@@ -85,7 +86,11 @@ const schema = a.schema({
       History: a.hasMany('RequestHistory', 'RequestTaskID'),
       Participants: a.hasMany('RequestParticipants', 'RequestTaskID'),
       Responses: a.hasMany('RequestResponses', 'RequestTaskID'),
-    }).authorization(allow => [allow.publicApiKey()]),
+    })
+    .secondaryIndexes(index => [
+      index('RequestTaskStatus').sortKeys(['RequestID'])
+    ])
+    .authorization(allow => [allow.publicApiKey()]),
     RequestParticipants: a
     .model({
       RequestID: a.string(),

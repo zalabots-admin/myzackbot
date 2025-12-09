@@ -18,7 +18,7 @@ import ToggleSwitch from '../../components/Toggle';
 import SideBar from '../SideBar';
 import { IconButtonMedium, SmallButton } from '../../components/Buttons';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-//import { setDocumentUploadText, uploadDocument } from '../../functions/document.ts'
+import Papa from "papaparse";
 
 import '../../styles/SideBar.css'
 
@@ -43,8 +43,8 @@ function CreateRequest(props: Prop) {
     const [searchedValue, setSearchedValue] = useState( "" );
     const [loading, setLoading] = useState( true );
     //const [followUp, setFollowUp] = useState( false );
-    const [emailResponse, setEmailResponse] = useState( false );
-    const [autoComplete, setAutoComplete] = useState( false );
+    //const [emailResponse, setEmailResponse] = useState( false );
+    //const [autoComplete, setAutoComplete] = useState( false );
     const [sidebarOpen, setSideBarOpen] = useState( false );
     const [activeItem, setActiveItem] = useState( 0 );
 
@@ -76,10 +76,10 @@ function CreateRequest(props: Prop) {
         }*/
 
         if ( currentRequest.data.AutoComplete ) {
-            setAutoComplete( true );
+            //setAutoComplete( true );
         }
         if ( currentRequest.data.EmailResponse ) {
-            setEmailResponse( true );
+            //setEmailResponse( true );
         }
         setRequestData( currentRequest.data );
         const sortedParticipants = (currentRequest.data as any)?.Participants?.sort((a: any, b: any) => a['FirstName'].localeCompare(b['FirstName']));
@@ -158,16 +158,17 @@ function CreateRequest(props: Prop) {
         };
     }
 
-    /*function handleToggleFollowUp(checked: boolean) {
+    function handleToggleFollowUp(checked: boolean) {
     
-        setEmailResponse(checked);
-        const updatedRequestData = {
-            ...requestData,
-            FollowUpDate: "",
-        };
-        setRequestData( updatedRequestData );
-
-    };*/
+        if ( checked === false ) {
+            const updatedRequestData = { ...requestData, FollowUpDate: "", FollowUp: false };
+             setRequestData( updatedRequestData );
+        } else {
+            const updatedRequestData = { ...requestData, FollowUp: true };
+            setRequestData( updatedRequestData );
+        }
+       
+    };
 
     function handleToggleEmailResponse(checked: boolean) {
  
@@ -178,25 +179,21 @@ function CreateRequest(props: Prop) {
                 } 
             });
             setRequestParticipants(prev =>
-            prev.filter(p => p.ParticipantRole !== 'Receiver')
-        );
-
+                prev.filter(p => p.ParticipantRole !== 'Receiver')
+            );
         } else {
             addParticipant( 'Receiver' );
         }
 
-        setEmailResponse(checked);
-        const updatedRequestData = {
-            ...requestData,
-            EmailResponse: checked,
-        };
+        const updatedRequestData = { ...requestData, EmailResponse: checked };
         setRequestData( updatedRequestData );
+
   
     }
 
     function handleToggleAutoComplete(checked: boolean) {
 
-        setAutoComplete(checked);
+        //setAutoComplete(checked);
         const updatedRequestData = {
             ...requestData,
             AutoComplete: checked,
@@ -216,15 +213,47 @@ function CreateRequest(props: Prop) {
 
     async function handleDocumentChange( event:any ) {
 
-        //setOrganizationData({ ...organizationData, Logo: organizationData.id + event.name });
-        //setDocumentData({ ...documentData, UploadText: 'File: ' + organizationData.id + event.name, documentData: event, DocumentLink: URL.createObjectURL(event) });
-        const reader = new FileReader();
-            reader.onloadend = () => {
-            //setImgURL(reader.result as string);
+        if ( event.size > 0 && event.size < 5242880 ) {
+            Papa.parse(event, {
+            header: true,        // Treat first row as keys
+            skipEmptyLines: true,
+            dynamicTyping: true, // Convert numbers automatically
+            complete: ( result:any ) => {
+                for ( let i = 0; i < result.data.length; i++ ) {
+                    if ( result.data[i].EntityName !== '' && result.data[i].EntityName != null ) {
+                        result.data[i].ParticipantType = 'Entity';
+                    } else {
+                        result.data[i].ParticipantType = 'Individual';
+                    }
+                    result.data[i].id = 'T' + uuidv4();
+                    result.data[i].ParticipantRole = 'Recipient';
+                }
+                console.log("JSON result:", result.data);
+                setRequestParticipants(result.data);
+            },
+            error: ( error:any ) => {
+                console.error("Parse error:", error);
+            }
+            });
+        } else {
+            alert('File size exceeds 5MB limit. Please select a smaller file.');
         };
-        reader.readAsDataURL(event);
 
     }
+
+  async function handleDownload() {
+    
+    const fileUrl = import.meta.env.VITE_DOC_URL + 'zackbot-documents/ZBT_TaskUpload_Template.csv' ; // your file URL
+    const response = await fetch(fileUrl);
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = 'ZBT_TaskUpload_Template.csv'; // suggested filename
+    link.click();
+    window.URL.revokeObjectURL(url);
+
+  };
 
     function deleteParticipant( oId:string ) {
 
@@ -405,20 +434,19 @@ function CreateRequest(props: Prop) {
                 </div>
             </div>
         </SideBar>
+{/*Request Details*/}
         <div className='p-4'>
             <section className="w-full bg-white p-6 rounded shadow lg:overflow-y-auto h-full border border-gray-300 mb-6">
                 <Input oKey='AccountName' oType='text' oLabel="Account Name:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.AccountName} />
                 <Input oKey='RequestedFor' oType='text' oLabel="Information Is Requested For:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.RequestedFor} />
                 <Input oKey='DueDate' oType='date' oLabel="Due Date:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.DueDate} />
                 <Select oKey='DeliveryMethod' oLabel='Delivery Type:' oOptions={['Manual','Standard']} oSize='col12' isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.DeliveryMethod} />
-                <ToggleSwitch label='Email Response on Submit' checked={emailResponse} onChange={handleToggleEmailResponse} onColor='#4E6E5D' offColor='#CCCCCC' />
-                <ToggleSwitch label='Auto Complete Request' checked={autoComplete} onChange={handleToggleAutoComplete} onColor='#4E6E5D' offColor='#CCCCCC' />
-                {/*<ToggleSwitch label='Send Follow-Up Reminder' checked={followUp} onChange={handleToggle} onColor='#4E6E5D' offColor='#CCCCCC' />
-                { followUp ? (
+                <ToggleSwitch label='Email Response on Submit' checked={requestData.EmailResponse} onChange={handleToggleEmailResponse} onColor='#4E6E5D' offColor='#CCCCCC' />
+                <ToggleSwitch label='Auto Complete Request' checked={requestData.AutoComplete} onChange={handleToggleAutoComplete} onColor='#4E6E5D' offColor='#CCCCCC' />
+                <ToggleSwitch label='Send Follow-Up Reminder' checked={requestData.FollowUp} onChange={handleToggleFollowUp} onColor='#4E6E5D' offColor='#CCCCCC' />
+                { requestData.FollowUp && (
                     <Input oKey='FollowUpDate' oType='date' oLabel="Follow Up Date" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.FollowUpDate} />
-                ) : (
-                    <></>
-                )}*/}
+                )}
             </section>
         </div>
         <div className='p-4'>
@@ -458,10 +486,11 @@ function CreateRequest(props: Prop) {
                         { requestData.DeliveryMethod === 'Standard' && (
                             <Tab className="react-tabs__tab w-[150px] text-center">Tasks</Tab>
                         )}
-                        { emailResponse && (
+                        { requestData.EmailResponse && (
                             <Tab className="react-tabs__tab w-[150px] text-center">Responses</Tab>
                         )}
                     </TabList>
+{/*Questions*/}
                     <TabPanel className="react-tabs__tab-panel h-full" forceRender={true}>
                         <div className='p-4 h-[525px] overflow-y-auto'>
                             <DndContext onDragEnd={handleDragEnd}>
@@ -494,6 +523,7 @@ function CreateRequest(props: Prop) {
                             </DndContext>
                         </div>
                     </TabPanel>
+{/*Tasks*/}  
                     { requestData.DeliveryMethod === 'Standard' && (
                         <TabPanel className="react-tabs__tab-panel flex-1 h-full">
                             <div className="grid grid-rows-[125px_1fr] w-full" >
@@ -501,11 +531,11 @@ function CreateRequest(props: Prop) {
                                     <p>Upload Multiple Tasks Using the Upload Template or Individually Add Tasks Using the 'Add Task' Button</p>
                                     <div className="flex items-center w-full">
                                         <div className="flex justify-start w-[60%]">
-                                            <Document isRequired={false}  oSize="col12" isEditable={true} oChange={(e) => handleDocumentChange(e)}  oData={{ UploadText: 'Upload File', DocumentId: '1', Label: '',  }}  />
+                                            <Document isRequired={false}  oSize="col12" isEditable={true} oChange={(e) => handleDocumentChange(e)}  oData={{ UploadText: 'Drag & Drop or Click to Upload (5MB Limit)', DocumentId: '1', Label: '',  }}  />
                                         </div>
                                         <div className="flex justify-start w-[10%]">
                                             <IconButtonMedium
-                                                oAction={() => {props.oCloseTab( props.oCurrentTab )}}
+                                                oAction={handleDownload}
                                                 oTitle="Download Template"
                                                 oIcon="fa-sharp fa-thin fa-download"
                                             />
@@ -572,7 +602,8 @@ function CreateRequest(props: Prop) {
                             </div>
                         </TabPanel>
                     )}
-                    { emailResponse && (
+{/*Responses*/}     
+                    { requestData.EmailResponse && (
                         <TabPanel className="react-tabs__tab-panel flex-1 h-full">
                             <div className="grid grid-rows-[75px_1fr] w-full" >
                                 <div className="flex justify-end items-center w-full">
