@@ -17,7 +17,8 @@ const schema = a.schema({
       PrimaryColor: a.string(),
       SecondaryColor: a.string(),
       Logo: a.string(),
-      EmailTemplate: a.string(),
+      NewRequestTemplate: a.string(),
+      FollowUpTemplate: a.string(),
       EmailContent: a.string(),
       Requests: a.hasMany('Request', 'OrganizationID'),
       Items: a.hasMany('Items', 'OrganizationID'),
@@ -76,7 +77,11 @@ const schema = a.schema({
       Participants: a.hasMany('RequestParticipants', 'RequestID'),
       RequestTasks: a.hasMany('RequestTasks', 'RequestID'),
       Questions: a.hasMany('RequestQuestions', 'RequestID'),
-    }).authorization(allow => [allow.publicApiKey()]),
+    })
+    .secondaryIndexes(index => [
+      index('FollowUpDate').sortKeys(['RequestStatus'])
+    ])
+    .authorization(allow => [allow.publicApiKey()]),
     RequestTasks: a
     .model({
       RequestID: a.string().required(),
@@ -88,7 +93,7 @@ const schema = a.schema({
       Responses: a.hasMany('RequestResponses', 'RequestTaskID'),
     })
     .secondaryIndexes(index => [
-      index('RequestTaskStatus').sortKeys(['RequestID'])
+      index('RequestTaskStatus').sortKeys(['RequestID']),
     ])
     .authorization(allow => [allow.publicApiKey()]),
     RequestParticipants: a
@@ -105,7 +110,8 @@ const schema = a.schema({
       RequestTask: a.belongsTo('RequestTasks', 'RequestTaskID'),
     })
     .secondaryIndexes(index => [
-      index('ParticipantRole').sortKeys(['RequestID'])
+      index('ParticipantRole').sortKeys(['RequestID']),
+      index('ParticipantRole').sortKeys(['RequestTaskID'])
     ])
     .authorization(allow => [allow.publicApiKey()]),
     RequestQuestions: a
