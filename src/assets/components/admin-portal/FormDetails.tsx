@@ -8,7 +8,7 @@ import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 import { arrayMove, } from '@dnd-kit/sortable';
 import { v4 as uuidv4 } from 'uuid';
 import { DraggableListItem } from '../RequestItems.tsx';
-import Editor from './Editor.tsx';
+import ZackbotEditor from './Editor.tsx';
 import DataInputs from '../data-objects/DataInputs'
 import Input from '../data-objects/Input'
 import Select from '../data-objects/Select.tsx';
@@ -231,7 +231,7 @@ console.log(result);
       </SideBar>
       <DndContext sensors={sensors} modifiers={[restrictToWindowEdges]} onDragEnd={handleDragEnd}>
         {props.oActiveForm >= 0 && (
-          <div className="col12 component-layout-columns section-layout" style={{ '--gridColumns': '30% 1fr' } as React.CSSProperties} >
+          <div className="col12 component-layout-columns section-layout" style={{ '--gridColumns': '30% 1fr', marginTop:'25px' } as React.CSSProperties} >
             <div className="col12 component-layout-rows" style={{ '--gridRows': '200px 1fr' } as React.CSSProperties} >
               <div>
                 <h3>Form Details</h3>
@@ -278,7 +278,7 @@ console.log(result);
                   )}
                   </div>  
                 </div>
-              <Editor oItems={props.oFormItems} oSetItems={props.oSetFormItemData} oIsEditable={props.oIsEditMode} oClick={props.oSetFormItemData} oSetActive={setActiveItem} oOpenSidePanel={handleViewSidebar} />
+              <ZackbotEditor oItems={props.oFormItems} oSetItems={props.oSetFormItemData} oIsEditable={props.oIsEditMode} oClick={props.oSetFormItemData} oSetActive={setActiveItem} oOpenSidePanel={handleViewSidebar} />
             </div>
           </div>
         )}

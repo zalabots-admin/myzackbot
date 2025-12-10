@@ -2,7 +2,6 @@
 
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 
-
 const schema = a.schema({
   Organization: a
     .model({
@@ -18,6 +17,9 @@ const schema = a.schema({
       PrimaryColor: a.string(),
       SecondaryColor: a.string(),
       Logo: a.string(),
+      NewRequestTemplate: a.string(),
+      FollowUpTemplate: a.string(),
+      EmailContent: a.string(),
       Requests: a.hasMany('Request', 'OrganizationID'),
       Items: a.hasMany('Items', 'OrganizationID'),
       Forms: a.hasMany('Forms', 'OrganizationID'),
@@ -63,6 +65,7 @@ const schema = a.schema({
       RequestedFor: a.string(),
       AccountName: a.string(),
       RequestType: a.string(),
+      FollowUp: a.boolean(),
       EmailResponse: a.boolean(),
       AutoComplete: a.boolean(),
       DeliveryMethod: a.string(),
@@ -74,29 +77,41 @@ const schema = a.schema({
       Participants: a.hasMany('RequestParticipants', 'RequestID'),
       RequestTasks: a.hasMany('RequestTasks', 'RequestID'),
       Questions: a.hasMany('RequestQuestions', 'RequestID'),
-    }).authorization(allow => [allow.publicApiKey()]),
+    })
+    .secondaryIndexes(index => [
+      index('FollowUpDate').sortKeys(['RequestStatus'])
+    ])
+    .authorization(allow => [allow.publicApiKey()]),
     RequestTasks: a
     .model({
       RequestID: a.string().required(),
+      Instructions: a.string(),
       RequestTaskStatus: a.string(),
       Request: a.belongsTo('Request', 'RequestID'),
       History: a.hasMany('RequestHistory', 'RequestTaskID'),
       Participants: a.hasMany('RequestParticipants', 'RequestTaskID'),
       Responses: a.hasMany('RequestResponses', 'RequestTaskID'),
-    }).authorization(allow => [allow.publicApiKey()]),
+    })
+    .secondaryIndexes(index => [
+      index('RequestTaskStatus').sortKeys(['RequestID']),
+    ])
+    .authorization(allow => [allow.publicApiKey()]),
     RequestParticipants: a
     .model({
       RequestID: a.string(),
       RequestTaskID: a.string(),
+      EntityName: a.string(),
       FirstName: a.string(),
       LastName: a.string(),
       Email: a.string(),
+      ParticipantType: a.string(),
       ParticipantRole: a.string(),
       Request: a.belongsTo('Request', 'RequestID'),
       RequestTask: a.belongsTo('RequestTasks', 'RequestTaskID'),
     })
     .secondaryIndexes(index => [
-      index('ParticipantRole').sortKeys(['RequestID'])
+      index('ParticipantRole').sortKeys(['RequestID']),
+      index('ParticipantRole').sortKeys(['RequestTaskID'])
     ])
     .authorization(allow => [allow.publicApiKey()]),
     RequestQuestions: a

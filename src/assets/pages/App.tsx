@@ -61,7 +61,7 @@ function App ( props:Prop ) {
 
   return (
     
-    <div className="flex flex-col lg:flex-row min-h-screen w-full">
+    <div className="flex flex-col lg:flex-row h-full w-full overflow-hidden">
       <header className="w-full lg:w-[6%] bg-[#0E2841] text-white p-4 flex items-center justify-between lg:bg-[#F1F1F1]">
         <div className="hidden lg:flex items-center justify-start flex-col w-full h-full">
           <div className="flex flex-col h-[225px] text-[#005566] items-center justify-start mt-5">

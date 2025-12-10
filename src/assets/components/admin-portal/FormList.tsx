@@ -37,7 +37,7 @@ function FormList ( props:Prop ) {
 
 
     return (
-        <div className="col11 component-layout-rows" style={{ '--gridRows': '75px 75px 1fr' } as React.CSSProperties} >
+        <div className="col11 component-layout-rows" style={{ '--gridRows': '75px 75px 1fr', height: '600px' } as React.CSSProperties} >
             <div className='col12 align-bottom-center'>
                 <button className={"standard" + (props.oIsEditMode ? ' notSelectable' : '')} onClick={() => {createNewItem()}}>Create New Form</button>
             </div>
