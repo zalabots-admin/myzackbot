@@ -318,7 +318,7 @@ function CreateRequest(props: Prop) {
             if ( participant.id.startsWith('T') ) {
                 participant.id = participant.id.slice(1);
                 if ( participant.ParticipantRole === 'Recipient' ) {
-                    const task = await client.models.RequestTasks.create({ RequestID: requestId, RequestTaskStatus: 'New', Instructions: participant.Instructions });
+                    const task = await client.models.RequestTasks.create({ OrganizationID: props.oUser.OrgId, RequestID: requestId, RequestTaskStatus: 'New', Instructions: participant.Instructions });
                     const taskId = task.data?.id;
                     createHistoryEvent('Task', 'ZackBot', 'Task Created', requestId ? requestId : '', taskId ? taskId : '');
                     await client.models.RequestParticipants.create({ RequestID: requestId, RequestTaskID: taskId, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
