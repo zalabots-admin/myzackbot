@@ -143,7 +143,7 @@ function RequestQueue( props:Prop ) {
             noRequests ? (
                 <div className='flex h-full items-center justify-center'>No Current Requests</div>
             ) : (
-                <div className="flex flex-col h-full" >
+                <div className="flex-1 h-full border overflow-y-auto" >
                     <div className='h-[100px] flex items-center w-2/5'>
                         <SearchBar
                             oSearchedValue={searchedValue}

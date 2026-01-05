@@ -70,7 +70,22 @@ export async function getRequestData( oId:string ) {
         };
     }
     return currentRequest;
-}
+};
+
+export async function getTasksData( oId:string ) {
+
+    const currentRequests = await client.models.RequestTasks.list({
+        limit:500,
+        filter: {OrganizationID: { eq: oId }},
+        selectionSet: ['id', 'RequestID', 'Instructions', 'RequestTaskStatus', 'createdAt',
+            'Request.AccountName', 'Request.RequestedFor', 'Request.DueDate', 
+            'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole'
+        ]
+    });  
+
+    return currentRequests.data;
+
+};
 
 export async function getRequestTaskData( oRequestId:string, oTaskId:string ) {
 
@@ -98,7 +113,7 @@ export async function getRequestTaskData( oRequestId:string, oTaskId:string ) {
 
     return enrichedRequest;
 
-}
+};
 
 export async function getRequestViewData( oRequestId:string ) {
 
@@ -128,7 +143,7 @@ export async function getRequestViewData( oRequestId:string ) {
     };
 
     return enrichedRequest;
-}
+};
 
 export async function getRequestFormsAndItemsData( oId:string ) {
 
@@ -160,13 +175,13 @@ export async function createHistoryEvent( oEvent:string, oUser:string, oDescript
     const historyEvent = await client.models.RequestHistory.create(item);
 
     return historyEvent;
-}
+};
 
 export function formatDate( dateString:string ) {
     const date = new Date( dateString );
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
     return date.toLocaleDateString( undefined, options );
-}
+};
 
 export function formatToLocalTime( utcString:string ) {
     const date = new Date( utcString ); 
@@ -175,4 +190,4 @@ export function formatToLocalTime( utcString:string ) {
         minute: "2-digit",
         hour12: true
     });
-}
+};

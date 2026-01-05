@@ -1,7 +1,8 @@
 
 
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-import RequestQueue from './RequestQueue'
+import RequestQueue2 from './RequestQueue2'
+import TaskQueue from './TaskQueue';
 import CreateRequest from './CreateRequest'
 import ViewRequest from './ViewRequest';
 
@@ -17,6 +18,7 @@ interface Prop {
   oCloseTab: any;
   oOpenRequest: any;
   oEvent: any;
+  oActiveItem: any;
 }
 
 
@@ -25,30 +27,42 @@ function RequestDashboard ( props:Prop ) {
 
   return (
 
-        <Tabs className="w-full h-full flex flex-col"
+        <Tabs className="w-full flex flex-col"
           forceRenderTabPanel={true}
           selectedIndex={props.oActiveIndex}
           onSelect={index => props.oSetActiveIndex(index)}
         >
           <TabList className="flex-none border-b border-gray-300 px-4">
-            <Tab>Request Queue</Tab>
+            { props.oActiveItem['Request Queue'] && <Tab key="request-queue">Request Queue</Tab> }
+            { props.oActiveItem['Tasks Queue'] && <Tab>Tasks Queue</Tab> }
             {props.oOpenTabs.map(( item:any, index:number ) => (
-              <Tab>
+              <Tab key={item.id}>
                 {item.name}
                 <i className={"fa-sharp fa-thin fa-xmark text-sm ml-5 cursor-pointer hover:text-[#D58936]"} onClick={() => {props.oCloseTab( index )}}></i>
               </Tab>
             ))}
           </TabList>
-          <div className="flex-1">
-            <TabPanel className="react-tabs__tab-panel h-full" forceRender={true}>
-              <RequestQueue 
-                oUserOrg={props.oUser.OrgId}
-                oOpenRequest={props.oOpenRequest}
-                oEvent={props.oEvent}
-              />            
-            </TabPanel>
+          <div className="flex-1 h-full">
+            { props.oActiveItem['Request Queue'] && 
+              <TabPanel className="react-tabs__tab-panel" forceRender={true}>
+                <RequestQueue2 
+                  oUserOrg={props.oUser.OrgId}
+                  oOpenRequest={props.oOpenRequest}
+                  oEvent={props.oEvent}
+                />            
+              </TabPanel>
+            } 
+            { props.oActiveItem['Tasks Queue'] && 
+              <TabPanel className="react-tabs__tab-panel" forceRender={true}>
+                <TaskQueue 
+                  oUserOrg={props.oUser.OrgId}
+                  oOpenRequest={props.oOpenRequest}
+                  oEvent={props.oEvent}
+                />          
+              </TabPanel>
+            } 
             {props.oOpenTabs.map(( item:any, index:number ) => (
-              <TabPanel key={item.id} className="react-tabs__tab-panel h-full" forceRender={true}>
+              <TabPanel key={item.id} className="react-tabs__tab-panel" forceRender={true}>
                 {item.isEditable ? (
                   <>
                     <CreateRequest
