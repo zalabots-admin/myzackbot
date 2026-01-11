@@ -137,7 +137,7 @@ export async function getRequestViewData( oRequestId:string ) {
             ParticipantRole: { eq: 'Recipient' }
         },
         selectionSet: [
-            'id', 'FirstName', 'LastName', 'Email', 'ParticipantRole','RequestTask.RequestTaskStatus', 'RequestTask.id', 'RequestTask.Responses.id', 'RequestTask.Responses.Name', 'RequestTask.Responses.Value', 'RequestTask.Responses.IsDocument'
+            'id', 'FirstName', 'LastName', 'Email', 'ParticipantRole','RequestTask.RequestTaskStatus', 'RequestTask.Instructions', 'RequestTask.id', 'RequestTask.Responses.id', 'RequestTask.Responses.Name', 'RequestTask.Responses.Value', 'RequestTask.Responses.IsDocument'
         ]
     });
 

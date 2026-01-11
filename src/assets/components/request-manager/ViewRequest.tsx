@@ -109,47 +109,48 @@ function ViewRequest ( props:Prop ) {
 
     <>
       { loading ? (
-        <div className='col12 align-center-center'>
+        <div className='flex-1 flex justify-center items-center'>
             <BeatLoader color = "#D58936" />
         </div>
       ) : (
-        <div className='component-layout-rows ' style={{ '--gridRows': ' 25px 650px 75px' } as React.CSSProperties}> 
-          <div></div>
-          <div className='component-layout-columns ' style={{ '--gridColumns': '35% 25% 1fr' } as React.CSSProperties}>
-            <div className="card-flat-rounded">
-              <div className='component-layout-rows ' style={{ '--gridRows': '50px 1fr' } as React.CSSProperties}> 
-                <div className='align-center-center'><h3>Request &amp; Task Details</h3></div>
-                  <div>
-                  <div style={{marginBottom:'25px'}}>
-                    <div className='font-bold text-[#003399] mb-4'>Request:</div>
-                    <div>{requestDetails.AccountName}</div>
-                    <div>{requestDetails.RequestedFor}</div>
-                    <div>Created: {formatDate( requestDetails.createdAt )}</div>
-                    <div>Due: {formatDate( requestDetails.DueDate )}</div>
-                    <div>Status: {requestDetails.RequestStatus}</div>
-                  </div>
-                  <div style={{marginBottom:'25px'}}>
-                    <div className='font-bold text-[#003399] mb-4'>Tasks:</div>
-                    {requestDetails.RequestTasks?.map((task:any) => (
-                      <>
-                      {activeTask === task.RequestTask.id ? (
-                        <div className={'flex cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={task.id} onClick={() => {setActiveTask(task.RequestTask.id)}}>
-                            <div className='w-[70%] flex items-center h-[60px] p-2 font-bold text-[#005566]'>{task.FirstName} {task.LastName}<br/>{task.Email}</div>
-                            <div className='w-[30%] flex items-center h-[60px] p-2 font-bold text-[#005566]'>{task.RequestTask.RequestTaskStatus.toUpperCase()}</div>
-                        </div>
-                      ) : (
-                        <div className={'flex cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={task.id} onClick={() => {setActiveTask(task.RequestTask.id)}}>
-                            <div className='w-[70%] flex items-center h-[60px] p-2'>{task.FirstName} {task.LastName}<br/>{task.Email}</div>
-                            <div className='w-[30%] flex items-center h-[60px] p-2'>{task.RequestTask.RequestTaskStatus.toUpperCase()}</div>
-                        </div>
-                      )}
-                      </>
-                    ))}
-                  </div>
+        <div className="flex-1 flex min-h-0 p-6 gap-4 bg-red-50"> 
+          <div className="flex-1 flex flex-row gap-4 min-h-0 bg-green-50">
+            <div id="request-details" className="flex-1 flex flex-col min-h-0 w-1/3 bg-white border border-gray-300 rounded shadow gap-4 p-4">
+              <div className="flex-1 flex flex-col min-h-0 gap-4 min-h-0"> 
+                <div className="flex justify-center items-center"><h3>Request &amp; Task Details</h3></div>
+                <div className="flex flex-col mb-4">
+                  <div className='font-bold text-[#003399] mb-4'>Request:</div>
+                  <div>{requestDetails.AccountName}</div>
+                  <div>{requestDetails.RequestedFor}</div>
+                  <div>Created: {formatDate( requestDetails.createdAt )}</div>
+                  <div>Due: {formatDate( requestDetails.DueDate )}</div>
+                  <div>Status: {requestDetails.RequestStatus}</div>
                 </div>
+                  <div className="flex-1 flex flex-col min-h-0 bg-red-50">
+                    <div className='font-bold text-[#003399] mb-4'>Tasks:</div>
+                    <div className='flex-1 flex flex-col overflow-y-auto bg-gray-100 border border-gray-300'>
+                      {requestDetails.RequestTasks?.map((task:any) => (
+                        <>
+                          {activeTask === task.RequestTask.id ? (
+                            <div className={'flex cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={task.id} onClick={() => {setActiveTask(task.RequestTask.id)}}>
+                                <div className='w-[80%] flex items-center h-[60px] p-2 font-bold text-[#005566]'>{task.FirstName} {task.LastName} | {task.Email}<br/>{task.RequestTask.Instructions}</div>
+                                <div className='w-[20%] flex items-center h-[60px] p-2 font-bold text-[#005566]'>{task.RequestTask.RequestTaskStatus.toUpperCase()}</div>
+                            </div>
+                          ) : (
+                            <div className={'flex cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={task.id} onClick={() => {setActiveTask(task.RequestTask.id)}}>
+                                <div className='w-[80%] flex items-center h-[60px] p-2'>{task.FirstName} {task.LastName} | {task.Email}<br/>{task.RequestTask.Instructions}</div>
+                                <div className='w-[20%] flex items-center h-[60px] p-2'>{task.RequestTask.RequestTaskStatus.toUpperCase()}</div>
+                            </div>
+                          )}
+                        </>
+                      ))}
+                    </div>
+                    
+                  </div>
+                
               </div>
             </div>
-            <div className="card-flat-rounded">
+            <div id="request-history" className="flex-1 flex flex-col min-h-0 w-1/3 bg-white border border-gray-300 rounded shadow gap-4 p-4">
               <div className='col12 component-layout-rows' style={{ '--gridRows': '50px 90px 90px 90px 90px 90px 90px' } as React.CSSProperties}> 
                       <div className='align-center-center'><h3>Request &amp; Task History</h3></div>
                       {historySteps.map(( item:any, index:number ) => ( 
@@ -240,7 +241,7 @@ function ViewRequest ( props:Prop ) {
                       ))}
                   </div>
             </div>
-            <div className="card-flat-rounded overflow-y-auto overflow-x-hidden" style={{'height':'650px'}}>
+            <div id="request-questions" className="flex-1 flex flex-col min-h-0 w-1/3 bg-white border border-gray-300 rounded shadow gap-4 p-4">
               <>
                 {questionDetails?.sort((a:any, b:any) => a.Order - b.Order).map((question:any) => (
                   <section className="w-[95%] bg-white m-4 p-4 rounded shadow h-[100px] border border-gray-300 flex items-center">

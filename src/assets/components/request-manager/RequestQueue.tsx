@@ -5,6 +5,7 @@ import { type Schema } from '../../../../amplify/data/resource'
 import BeatLoader from "react-spinners/BeatLoader";
 import  SearchBar from '../SearchBar'
 import { formatDate, formatToLocalTime } from '../../functions/data';
+import ZackBot from "../../images/ZBT_Logo_Default.png";
 
 
 interface Prop {
@@ -141,7 +142,13 @@ function RequestQueue( props:Prop ) {
             </div>
         ) : (
             noRequests ? (
-                <div id="no-requests" className='flex-1 flex items-center justify-center'>No Current Requests</div>
+                <div id="no-requests" className='flex-1 flex items-center justify-center'>
+                    <img className="h-24 mr-4" src={ZackBot} alt='ZackBot Logo' />
+                    <div className="relative max-w-xs rounded-lg bg-white px-4 py-2 text-gray-900 border border-gray-300 shadow">
+                        No Current Requests
+                        <span className="absolute -left-2 top-3 h-4 w-4 rotate-45 bg-white border-b border-l border-gray-300 "></span>
+                    </div>
+                </div>
             ) : (
                 <div id="request-queue" className="flex-1 flex flex-col min-h-0 shadow m-4 p-4 border border-gray-300 bg-white" >
                     <div id="search-bar" className='flex items-center w-full lg:w-1/3 mb-2'>
