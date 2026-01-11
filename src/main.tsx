@@ -8,7 +8,7 @@ import outputs from "../amplify_outputs.json";
 import Task from "../src/assets/pages/Task";
 
 import './assets/styles/ZackBot.css'
-import Login from '../src/assets/pages/LogIn';
+import Login from '../src/assets/pages/Login';
 
 Amplify.configure(outputs);
 
