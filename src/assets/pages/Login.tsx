@@ -54,7 +54,7 @@ const theme = createTheme({
   },
 });
 
-function Login2 (  ) {
+function Login (  ) {
 
   const [showLogIn, setShowLogIn] = useState( true );
   const [mainLayout, setMainLayout] = useState( 'lg:w-[40%] lg:h-full h-1/2 flex items-center justify-center' );
@@ -99,4 +99,4 @@ function Login2 (  ) {
 
 };
 
-export default Login2;
+export default Login;
