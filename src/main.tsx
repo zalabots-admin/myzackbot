@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ReactDOM from "react-dom/client";
-import ZackBot from "./assets/pages/ZackBot"
+//import ZackBot from "./assets/pages/ZackBot"
+import LogIn from "./assets/pages/LogIn"
 import { Amplify } from "aws-amplify";
 import outputs from "../amplify_outputs.json";
 import Task from "../src/assets/pages/Task";
@@ -18,7 +19,7 @@ function MyRoutes() {
     <BrowserRouter>
       <Routes>
         <Route path="/request/:requestId/task/:taskId" element={<Task />}></Route>
-        <Route path="/" element={<ZackBot/>}></Route>
+        <Route path="/" element={<LogIn/>}></Route>
       </Routes>
     </BrowserRouter>
   );

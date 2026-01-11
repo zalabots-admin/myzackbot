@@ -152,7 +152,7 @@ p { margin: 0; padding: 0; }
 }
 
 .request-item:hover {
-  border-color: #003399;
+  border-color: #FD6800;
   cursor: pointer;
 }
 

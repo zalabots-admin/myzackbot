@@ -79,9 +79,17 @@ export async function getTasksData( oId:string ) {
         filter: {OrganizationID: { eq: oId }},
         selectionSet: ['id', 'RequestID', 'Instructions', 'RequestTaskStatus', 'createdAt',
             'Request.AccountName', 'Request.RequestedFor', 'Request.DueDate', 
-            'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole'
+            'Participants.id','Participants.FirstName','Participants.LastName', 'Participants.EntityName','Participants.Email','Participants.ParticipantRole'
         ]
     });  
+
+    currentRequests.data.map( ( task ) => {
+        if ( task.Participants[0].EntityName === '' ) {
+            (task as any).Assignee = task.Participants[0].FirstName + ' ' + task.Participants[0].LastName;
+        } else {
+            (task as any).Assignee = task.Participants[0].EntityName;
+        }
+    });
 
     return currentRequests.data;
 
@@ -178,9 +186,12 @@ export async function createHistoryEvent( oEvent:string, oUser:string, oDescript
 };
 
 export function formatDate( dateString:string ) {
-    const date = new Date( dateString );
-    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    return date.toLocaleDateString( undefined, options );
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    });
 };
 
 export function formatToLocalTime( utcString:string ) {

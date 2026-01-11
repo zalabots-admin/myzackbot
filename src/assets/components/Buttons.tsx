@@ -62,11 +62,25 @@ export const StandardButton: React.FC<ButtonProps> = ({ oAction, oText }) => {
 export const NavigationButton: React.FC<ButtonProps> = ({ oAction, oTitle, oIcon, oState }) => {
 
     return (
-        
+    
         <div className={`flex items-center hover:cursor-pointer ${ oState[oTitle as keyof typeof oState] ? ' text-[#005566]' : ' text-gray-300 hover:text-[#FD6800]' }` } onClick={oAction} title={oTitle}>
             <i className={ oIcon + " mr-2 text-3xl lg:text-2xl"}></i>
             <p>{oTitle}</p>
         </div>
+        
+    ); 
+
+};
+
+export const StaticNavigationButton: React.FC<ButtonProps> = ({ oTitle, oIcon }) => {
+
+    return (
+    
+        <div className={`flex items-center text-[#005566]` } title={oTitle}>
+            <i className={ oIcon + " mr-2 text-3xl lg:text-2xl"}></i>
+            <p>{oTitle}</p>
+        </div>
+        
     ); 
 
 };

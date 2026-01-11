@@ -134,60 +134,83 @@ function RequestQueue( props:Prop ) {
 
   return (
 
-    <>
+    <div className="flex-1 flex flex-col min-h-0">
         { loading ? (
-            <div className='flex h-full items-center justify-center'>
+            <div className='flex-1 flex items-center justify-center'>
                 <BeatLoader color = "#D58936" />
             </div>
         ) : (
             noRequests ? (
-                <div className='flex h-full items-center justify-center'>No Current Requests</div>
+                <div id="no-requests" className='flex-1 flex items-center justify-center'>No Current Requests</div>
             ) : (
-                <div className="flex-1 h-full border overflow-y-auto" >
-                    <div className='h-[100px] flex items-center w-2/5'>
+                <div id="request-queue" className="flex-1 flex flex-col min-h-0 shadow m-4 p-4 border border-gray-300 bg-white" >
+                    <div id="search-bar" className='flex items-center w-full lg:w-1/3 mb-2'>
                         <SearchBar
                             oSearchedValue={searchedValue}
                             oSetSearchedValue={setSearchedValue}
                         />
                     </div>
-                    <div className="border-b h-[50px] flex items-center p-2">
-                        <div
-                            className="w-[15%] flex items-center gap-1 cursor-pointer"
-                            onClick={() => handleSort("createdAt")}>
-                            {renderIcon("createdAt")} <span className='select-none'>Created On</span>
-                        </div>
-                        <div className="w-[15%] flex items-center gap-1 cursor-pointer"
-                            onClick={() => handleSort("DueDate")}>
-                            {renderIcon("DueDate")} <span className='select-none'>Due Date</span>
-                        </div>
-                        <div className="w-[30%] flex items-center gap-1 cursor-pointer"
-                            onClick={() => handleSort("AccountName")} >
-                            {renderIcon("AccountName")} <span className='select-none'>Account Name</span>
-                        </div>
-                        <div className="w-[30%] flex items-center gap-1 cursor-pointer"
-                            onClick={() => handleSort("RequestedFor")} >
-                            {renderIcon("RequestedFor")} <span className='select-none'>Requested For</span>
-                        </div>
-                        <div className="w-[10%] flex items-center gap-1 cursor-pointer"
-                            onClick={() => handleSort("RequestStatus")} >
-                            {renderIcon("RequestStatus")} <span className='select-none'>Status</span>
-                        </div>
-                    </div>
-                    <div className='flex-1 overflow-y-auto'>
-                        {filteredData.map((item:any, index:number) => (
-                            <div className={'flex  cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={index} onClick={() => {props.oOpenRequest( item.id, item.RequestedFor, item.RequestStatus ); props.oEvent;}}>
-                                <div className='w-[15%] flex items-center h-[40px] p-2'>{formatDate(item.createdAt) + ' ' + formatToLocalTime(item.createdAt)}</div>
-                                <div className='w-[15%] flex items-center h-[40px] p-2'>{formatDate(item.DueDate)}</div>
-                                <div className='w-[30%] flex items-center h-[40px] p-2'>{item.AccountName}</div>
-                                <div className='w-[30%] flex items-center h-[40px] p-2'>{item.RequestedFor}</div>
-                                <div className='w-[10%] flex items-center h-[40px] p-2'>{item.RequestStatus.toUpperCase()}</div>
+                    <div id="request-list" className="flex-1 flex flex-col min-h-0 shadow m-4 p-4 border border-gray-300">
+                        <div id="request-list-header" className="hidden lg:flex items-center border-b h-[50px] p-2">
+                            <div
+                                className="w-[15%] flex items-center gap-1 cursor-pointer"
+                                onClick={() => handleSort("createdAt")}>
+                                {renderIcon("createdAt")} <span className='select-none'>Created On</span>
                             </div>
-                        ))}
-                    </div> 
+                            <div className="w-[15%] flex items-center gap-1 cursor-pointer"
+                                onClick={() => handleSort("DueDate")}>
+                                {renderIcon("DueDate")} <span className='select-none'>Due Date</span>
+                            </div>
+                            <div className="w-[30%] flex items-center gap-1 cursor-pointer"
+                                onClick={() => handleSort("AccountName")} >
+                                {renderIcon("AccountName")} <span className='select-none'>Account Name</span>
+                            </div>
+                            <div className="w-[30%] flex items-center gap-1 cursor-pointer"
+                                onClick={() => handleSort("RequestedFor")} >
+                                {renderIcon("RequestedFor")} <span className='select-none'>Requested For</span>
+                            </div>
+                            <div className="w-[10%] flex items-center gap-1 cursor-pointer"
+                                onClick={() => handleSort("RequestStatus")} >
+                                {renderIcon("RequestStatus")} <span className='select-none'>Status</span>
+                            </div>
+                        </div>
+                        <div id="request-list-body" className='flex-1 flex flex-col overflow-y-auto'>
+                            {filteredData.map((item:any, index:number) => (
+                                <>
+                                    {/* Desktop View */}
+                                    <div id={`request-list-item-${index}`} className={'hidden lg:flex cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={index} onClick={() => {props.oOpenRequest( item.id, item.RequestedFor, item.RequestStatus ); /*props.oEvent;*/}}>
+                                        <div className='w-[15%] flex items-center h-[50px] p-2'>{formatDate(item.createdAt) + ' ' + formatToLocalTime(item.createdAt)}</div>
+                                        <div className='w-[15%] flex items-center h-[50px] p-2'>{formatDate(item.DueDate)}</div>
+                                        <div className='w-[30%] flex items-center h-[50px] p-2'>{item.AccountName}</div>
+                                        <div className='w-[30%] flex items-center h-[50px] p-2'>{item.RequestedFor}</div>
+                                        <div className='w-[10%] flex items-center h-[50px] p-2'>{item.RequestStatus.toUpperCase()}</div>
+                                    </div>
+                                    {/* Mobile View */}
+                                        <div id={`request-list-item-${index}`} className={'flex lg:hidden flex-col border-b'} key={index} onClick={() => {props.oOpenRequest( item.id, item.RequestedFor, item.RequestStatus ); /*props.oEvent;*/}}>
+                                            <div className='flex justify-between p-2'>
+                                                <span className='font-semibold'>Created On:</span>{formatDate(item.createdAt) + ' ' + formatToLocalTime(item.createdAt)}
+                                            </div>
+                                            <div className='flex justify-between p-2'>
+                                                <span className='font-semibold'>Due Date:</span>{formatDate(item.DueDate)}
+                                            </div>
+                                            <div className='flex justify-between p-2'>
+                                                <span className='font-semibold'>Account Name:</span>{item.AccountName}
+                                            </div>
+                                            <div className='flex justify-between p-2'>
+                                                <span className='font-semibold'>Requested For:</span>{item.RequestedFor}
+                                            </div>
+                                            <div className='flex justify-between p-2'>
+                                                <span className='font-semibold'>Status:</span>{item.RequestStatus.toUpperCase()}
+                                            </div>
+                                        </div>
+                                </>
+                            ))}
+                        </div> 
+                    </div>
                 </div>
             )
         )}
-    </>
+    </div>
 
   );
 

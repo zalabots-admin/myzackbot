@@ -17,8 +17,9 @@ import  SearchBar from '../SearchBar'
 import ToggleSwitch from '../../components/Toggle';
 import SideBar from '../SideBar';
 import { IconButtonMedium, SmallButton } from '../../components/Buttons';
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import { Tab, Panel } from '../Tabs.tsx';
 import Papa from "papaparse";
+import { Slide, ToastContainer, toast } from 'react-toastify';
 
 import '../../styles/SideBar.css'
 
@@ -29,6 +30,7 @@ interface Prop {
   oActiveIndex: number;
   oCurrentTab: number;
   oSetOpenTabs: any;
+  oPanelId: string;
 }
 
 const typeSelect = ['Text Field|text','Date Field|date','Number Field|number','Dropdown Menu|select', 'File Upload|file']
@@ -47,6 +49,10 @@ function CreateRequest(props: Prop) {
     //const [autoComplete, setAutoComplete] = useState( false );
     const [sidebarOpen, setSideBarOpen] = useState( false );
     const [activeItem, setActiveItem] = useState( 0 );
+    const [tabs, setTabs] = useState([{id: '1', name: 'Questions', show:true}, {id: '2', name: 'Tasks', show:true, status: 'N/A'}, {id: '3', name: 'Responses', show:false, status: 'N/A'}]); // Tabs for request builder
+    const [activeTab, setActiveTab] = useState(0);
+    const [activeTabId, setActiveTabId] = useState('1');
+    const notify = () => toast("Request Saved Successfully!");
 
 
     async function getItems() {
@@ -86,6 +92,7 @@ function CreateRequest(props: Prop) {
         setRequestParticipants( sortedParticipants ?? [] );
         const sortedItems = (currentRequest.data as any)?.Questions?.sort((a: any, b: any) => Number(a.Order) - Number(b.Order));
         setRequestQuestions( sortedItems ?? [] );
+
     }
 
     function handleViewSidebar() {
@@ -93,6 +100,13 @@ function CreateRequest(props: Prop) {
         setSideBarOpen(!sidebarOpen);
 
     };
+
+    function clickTab( index:number, id:string ) {
+
+        setActiveTab( index );
+        setActiveTabId( id );
+
+    }
 
     function handleDragEnd ( event: DragEndEvent ) {
         
@@ -181,8 +195,26 @@ function CreateRequest(props: Prop) {
             setRequestParticipants(prev =>
                 prev.filter(p => p.ParticipantRole !== 'Receiver')
             );
+            const updatedTabs = [...tabs];
+            const responseTabIndex = updatedTabs.findIndex(tab => tab.name === 'Responses');
+            if (responseTabIndex !== -1) {
+                updatedTabs[responseTabIndex].show = false;
+                setTabs(updatedTabs);
+                if (activeTabId === updatedTabs[responseTabIndex].id) {
+                    setActiveTab(0);
+                    setActiveTabId(updatedTabs[0].id);
+                }
+            }
         } else {
             addParticipant( 'Receiver' );
+            const updatedTabs = [...tabs];
+            const responseTabIndex = updatedTabs.findIndex(tab => tab.name === 'Responses');
+            if (responseTabIndex !== -1) {
+                updatedTabs[responseTabIndex].show = true;
+                setTabs(updatedTabs);
+                setActiveTab( responseTabIndex );
+                setActiveTabId( updatedTabs[responseTabIndex].id );
+            }
         }
 
         const updatedRequestData = { ...requestData, EmailResponse: checked };
@@ -311,6 +343,7 @@ function CreateRequest(props: Prop) {
         } else {
             request = await client.models.Request.update({ ...requestData, RequestStatus: 'New' });
         }
+
         const requestId = request.data?.id;
         const copyParticipants = [...requestParticipants];
         copyParticipants.map( async ( participant ) => {
@@ -357,6 +390,7 @@ function CreateRequest(props: Prop) {
             await createHistoryEvent('Request', props.oUser.firstName + ' ' + props.oUser.lastName, 'Request Created', requestId ? requestId : '', '');
             props.oCloseTab( props.oCurrentTab );
         } else {
+            notify();
             props.oSetOpenTabs(( prevItems:any ) => {
                 const updatedItems = [...prevItems];
                 updatedItems[props.oCurrentTab] = { ...updatedItems[props.oCurrentTab], name: requestData.RequestedFor };
@@ -391,6 +425,7 @@ function CreateRequest(props: Prop) {
     );*/
 
     useEffect(() => { 
+
         if ( props.oOpenTabs[props.oCurrentTab].status != 'New' ) {
             getRequest( props.oOpenTabs[props.oCurrentTab].id );
         };
@@ -398,10 +433,33 @@ function CreateRequest(props: Prop) {
 
     },[props.oUser]);
 
+    useEffect(() => {
+
+        if ( requestData.DeliveryMethod === 'Standard' ) {
+        const updatedTabs = [...tabs];
+            const responseTabIndex = updatedTabs.findIndex(tab => tab.name === 'Tasks');
+            if (responseTabIndex !== -1) {
+                updatedTabs[responseTabIndex].show = true;
+                setTabs(updatedTabs);
+                if (activeTabId === updatedTabs[responseTabIndex].id) {
+                    setActiveTab(0);
+                    setActiveTabId(updatedTabs[0].id);
+                }
+            }
+        } else {
+            const updatedTabs = [...tabs];
+            const responseTabIndex = updatedTabs.findIndex(tab => tab.name === 'Tasks');
+            if (responseTabIndex !== -1) {
+                updatedTabs[responseTabIndex].show = false;
+                setTabs(updatedTabs);
+            }
+        }
+    }, [requestData.DeliveryMethod]);
+
 
   return (
     
-    <div className="grid grid-cols-[30%_1fr]" >
+    <div className="flex-1 flex flex-row min-h-0 overflow-hidden">
         <SideBar isOpen={sidebarOpen}>
             <div className="flex flex-col h-full">
                 <div className="flex flex-col h-[125px] w-full">
@@ -411,17 +469,17 @@ function CreateRequest(props: Prop) {
                 <div className="flex-1">
                     {requestQuestions.length > 0 && (
                         <>
-                            <Select oKey='Type' oLabel='Data Type' oOptions={typeSelect}  oSize='col12' isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Type} />
-                            <Input oKey='Name' oType='text' oLabel='Name' oSize='col12' oDescription='Internal reference only in the Request Builder' isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Name} />
-                            <Input oKey='Label' oType='text' oLabel="Label" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Label} />
-                            <Input oKey='Description' oType='text' oLabel='Description' oSize='col12' isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Description} />
+                            <Select oKey="Type" oLabel="Data Type" oOptions={typeSelect}  oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Type} />
+                            <Input oKey="Name" oType="text" oLabel="Name" oSize="col12" oDescription="Internal reference only in the Request Builder" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Name} />
+                            <Input oKey="Label" oType="text" oLabel="Label" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Label} />
+                            <Input oKey="Description" oType="text" oLabel="Description" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Description} />
                             { requestQuestions[activeItem].Type === "select" && (
                                 <>
                                     <Input oKey='Options' oType='text' oLabel='Enter Options' oSize='col12' oDescription='Seperate each value with a comma. For ex: Option 1,Option 2,Option 3' isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Options} />
                                 </>
                             )}
                             <div className="col12" style={{marginTop:'25px'}}>
-                                <div className='col12'>Question Preview</div>
+                                <div className="col12">Question Preview</div>
                                 <div className="col12 align-top-center">
                                     <DataInputs oData={requestQuestions[activeItem]} oChange='' oEditable={true} />
                                 </div>
@@ -434,26 +492,28 @@ function CreateRequest(props: Prop) {
                 </div>
             </div>
         </SideBar>
-{/*Request Details*/}
-        <div className='p-4'>
-            <section className="w-full bg-white p-6 rounded shadow lg:overflow-y-auto h-full border border-gray-300 mb-6">
-                <Input oKey='AccountName' oType='text' oLabel="Account Name:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.AccountName} />
-                <Input oKey='RequestedFor' oType='text' oLabel="Information Is Requested For:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.RequestedFor} />
-                <Input oKey='DueDate' oType='date' oLabel="Due Date:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.DueDate} />
-                <Select oKey='DeliveryMethod' oLabel='Delivery Type:' oOptions={['Manual','Standard']} oSize='col12' isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.DeliveryMethod} />
-                <ToggleSwitch label='Email Response on Submit' checked={requestData.EmailResponse} onChange={handleToggleEmailResponse} onColor='#4E6E5D' offColor='#CCCCCC' />
-                <ToggleSwitch label='Auto Complete Request' checked={requestData.AutoComplete} onChange={handleToggleAutoComplete} onColor='#4E6E5D' offColor='#CCCCCC' />
-                <ToggleSwitch label='Send Follow-Up Reminder' checked={requestData.FollowUp} onChange={handleToggleFollowUp} onColor='#4E6E5D' offColor='#CCCCCC' />
+        {/*Request Details*/}
+        <div className="flex-1 flex flex-col min-h-0 w-1/4 p-4 pr-2">
+            <section className="flex-1 flex flex-col bg-white p-6 rounded shadow overflow-y-auto border border-gray-300">
+                <Input oKey="AccountName" oType="text" oLabel="Account Name:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.AccountName} />
+                <Input oKey="RequestedFor" oType="text" oLabel="Information Is Requested For:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.RequestedFor} />
+                <Input oKey="DueDate" oType="date" oLabel="Due Date:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.DueDate} />
+                <Select oKey="DeliveryMethod" oLabel="Delivery Type:" oOptions={['Manual','Standard']} oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.DeliveryMethod} />
+                <ToggleSwitch label="Email Task Response on Submit" checked={requestData.EmailResponse} onChange={handleToggleEmailResponse} onColor="#4E6E5D" offColor="#CCCCCC" />
+                <ToggleSwitch label="Auto Complete Request When All Tasks Are Completed" checked={requestData.AutoComplete} onChange={handleToggleAutoComplete} onColor="#4E6E5D" offColor="#CCCCCC" />
+                <ToggleSwitch label="Send Task Assignee Follow-Up Reminder" checked={requestData.FollowUp} onChange={handleToggleFollowUp} onColor="#4E6E5D" offColor="#CCCCCC" />
                 { requestData.FollowUp && (
-                    <Input oKey='FollowUpDate' oType='date' oLabel="Follow Up Date" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.FollowUpDate} />
+                    <Input oKey="FollowUpDate" oType="date" oLabel="Follow Up Date" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.FollowUpDate} />
                 )}
             </section>
         </div>
-        <div className='p-4'>
-            <section className="grid grid-rows-[50px_1fr] w-full bg-white p-6 rounded shadow h-full border border-gray-300 mb-6">
-                <div className="flex justify-start items-center mb-4">
+        {/*Request Builder*/}
+        <div className='flex flex-col min-h-0 w-3/4 p-4 pl-2'>
+            <section className="flex-1 flex flex-col bg-white px-6 py-4 rounded shadow overflow-y-auto border border-gray-300">
+                {/*Header & Buttons*/}
+                <div className="flex justify-start items-center mb-2">
                     <div className="w-[80%] flex items-center">
-                        <h3>Request Builder</h3>
+                        <p className="h2 text-xl">Request Builder</p>
                     </div>
                     <div className="w-[20%] flex justify-end items-center">
                         <IconButtonMedium
@@ -480,52 +540,46 @@ function CreateRequest(props: Prop) {
                         />
                     </div> 
                 </div>
-                <Tabs className="w-full h-full">
-                    <TabList>
-                        <Tab className="react-tabs__tab w-[150px] text-center">Questions</Tab>
-                        { requestData.DeliveryMethod === 'Standard' && (
-                            <Tab className="react-tabs__tab w-[150px] text-center">Tasks</Tab>
-                        )}
-                        { requestData.EmailResponse && (
-                            <Tab className="react-tabs__tab w-[150px] text-center">Responses</Tab>
-                        )}
-                    </TabList>
-{/*Questions*/}
-                    <TabPanel className="react-tabs__tab-panel h-full" forceRender={true}>
-                        <div className='p-4 h-[525px] overflow-y-auto'>
+                <div id="tabs" className="flex flex-row bg-white">
+                    {tabs.map((tab, index) => (
+                        <Tab oAction={() => clickTab(index,tab.id)} oIndex={index} oText={tab.name} oIsActive={activeTab === index} oState={tab.show} oCustomClass="w-[125px] text-center" />
+                    ))}
+                    <div className="border-b border-gray-300 flex-grow "></div>
+                </div>
+                <div id="panels" className="flex-1 flex min-h-0 p-4">
+                    <Panel oIsActive={activeTabId === '1'} oIndex={'1'} oState={tabs.find(tab => tab.id === '1')?.show}>
+                        <div id="panel-Questions" className='flex-1 flex flex-col min-h-0 overflow-hidden'>
                             <DndContext onDragEnd={handleDragEnd}>
-                                <div className="grid grid-cols-[35%_1fr] gap-4" >
-                                    <div>
-                                        { loading ? (
-                                            <div className='h-full w-full flex justify-center items-center'>
-                                                <BeatLoader color = "#D58936" />
+                                <div className="flex-1 flex flex-row min-h-0 gap-4 p-4" >
+                                    { loading ? (
+                                        <div className='h-full w-full flex justify-center items-center'>
+                                            <BeatLoader color = "#D58936" />
+                                        </div>
+                                    ) : (
+                                        <div className='flex-1 flex flex-col w-1/3'>
+                                            <div className='w-full'>
+                                                <SearchBar
+                                                    oSearchedValue={searchedValue}
+                                                    oSetSearchedValue={setSearchedValue}
+                                                />
                                             </div>
-                                        ) : (
                                             <div>
-                                                <div className='w-full'>
-                                                    <SearchBar
-                                                        oSearchedValue={searchedValue}
-                                                        oSetSearchedValue={setSearchedValue}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    {itemData.filter((row:any) => row.Name.toString().toLowerCase().includes(searchedValue.toString().toLowerCase())).map(( item:any ) => (
-                                                        <DraggableListItem oKey={item.id} oName={item.Name} oType={item.Type} oActive={true} />
-                                                    ))}
-                                                </div>
+                                                {itemData.filter((row:any) => row.Name.toString().toLowerCase().includes(searchedValue.toString().toLowerCase())).map(( item:any ) => (
+                                                    <DraggableListItem oKey={item.id} oName={item.Name} oType={item.Type} oActive={true} />
+                                                ))}
                                             </div>
-                                        )}
-                                    </div>
-                                    <div className="h-full">
+                                        </div>
+                                    )}
+                                    
+                                    <div className=" flex flex-col w-2/3">
                                         <ZackbotEditor oItems={requestQuestions} oSetItems={setRequestQuestions} oIsEditable={true} oClick={setRequestQuestions} oSetActive={setActiveItem} oOpenSidePanel={handleViewSidebar} />
                                     </div>
                                 </div>
                             </DndContext>
                         </div>
-                    </TabPanel>
-{/*Tasks*/}  
-                    { requestData.DeliveryMethod === 'Standard' && (
-                        <TabPanel className="react-tabs__tab-panel flex-1 h-full">
+                    </Panel>
+                    <Panel oIsActive={activeTabId === '2'} oIndex={'2'} oState={tabs.find(tab => tab.id === '2')?.show}>
+                        <div id="panel-Tasks" className='flex-1 flex flex-col min-h-0 overflow-hidden'>
                             <div className="grid grid-rows-[125px_1fr] w-full" >
                                 <div className="p-2">
                                     <p>Upload Multiple Tasks Using the Upload Template or Individually Add Tasks Using the 'Add Task' Button</p>
@@ -600,66 +654,67 @@ function CreateRequest(props: Prop) {
                                     ))}
                                 </div>
                             </div>
-                        </TabPanel>
-                    )}
-{/*Responses*/}     
-                    { requestData.EmailResponse && (
-                        <TabPanel className="react-tabs__tab-panel flex-1 h-full">
-                            <div className="grid grid-rows-[75px_1fr] w-full" >
-                                <div className="flex justify-end items-center w-full">
-                                    <SmallButton
-                                        oAction={() => addParticipant('Receiver')}
-                                        oText="Add Recipient"
-                                    />
-                                </div>
-                                <div className="p-2 h-[450px] overflow-y-auto">
-                                    {requestParticipants.filter(participant => participant.ParticipantRole === 'Receiver').map( ( participant, index ) => (
-                                        <div key={index} className="w-full flex items-center bg-[#F4F4F4] border border-gray-300 p-2 mb-2 rounded">
-                                            <div className="w-[8%] h-full flex flex-col items-center justify-center">
-                                                <p>Recipient</p>
-                                                <h2>{index + 1}</h2>
+                        </div>
+                    </Panel>
+                    <Panel oIsActive={activeTabId === '3'} oIndex={'3'} oState={tabs.find(tab => tab.id === '3')?.show}>
+                        <div id="panel-Responses" className="grid grid-rows-[75px_1fr] w-full" >
+                            <div className="flex justify-between items-center w-full p-4">
+                                <p>Response Recipients Will Receive Completed Task Responses via Email.</p>
+                                <SmallButton
+                                    oAction={() => addParticipant('Receiver')}
+                                    oText="Add Recipient"
+                                />
+                            </div>
+                            <div className="p-2 h-[450px] overflow-y-auto">
+                                {requestParticipants.filter(participant => participant.ParticipantRole === 'Receiver').map( ( participant, index ) => (
+                                    <div key={index} className="w-full flex items-center bg-[#F4F4F4] border border-gray-300 p-2 mb-2 rounded">
+                                        <div className="w-[8%] h-full flex flex-col items-center justify-center">
+                                            <p>Recipient</p>
+                                            <h2>{index + 1}</h2>
+                                        </div>
+                                        <div className="w-[88%] flex items-center">
+                                            <div className="w-[65%] flex items-center">
+                                                {participant.ParticipantType === 'Individual' ? (
+                                                    <>
+                                                        <div className="w-[25%] flex flex-row items-center justify-center">
+                                                            <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#005566]"} title="Individual Task"></i>
+                                                            <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#DADADA]  hover:text-[#D58936]"} title="Entity Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Entity')}}></i>
+                                                        </div>
+                                                        <div className="w-[75%] flex flex-row items-center justify-center">
+                                                            <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.FirstName} />
+                                                            <Input oKey='LastName' oType='text' oLabel="Last Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.LastName} />
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="w-[25%] flex flex-row items-center justify-center">
+                                                            <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#DADADA] hover:text-[#D58936]"} title="Individual Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Individual')}}></i>
+                                                            <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#005566]"} title="Entity Task"></i>
+                                                        </div>
+                                                        <div className="w-[75%] flex flex-row items-center justify-center">
+                                                            <Input oKey='EntityName' oType='text' oLabel="Entity Name" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.EntityName} />
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
-                                            <div className="w-[88%] flex items-center">
-                                                <div className="w-[65%] flex items-center">
-                                                    {participant.ParticipantType === 'Individual' ? (
-                                                        <>
-                                                            <div className="w-[25%] flex flex-row items-center justify-center">
-                                                                <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#005566]"} title="Individual Task"></i>
-                                                                <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#DADADA]  hover:text-[#D58936]"} title="Entity Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Entity')}}></i>
-                                                            </div>
-                                                            <div className="w-[75%] flex flex-row items-center justify-center">
-                                                                <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.FirstName} />
-                                                                <Input oKey='LastName' oType='text' oLabel="Last Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.LastName} />
-                                                            </div>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <div className="w-[25%] flex flex-row items-center justify-center">
-                                                                <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#DADADA] hover:text-[#D58936]"} title="Individual Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Individual')}}></i>
-                                                                <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#005566]"} title="Entity Task"></i>
-                                                            </div>
-                                                            <div className="w-[75%] flex flex-row items-center justify-center">
-                                                                <Input oKey='EntityName' oType='text' oLabel="Entity Name" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.EntityName} />
-                                                            </div>
-                                                        </>
-                                                    )}
-                                                </div>
-                                                <div className="w-[35%] flex items-center">
-                                                    <Input oKey='Email' oType='text' oLabel="Email" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Email} />
-                                                </div>
-                                            </div>
-                                            <div className="w-[4%] h-full flex flex-col items-center justify-center">
-                                                <i className={"fa-classic fa-thin fa-xmark text-2xl cursor-pointer text-[#005566]  hover:text-[#D58936]"} title="Delete Task" onClick={() => {deleteParticipant(participant.id)}}></i>
+                                            <div className="w-[35%] flex items-center">
+                                                <Input oKey='Email' oType='text' oLabel="Email" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Email} />
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="w-[4%] h-full flex flex-col items-center justify-center">
+                                            <i className={"fa-classic fa-thin fa-xmark text-2xl cursor-pointer text-[#005566]  hover:text-[#D58936]"} title="Delete Task" onClick={() => {deleteParticipant(participant.id)}}></i>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        </TabPanel>
-                    )}
-                </Tabs>
+                        </div>
+                    </Panel>
+                </div>
             </section>
         </div>
+        <ToastContainer
+            position='bottom-left'
+            transition={Slide}/>
     </div>
     
   );

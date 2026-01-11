@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ThemeProvider, createTheme, Authenticator } from "@aws-amplify/ui-react";
 import Logo from '../images/Logo_Default_White.png'
 import MobileLogo from '../images/ZBT_Logo_Default.png'
-import App from "./App";
+import ZackBot from "./ZackBot";
 
 
 import '../styles/Main.css'
@@ -84,7 +84,7 @@ function Login2 (  ) {
           <Authenticator 
             hideSignUp>
             {({ signOut }) => (
-              <App 
+              <ZackBot 
                 oSignOut={signOut}
                 oSetShowLogIn={setShowLogIn}
                 oSetMainLayout={setMainLayout}
