@@ -13,6 +13,7 @@ import RequestQueue from '../components/request-manager/RequestQueue';
 import TasksQueue from '../components/request-manager/TaskQueue';
 import CreateRequest from '../components/request-manager/CreateRequest';
 import ViewRequest from '../components/request-manager/ViewRequest';
+import ViewTask from '../components/request-manager/ViewTask';
 
 interface Prop {
     oSignOut: any
@@ -25,11 +26,11 @@ const client = generateClient<Schema>();
 function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
 
     const [menuOpen, setMenuOpen] = useState(false);
-    const [activeItem, setActiveItem] = useState( {'Request Queue':true, 'Tasks Queue':false, 'Admin Portal':false} ); //Currently active navigation item
+    const [activeItem, setActiveItem] = useState( {'Request Queue':true, 'Tasks Queue':true, 'Admin Portal':false} ); //Currently active navigation item
     const [currentUserDetails, setCurrentUserDetails] = useState({firstName:'', lastName:'', emailAddress:'', OrgId:'', Role:''});
     const [activeTab, setActiveTab] = useState(0);
     const [activeTabId, setActiveTabId] = useState('1');
-    const [tabs, setTabs] = useState([{id: '1', name: 'Request Queue', show:true}, {id: '2', name: 'Tasks Queue', show:false, status: 'N/A'}]); // Tabs for open requests and queues
+    const [tabs, setTabs] = useState([{id: '1', name: 'Request Queue', show:true, status: 'N/A', type: 'queue'}, {id: '2', name: 'Tasks Queue', show:true, status: 'N/A', type: 'queue'}]); // Tabs for open requests and queues
     const [eventData, setEventData] = useState<any>( [] ); // Event data from subscriptions
 
     const getUserAttributes = async () => {
@@ -93,17 +94,25 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
     function createNewRequest() {
 
         const newTabId = uuid();
-        setTabs( prevItems => [...prevItems, {id: newTabId, name: 'New Request', status: 'New', show:true}] );
+        setTabs( prevItems => [...prevItems, {id: newTabId, name: 'New Request', status: 'New', show:true, type: 'request'}] );
         setActiveTab( tabs.length );
         setActiveTabId( newTabId );
 
     };
 
-    async function openRequest( oId:string, oName:string, oStatus:string ) {
+    async function openRequest( oId:string, oName:string, oStatus:string, oType:string ) {
 
-        setTabs( prevItems => [...prevItems, {id: oId, name: oName, status: oStatus, show:true}] );
-        setActiveTab( tabs.length );
-        setActiveTabId( oId );
+        const existingTab = tabs.find( ( tab ) => tab.id === oId );
+        if ( existingTab ) {
+            setTabs( prevItems => prevItems.map( tab => tab.id === oId ? { ...tab, show:true } : tab ) );
+            setActiveTab( tabs.findIndex( ( tab ) => tab.id === oId ) );
+            setActiveTabId( tabs.find( ( tab ) => tab.id === oId )!.id );
+            return;
+        } else {
+            setTabs( prevItems => [...prevItems, {id: oId, name: oName, status: oStatus, show:true, type: oType}] );
+            setActiveTab( tabs.length );
+            setActiveTabId( oId );
+        } 
 
     };
 
@@ -187,7 +196,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
             <div className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-white shadow-md w-full lg:h-[60px]">
                 <div className="flex items-center space-x-3">
                     <img className="h-8 lg:h-10" src={HeaderLogo} alt='ZackBot Logo' />
-                    <p className="text-[#FD6800] text-2xl lg:text-3xl">ZACK<span className="font-bold">BOT</span></p>
+                    <p className="text-[#EB7100] text-2xl lg:text-3xl">ZACK<span className="font-bold">BOT</span></p>
                 </div>
 
                 {/* Hamburger button - visible on mobile */}
@@ -237,7 +246,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                             oState={activeItem}
                         />
                     )}
-                    <i title="Requests" className={"fa-thin fa-thin fa-pipe text-3xl lg:text-2xl text-gray-500"}></i>
+                    <i className={"fa-thin fa-thin fa-pipe text-3xl lg:text-2xl text-gray-500"}></i>
                     <LogOutButton
                         oAction={oSignOut}
                         oTitle="Log Out"
@@ -301,15 +310,26 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                                                             oPanelId={panel.id}
                                                         />
                                                     ) : (
-                                                        <ViewRequest 
-                                                            oUser={currentUserDetails}
-                                                            //oCloseTab={closeTab}
-                                                            oOpenTabs={tabs}
-                                                            //oActiveIndex={activeTab}
-                                                            oCurrentTab={activeTab}
-                                                            //oSetOpenTabs={setActiveTab}
-                                                            //oPanelId={panel.id}
-                                                        />
+                                                        <>
+                                                            {panel.type === 'request' ? (
+                                                                <ViewRequest 
+                                                                    oUser={currentUserDetails}
+                                                                    oCloseTab={closeTab}
+                                                                    oOpenTabs={tabs}
+                                                                    oActiveTabId={activeTabId}
+                                                                    oCurrentTab={activeTab}
+                                                                />
+                                                            ) : (
+                                                                <ViewTask
+                                                                    oUser={currentUserDetails}
+                                                                    oCloseTab={closeTab}
+                                                                    oOpenTabs={tabs}
+                                                                    oActiveTabId={activeTabId}
+                                                                    oCurrentTab={activeTab}
+                                                                />
+                                                            )}
+                                                        </>
+                                                        
                                                 
                                                     )}
                                                 </Panel>

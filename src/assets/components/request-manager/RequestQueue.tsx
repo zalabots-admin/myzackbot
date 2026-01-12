@@ -182,35 +182,51 @@ function RequestQueue( props:Prop ) {
                             </div>
                         </div>
                         <div id="request-list-body" className='flex-1 flex flex-col overflow-y-auto'>
-                            {filteredData.map((item:any, index:number) => (
-                                <>
-                                    {/* Desktop View */}
-                                    <div id={`request-list-item-${index}`} className={'hidden lg:flex cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={index} onClick={() => {props.oOpenRequest( item.id, item.RequestedFor, item.RequestStatus ); /*props.oEvent;*/}}>
-                                        <div className='w-[15%] flex items-center h-[50px] p-2'>{formatDate(item.createdAt) + ' ' + formatToLocalTime(item.createdAt)}</div>
-                                        <div className='w-[15%] flex items-center h-[50px] p-2'>{formatDate(item.DueDate)}</div>
-                                        <div className='w-[30%] flex items-center h-[50px] p-2'>{item.AccountName}</div>
-                                        <div className='w-[30%] flex items-center h-[50px] p-2'>{item.RequestedFor}</div>
-                                        <div className='w-[10%] flex items-center h-[50px] p-2'>{item.RequestStatus.toUpperCase()}</div>
+                            {filteredData.map((item: any) => (
+                                <div key={item.id} className="cursor-pointer transition-colors duration-200 ease-in-out even:bg-[#F4F4F4] hover:bg-[#00556640]" onClick={() => props.oOpenRequest(item.id, item.RequestedFor, item.RequestStatus, 'request')}>
+                                    {/* Desktop */}
+                                    <div className="hidden lg:flex">
+                                    <div className="w-[15%] h-[50px] p-2 flex items-center">
+                                        {formatDate(item.createdAt)} {formatToLocalTime(item.createdAt)}
                                     </div>
-                                    {/* Mobile View */}
-                                        <div id={`request-list-item-${index}`} className={'flex lg:hidden flex-col border-b'} key={index} onClick={() => {props.oOpenRequest( item.id, item.RequestedFor, item.RequestStatus ); /*props.oEvent;*/}}>
-                                            <div className='flex justify-between p-2'>
-                                                <span className='font-semibold'>Created On:</span>{formatDate(item.createdAt) + ' ' + formatToLocalTime(item.createdAt)}
-                                            </div>
-                                            <div className='flex justify-between p-2'>
-                                                <span className='font-semibold'>Due Date:</span>{formatDate(item.DueDate)}
-                                            </div>
-                                            <div className='flex justify-between p-2'>
-                                                <span className='font-semibold'>Account Name:</span>{item.AccountName}
-                                            </div>
-                                            <div className='flex justify-between p-2'>
-                                                <span className='font-semibold'>Requested For:</span>{item.RequestedFor}
-                                            </div>
-                                            <div className='flex justify-between p-2'>
-                                                <span className='font-semibold'>Status:</span>{item.RequestStatus.toUpperCase()}
-                                            </div>
-                                        </div>
-                                </>
+                                    <div className="w-[15%] h-[50px] p-2 flex items-center">
+                                        {formatDate(item.DueDate)}
+                                    </div>
+                                    <div className="w-[30%] h-[50px] p-2 flex items-center">
+                                        {item.AccountName}
+                                    </div>
+                                    <div className="w-[30%] h-[50px] p-2 flex items-center">
+                                        {item.RequestedFor}
+                                    </div>
+                                    <div className="w-[10%] h-[50px] p-2 flex items-center">
+                                        {item.RequestStatus.toUpperCase()}
+                                    </div>
+                                    </div>
+
+                                    {/* Mobile */}
+                                    <div className="flex flex-col lg:hidden border-b">
+                                    <div className="flex justify-between p-2">
+                                        <span className="font-semibold">Created On:</span>
+                                        {formatDate(item.createdAt)} {formatToLocalTime(item.createdAt)}
+                                    </div>
+                                    <div className="flex justify-between p-2">
+                                        <span className="font-semibold">Due Date:</span>
+                                        {formatDate(item.DueDate)}
+                                    </div>
+                                    <div className="flex justify-between p-2">
+                                        <span className="font-semibold">Account Name:</span>
+                                        {item.AccountName}
+                                    </div>
+                                    <div className="flex justify-between p-2">
+                                        <span className="font-semibold">Requested For:</span>
+                                        {item.RequestedFor}
+                                    </div>
+                                    <div className="flex justify-between p-2">
+                                        <span className="font-semibold">Status:</span>
+                                        {item.RequestStatus.toUpperCase()}
+                                    </div>
+                                    </div>
+                                </div>
                             ))}
                         </div> 
                     </div>

@@ -23,7 +23,7 @@ export const Tab: React.FC<TabProps> = ({ oAction, oIndex, oText, oIsActive, oSt
     if ( oCustomClass !== undefined ) {
         oClass += oCustomClass;
     }
-console.log(oClass);
+
     return (
         
         <div key={oIndex} className={ oClass + ( oIsActive ? ' border-t border-l border-r border-gray-300 bg-white text-[#005566] font-bold' : ' bg-[#00556620] text-[#4E6E5D] border-b border-gray-300') } onClick={() => oAction(oIndex)}>{oText}</div>

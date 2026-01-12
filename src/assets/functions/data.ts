@@ -137,7 +137,7 @@ export async function getRequestViewData( oRequestId:string ) {
             ParticipantRole: { eq: 'Recipient' }
         },
         selectionSet: [
-            'id', 'FirstName', 'LastName', 'Email', 'ParticipantRole','RequestTask.RequestTaskStatus', 'RequestTask.Instructions', 'RequestTask.id', 'RequestTask.Responses.id', 'RequestTask.Responses.Name', 'RequestTask.Responses.Value', 'RequestTask.Responses.IsDocument'
+            'id', 'FirstName', 'LastName', 'EntityName', 'Email', 'ParticipantRole','RequestTask.RequestTaskStatus', 'RequestTask.Instructions', 'RequestTask.id', 'RequestTask.Responses.id', 'RequestTask.Responses.Name', 'RequestTask.Responses.Value', 'RequestTask.Responses.IsDocument'
         ]
     });
 
@@ -151,6 +151,32 @@ export async function getRequestViewData( oRequestId:string ) {
     };
 
     return enrichedRequest;
+
+};
+
+export async function getTaskViewData( oTaskId:string ) {
+
+    const currentTask = await client.models.RequestTasks.get({ id: oTaskId },
+    {
+        selectionSet: ['id', 'RequestID', 'Instructions', 'RequestTaskStatus', 'createdAt',
+            'Request.AccountName', 'Request.RequestedFor', 'Request.DueDate', 'Request.RequestStatus', 'Request.RequestType', 'Request.FollowUpDate',
+            'Participants.id','Participants.FirstName','Participants.LastName', 'Participants.EntityName','Participants.Email','Participants.ParticipantRole',
+            'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument',
+            'Request.Questions.id', 'Request.Questions.Name', 'Request.Questions.Type', 'Request.Questions.Order',
+            'Request.History.Event','Request.History.Date','Request.History.User','Request.History.Description', 'Request.History.RequestTaskID'
+        ]
+
+    } );
+
+        if ( currentTask.data?.Participants[0].EntityName === '' ) {
+            (currentTask.data as any).Assignee = currentTask.data.Participants[0].FirstName + ' ' + currentTask.data.Participants[0].LastName;
+        } else {
+            (currentTask.data as any).Assignee = currentTask.data?.Participants[0].EntityName;
+        }
+
+
+    return currentTask;
+
 };
 
 export async function getRequestFormsAndItemsData( oId:string ) {

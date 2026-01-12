@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import BeatLoader from "react-spinners/BeatLoader";
 import  SearchBar from '../SearchBar'
 import { getTasksData, formatDate } from '../../functions/data';
+//import { ViewTask } from './ViewTask';
+import ZackBot from "../../images/ZBT_Logo_Default.png";
 
 
 interface Prop {
@@ -24,7 +26,6 @@ function TaskQueue( props:Prop ) {
     async function getTasks()  {
 
         const currentTasks = await getTasksData( props.oUserOrg ) 
-
         setTaskData( currentTasks );
         setFilteredData( currentTasks );
 
@@ -72,16 +73,19 @@ function TaskQueue( props:Prop ) {
 
     useEffect(() => { 
 
+        const lowerCaseSearchTerm = searchedValue.toLowerCase();
         const filteringData = taskData.filter(item => {
-            const lowerCaseSearchTerm = searchedValue.toLowerCase();
-            return (
-                item.Request.AccountName.toLowerCase().includes(lowerCaseSearchTerm) ||
-                item.Request.DueDate.toLowerCase().includes(lowerCaseSearchTerm) ||
-                item.Assignee.toLowerCase().includes(lowerCaseSearchTerm) ||
-                item.Request.RequestedFor.toLowerCase().includes(lowerCaseSearchTerm) ||
-                item.Instructions.toLowerCase().includes(lowerCaseSearchTerm) ||
-                item.RequestTaskStatus.toLowerCase().includes(lowerCaseSearchTerm)
-            );
+        const includes = (value?: string) =>
+            value?.toLowerCase().includes(lowerCaseSearchTerm) ?? false;
+
+        return (
+            includes(item.Request?.AccountName) ||
+            includes(item.Request?.DueDate) ||
+            includes(item.Assignee) ||
+            includes(item.Request?.RequestedFor) ||
+            includes(item.Instructions) ||
+            includes(item.RequestTaskStatus)
+        );
         });
 
         const sortedData = [...filteringData].sort((a, b) => {
@@ -89,6 +93,7 @@ function TaskQueue( props:Prop ) {
         if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === "asc" ? 1 : -1;
         return 0;
         });
+
         setFilteredData( sortedData );
 
     },[searchedValue]);
@@ -135,7 +140,13 @@ function TaskQueue( props:Prop ) {
             </div>
         ) : (
             noTasks ? (
-                <div id="no-tasks" className='flex-1 flex items-center justify-center'>No Current Tasks</div>
+                <div id="no-requests" className='flex-1 flex items-center justify-center'>
+                    <img className="h-24 mr-4" src={ZackBot} alt='ZackBot Logo' />
+                    <div className="relative max-w-xs rounded-lg bg-white px-4 py-2 text-gray-900 border border-gray-300 shadow">
+                        No Current Tasks
+                        <span className="absolute -left-2 top-3 h-4 w-4 rotate-45 bg-white border-b border-l border-gray-300 "></span>
+                    </div>
+                </div>
             ) : (
                 <div id="task-queue" className="flex-1 flex flex-col min-h-0 shadow m-4 p-4 border border-gray-300 bg-white" >
                     <div id="search-bar" className='flex items-center w-full lg:w-1/3 mb-2'>
@@ -174,49 +185,39 @@ function TaskQueue( props:Prop ) {
                             </div>
                         </div>
                         <div id="task-list-body" className='flex-1 flex flex-col overflow-y-auto'>
-                            {filteredData.map((item:any, index:number) => (
-                                <>
+                            {filteredData.map((item:any) => (
+                                <div key={item.id} className="cursor-pointer transition-colors duration-200 ease-in-out even:bg-[#F4F4F4] hover:bg-[#00556640]" onClick={() => props.oOpenRequest(item.id, item.Request.RequestedFor + ' - ' + item.Assignee, item.Request.RequestStatus, 'task')}>
                                     {/* Desktop View */}
-                                    <div id={`task-list-item-${index}`} className={'hidden lg:flex cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={index} onClick={() => {props.oOpenRequest( item.id, item.RequestedFor, item.RequestTaskStatus ); /*props.oEvent;*/}}>
+                                    <div className="hidden lg:flex">
                                         <div className='w-[10%] flex items-center h-[50px] p-2'>{formatDate(item.Request.DueDate)}</div>
                                         <div className='w-[20%] flex items-center h-[50px] p-2'>{item.Request.AccountName}</div>
                                         <div className='w-[20%] flex items-center h-[50px] p-2'>{item.Request.RequestedFor}</div>
-                                        {item.Participants[0].EntityName === '' ? (
-                                            <div className='w-[20%] flex items-center h-[50px] p-2'>{item.Participants[0].FirstName + ' ' + item.Participants[0].LastName}</div>
-                                        ) : (
-                                            <div className='w-[20%] flex items-center h-[50px] p-2'>{item.Participants[0].EntityName}</div>
-                                        )}
+                                        <div className='w-[20%] flex items-center h-[50px] p-2'>{item.Assignee}</div>
                                         <div className='w-[20%] flex items-center h-[50px] p-2'>{item.Instructions}</div>
                                         <div className='w-[10%] flex items-center h-[50px] p-2'>{item.RequestTaskStatus.toUpperCase()}</div>
                                     </div>
                                     {/* Mobile View */}
-                                        <div id={`task-list-item-${index}`} className={'flex lg:hidden flex-col border-b'} key={index} onClick={() => {props.oOpenRequest( item.id, item.RequestedFor, item.RequestTaskStatus ); /*props.oEvent;*/}}>
-                                            <div className='flex justify-between p-2'>
-                                                <span className='font-semibold'>Due Date:</span>{formatDate(item.Request.DueDate)}
-                                            </div>
-                                            <div className='flex justify-between p-2'>
-                                                <span className='font-semibold'>Account Name:</span>{item.Request.AccountName}
-                                            </div>
-                                            <div className='flex justify-between p-2'>
-                                                <span className='font-semibold'>Requested For:</span>{item.Request.RequestedFor}
-                                            </div>
-                                            {item.Participants[0].EntityName === '' ? (
-                                                <div className='flex justify-between p-2'>
-                                                    <span className='font-semibold'>Requested For:</span>{item.Participants[0].FirstName + ' ' + item.Participants[0].LastName}
-                                                </div>
-                                            ) : (
-                                                <div className='flex justify-between p-2'>
-                                                    <span className='font-semibold'>Requested For:</span>{item.Participants[0].EntityName}
-                                                </div>
-                                            )}
-                                            <div className='flex justify-between p-2'>
-                                                <span className='font-semibold'>Status:</span>{item.Instructions}
-                                            </div>
-                                            <div className='flex justify-between p-2'>
-                                                <span className='font-semibold'>Status:</span>{item.RequestTaskStatus.toUpperCase()}
-                                            </div>
+                                    <div className="flex flex-col lg:hidden border-b">
+                                        <div className='flex justify-between p-2'>
+                                            <span className='font-semibold'>Due Date:</span>{formatDate(item.Request.DueDate)}
                                         </div>
-                                </>
+                                        <div className='flex justify-between p-2'>
+                                            <span className='font-semibold'>Account Name:</span>{item.Request.AccountName}
+                                        </div>
+                                        <div className='flex justify-between p-2'>
+                                            <span className='font-semibold'>Requested For:</span>{item.Request.RequestedFor}
+                                        </div>
+                                        <div className='flex justify-between p-2'>
+                                            <span className='font-semibold'>Requested For:</span>{item.Assignee}
+                                        </div>
+                                        <div className='flex justify-between p-2'>
+                                            <span className='font-semibold'>Status:</span>{item.Instructions}
+                                        </div>
+                                        <div className='flex justify-between p-2'>
+                                            <span className='font-semibold'>Status:</span>{item.RequestTaskStatus.toUpperCase()}
+                                        </div>
+                                    </div>
+                                </div> 
                             ))}
                         </div> 
                     </div>

@@ -23,7 +23,7 @@ const theme = createTheme({
       },
       button: {
         primary: {
-          backgroundColor: '#FD6800',
+          backgroundColor: '#EB7100',
           color: '#FFFFFF',
           _hover: {
             backgroundColor: '#3F5A4C',
@@ -64,7 +64,7 @@ function Login (  ) {
     <div className="flex flex-col lg:flex-row items-center justify-center h-dvh w-full overflow-hidden">
       { showLogIn &&  
         <>
-      <div className="hidden lg:flex w-[60%] h-full flex items-center justify-center bg-[#FD6800]">
+      <div className="hidden lg:flex w-[60%] h-full flex items-center justify-center bg-[#EB7100]">
         <img src={Logo} alt="Zalabots Logo" className="w-1/5"/>
         <div className="text-white ml-5 mt-8">
           <p className="text-8xl">ZACK<span className="font-bold">BOT</span></p>
@@ -73,7 +73,7 @@ function Login (  ) {
       </div>
       <div className="lg:hidden flex flex-col items-center justify-center w-full bg-white mb-10">
         <img src={MobileLogo} alt="Zalabots Logo" className="w-1/4"/>
-        <p className="text-[#FD6800] text-4xl ml-3">ZACK<span className="font-bold">BOT</span></p>
+        <p className="text-[#EB7100] text-4xl ml-3">ZACK<span className="font-bold">BOT</span></p>
         <p className="text-gray-500 text-lg mt-2">The Information Request Concierge</p>
       </div>     
       </>   
