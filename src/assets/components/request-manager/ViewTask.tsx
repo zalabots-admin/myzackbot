@@ -28,7 +28,7 @@ function ViewTask ( props:Prop ) {
   const getTask = async () => {
 
     const currentTask = await getTaskViewData( props.oOpenTabs[props.oCurrentTab].id );
-console.log( 'Current Task Data:', currentTask );
+
     setTaskDetails( currentTask.data );
     setHistoryDetails( currentTask.data?.Request.History );
     setQuestionDetails( currentTask.data?.Request.Questions );
