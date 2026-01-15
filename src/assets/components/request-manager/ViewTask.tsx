@@ -28,7 +28,7 @@ function ViewTask ( props:Prop ) {
   const getTask = async () => {
 
     const currentTask = await getTaskViewData( props.oOpenTabs[props.oCurrentTab].id );
-
+console.log( 'Current Task Data:', currentTask );
     setTaskDetails( currentTask.data );
     setHistoryDetails( currentTask.data?.Request.History );
     setQuestionDetails( currentTask.data?.Request.Questions );
@@ -296,9 +296,8 @@ function ViewTask ( props:Prop ) {
                     <section className="w-[95%] bg-white m-4 p-4 rounded shadow h-[100px] border border-gray-300 flex items-center">
                       <div className='w-full'>
                         <div className=" mb-4">{question.Name}:</div>
-                        {taskDetails.RequestTasks?.filter((task:any) => task.RequestTask.id === activeTask).map((task:any) => (
-                          <>
-                            {task.RequestTask.Responses?.filter((response:any) => response.Name === question.Name).map((response:any) => (  
+
+                            {taskDetails.Responses?.filter((response:any) => response.Name === question.Name).map((response:any) => (  
                               <>
                                 {(() => {
                                   switch (question.Type) {
@@ -311,9 +310,9 @@ function ViewTask ( props:Prop ) {
                                     case 'file':
                                       return (
                                         <div  className='flex w-full'>
-                                          <div className='w-[86%]'>{response.Value}</div>
+                                          <div className='w-[86%] overflow-hidden'>{response.Value}</div>
                                           <div title='Download File' className='w-[7%] text-[20px] text-[#005566] cursor-pointer hover:text-[#005566]' onClick={() => handleDownload(response.Value, response.id)}><i className={"fa-sharp fa-thin fa-download "}></i></div>
-                                          <a title='Open File in New Tab' className='w-[7%] cursor-pointer' href={import.meta.env.VITE_DOC_URL + response.id} target="_blank" rel="noopener noreferrer"><div className='text-[20px] text-[#005566] cursor-pointer hover:text-[#D58936]'><i className={"fa-sharp fa-thin fa-up-right-from-square "}></i></div></a>
+                                          <a title='Open File in New Tab' className='w-[7%] cursor-pointer' href={import.meta.env.VITE_DOC_URL + 'request-documents/' + response.id} target="_blank" rel="noopener noreferrer"><div className='text-[20px] text-[#005566] cursor-pointer hover:text-[#D58936]'><i className={"fa-sharp fa-thin fa-up-right-from-square "}></i></div></a>
                                         </div>
                                     )
                                     default:
@@ -330,8 +329,7 @@ function ViewTask ( props:Prop ) {
                                 </div>
                               </>
                             ))}
-                          </>
-                        ))}
+
                       </div>
                       
                     </section>

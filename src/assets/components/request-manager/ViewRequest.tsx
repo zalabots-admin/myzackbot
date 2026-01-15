@@ -329,7 +329,7 @@ function ViewRequest ( props:Prop ) {
                                         <div  className='flex w-full'>
                                           <div className='w-[86%]'>{response.Value}</div>
                                           <div title='Download File' className='w-[7%] text-[20px] text-[#005566] cursor-pointer hover:text-[#005566]' onClick={() => handleDownload(response.Value, response.id)}><i className={"fa-sharp fa-thin fa-download "}></i></div>
-                                          <a title='Open File in New Tab' className='w-[7%] cursor-pointer' href={import.meta.env.VITE_DOC_URL + response.id} target="_blank" rel="noopener noreferrer"><div className='text-[20px] text-[#005566] cursor-pointer hover:text-[#D58936]'><i className={"fa-sharp fa-thin fa-up-right-from-square "}></i></div></a>
+                                          <a title='Open File in New Tab' className='w-[7%] cursor-pointer' href={import.meta.env.VITE_DOC_URL + 'request-documents/' + response.id} target="_blank" rel="noopener noreferrer"><div className='text-[20px] text-[#005566] cursor-pointer hover:text-[#D58936]'><i className={"fa-sharp fa-thin fa-up-right-from-square "}></i></div></a>
                                         </div>
                                     )
                                     default:
