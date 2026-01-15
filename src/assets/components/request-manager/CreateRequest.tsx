@@ -74,15 +74,9 @@ function CreateRequest(props: Prop) {
     async function getRequest( oId:string )  {
 
         const currentRequest: any = await getRequestData( oId );
-        /*if ( (currentRequest.data as any)?.FollowUpDate != '' && (currentRequest.data as any)?.FollowUpDate != null ) {
-            setFollowUp( true );
-        }*/
 
-        if ( currentRequest.data.AutoComplete ) {
-            //setAutoComplete( true );
-        }
         if ( currentRequest.data.EmailResponse ) {
-            //setEmailResponse( true );
+            setTabs( prevItems => prevItems.map( tab => tab.name === 'Responses' ? { ...tab, show:true } : tab ) );
         }
         setRequestData( currentRequest.data );
         const sortedParticipants = (currentRequest.data as any)?.Participants?.sort((a: any, b: any) => a['FirstName'].localeCompare(b['FirstName']));
@@ -270,19 +264,19 @@ function CreateRequest(props: Prop) {
 
     }
 
-  async function handleDownload() {
-    
-    const fileUrl = import.meta.env.VITE_DOC_URL + 'zackbot-documents/ZBT_TaskUpload_Template.csv' ; // your file URL
-    const response = await fetch(fileUrl);
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = 'ZBT_TaskUpload_Template.csv'; // suggested filename
-    link.click();
-    window.URL.revokeObjectURL(url);
+    async function handleDownload() {
+        
+        const fileUrl = import.meta.env.VITE_DOC_URL + 'zackbot-documents/ZBT_TaskUpload_Template.csv' ; // your file URL
+        const response = await fetch(fileUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = 'ZBT_TaskUpload_Template.csv'; // suggested filename
+        link.click();
+        window.URL.revokeObjectURL(url);
 
-  };
+    };
 
     function deleteParticipant( oId:string ) {
 
