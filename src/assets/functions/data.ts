@@ -74,7 +74,7 @@ export async function getRequestData( oId:string ) {
 
 export async function getTasksData( oId:string ) {
 
-    const currentRequests = await client.models.RequestTasks.list({
+    const currentTasks = await client.models.RequestTasks.list({
         limit:500,
         filter: {OrganizationID: { eq: oId }},
         selectionSet: ['id', 'RequestID', 'Instructions', 'RequestTaskStatus', 'createdAt',
@@ -83,15 +83,16 @@ export async function getTasksData( oId:string ) {
         ]
     });  
 
-    currentRequests.data.map( ( task ) => {
-        if ( task.Participants[0].EntityName === '' ) {
-            (task as any).Assignee = task.Participants[0].FirstName + ' ' + task.Participants[0].LastName;
+    currentTasks.data.map( ( task ) => {
+        const filteredParticipants = task.Participants.filter( ( participant ) => participant.ParticipantRole === 'Recipient' );
+        if ( filteredParticipants[0].EntityName === '' ) {
+            (task as any).Assignee = filteredParticipants[0].FirstName + ' ' + filteredParticipants[0].LastName;
         } else {
-            (task as any).Assignee = task.Participants[0].EntityName;
+            (task as any).Assignee = filteredParticipants[0].EntityName;
         }
     });
 
-    return currentRequests.data;
+    return currentTasks.data;
 
 };
 
