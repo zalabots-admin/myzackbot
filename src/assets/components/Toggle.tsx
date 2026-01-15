@@ -20,8 +20,8 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   offColor = '#CCCCCC',
 }) => {
   return (
-    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1rem', marginLeft: '0.5rem' }}>
-      {label && <div className='col10'><span>{label}</span></div>}
+    <label className="flex items-center gap-2 mt-4 ml-2 text-sm">
+      {label && <div className='w-full'><span>{label}</span></div>}
       <Switch
         onChange={onChange}
         checked={checked}

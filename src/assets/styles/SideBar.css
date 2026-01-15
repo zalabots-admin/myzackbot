@@ -5,8 +5,7 @@
   right: 0;                /* center horizontally */
   transform: translate(-50%, 100%); /* start off-screen below */
   bottom: 0;                /* anchor to bottom */
-  width: 25vw;
-  height: 99vh;             /* adjust as needed */
+  width: 500px;             /* adjust as needed */
   background-color: #F4F4F4;
   border: 1px solid #005566;
   border-top-left-radius: 15px;
@@ -40,5 +39,5 @@
 }
 
 .content.open {
-  left: 15vw;
+  right: 0;
 }

@@ -84,6 +84,7 @@ const schema = a.schema({
     .authorization(allow => [allow.publicApiKey()]),
     RequestTasks: a
     .model({
+      OrganizationID: a.string().required(),
       RequestID: a.string().required(),
       Instructions: a.string(),
       RequestTaskStatus: a.string(),

@@ -37,8 +37,7 @@ function Branding(props: Prop) {
         const currentOrganization = await client.models.Organization.get({ id: props.oUserOrg });
         const uploadText = await setDocumentUploadText(currentOrganization.data?.Logo ?? '');
         setDocumentData({ UploadText:uploadText, DocumentLink: '', documentData: '' });
-        console.log(import.meta.env.VITE_IMG_URL + currentOrganization.data?.Logo );
-        setImgURL( import.meta.env.VITE_IMG_URL + currentOrganization.data?.Logo );
+        setImgURL( import.meta.env.VITE_DOC_URL + 'organization-logos/' + currentOrganization.data?.Logo );
         setIsLoading(false);
         setOrganizationData(currentOrganization.data);
 
@@ -146,7 +145,7 @@ function Branding(props: Prop) {
                                         apiKey='6i6klk4xam8ka7wpzypv1p2avowa3muwe8nxldmqrers2mms'
                                         init={{
                                         plugins: [
-                                            'mergetags'
+                                            //'mergetags'
                                         ],
 
                                         menubar: false,

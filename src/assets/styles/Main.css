@@ -1,6 +1,6 @@
 
 
-@import url("https://fonts.googleapis.com/css2?family=Work Sans");
+@import url("https://fonts.googleapis.com/css2?family=Jost");
 @import url("https://fonts.googleapis.com/css2?family=Playfair Display");
 @import url("https://fonts.googleapis.com/css2?family=Poppins");
 @import url("https://fonts.googleapis.com/css2?family=Montserrat");
@@ -19,7 +19,7 @@
 }
 
 body {
-  font-family: 'Work Sans';
+  font-family: 'Jost';
 }
 
 h1 { color: var(--primaryColorZB); font-family: 'Montserrat'; font-size: 36pt; font-weight: bold; height: 60px; margin: 0;padding: 0; }
@@ -152,7 +152,7 @@ p { margin: 0; padding: 0; }
 }
 
 .request-item:hover {
-  border-color: #003399;
+  border-color: #FD6800;
   cursor: pointer;
 }
 

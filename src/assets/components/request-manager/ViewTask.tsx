@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import BeatLoader from 'react-spinners/BeatLoader';
-import { formatDate, formatToLocalTime, getRequestViewData } from '../../functions/data'
+import { formatDate, formatToLocalTime, getTaskViewData } from '../../functions/data'
 import { IconButtonMedium } from '../Buttons'
 
 import '../../styles/ProgressBar.css'
@@ -16,23 +16,23 @@ interface Prop {
 }
 
 
-function ViewRequest ( props:Prop ) {
+function ViewTask ( props:Prop ) {
 
-  const [requestDetails, setRequestDetails] = useState<any>( {} );
+  const [taskDetails, setTaskDetails] = useState<any>( {} );
   const [historyDetails, setHistoryDetails] = useState<any>( [] );
   const [questionDetails, setQuestionDetails] = useState<any>( [] );
   const [loading, setLoading] = useState( true );
   const [activeTask, setActiveTask] = useState( '' );
   const [historySteps, setHistorySteps] = useState<any>( [] );
 
-  const getRequest = async () => {
+  const getTask = async () => {
 
-    const currentRequest = await getRequestViewData( props.oOpenTabs[props.oCurrentTab].id );
-
-    setRequestDetails( currentRequest.data );
-    setHistoryDetails( currentRequest.data?.History );
-    setQuestionDetails( currentRequest.data?.Questions );
-    setActiveTask( currentRequest.data?.RequestTasks[0]?.RequestTask.id );
+    const currentTask = await getTaskViewData( props.oOpenTabs[props.oCurrentTab].id );
+console.log( 'Current Task Data:', currentTask );
+    setTaskDetails( currentTask.data );
+    setHistoryDetails( currentTask.data?.Request.History );
+    setQuestionDetails( currentTask.data?.Request.Questions );
+    setActiveTask( currentTask.data!.id );
     setLoading( false );
 
   };
@@ -97,20 +97,20 @@ function ViewRequest ( props:Prop ) {
 
   function openTaskForm() {
     
-    window.open( 'request/' + requestDetails.id + '/task/' + activeTask, '_blank' );
+    window.open( 'request/' + taskDetails.RequestID + '/task/' + activeTask, '_blank' );
 
   };
 
   useEffect(() => {
   
-      getRequest();
+      getTask();
 
   },[]);
 
   useEffect(() => {
   
-    if (props.oActiveTabId === requestDetails.id ) {
-      getRequest();
+    if (props.oActiveTabId === taskDetails.id ) {
+      getTask();
     }
       
   },[props.oActiveTabId]);
@@ -135,23 +135,23 @@ function ViewRequest ( props:Prop ) {
           <div id="request-details" className="flex flex-row justify-between items-center w-full bg-white border border-gray-300 rounded shadow gap-4. px-4 py-2">
             <div className="flex flex-col w-[15%]">
               <p>Account Name:</p>
-              <p>{requestDetails.AccountName}</p>
+              <p>{taskDetails.Request.AccountName}</p>
             </div>
             <div className="flex flex-col w-[15%]">
               <p>Requested For:</p>
-              <p>{requestDetails.RequestedFor}</p>
+              <p>{taskDetails.Request.RequestedFor}</p>
             </div>
             <div className="flex flex-col w-[15%]">
               <p>Created On:</p>
-              <p>{formatDate( requestDetails.createdAt )}</p>
+              <p>{formatDate( taskDetails.createdAt )}</p>
             </div>
             <div className="flex flex-col w-[15%]">
               <p>Due Date:</p>
-              <p>{formatDate( requestDetails.DueDate )}</p>
+              <p>{formatDate( taskDetails.Request.DueDate )}</p>
             </div>
             <div className="flex flex-col w-[15%]">
               <p>Status:</p>
-              <p>{requestDetails.RequestStatus}</p>
+              <p>{taskDetails.Request.RequestStatus}</p>
             </div>
             <div className="flex flex-grow items-center justify-end flex-row gap-2">
               <IconButtonMedium
@@ -169,43 +169,27 @@ function ViewRequest ( props:Prop ) {
                 oTitle="Open Task Form"
                 oIcon="fa-sharp fa-thin fa-arrow-up-right-from-square"
               />
-              <IconButtonMedium
+              {/*<IconButtonMedium
                 oAction={() => {}}
                 oTitle="Complete Request"
                 oIcon="fa-sharp fa-thin fa-check"
-              />
+              />*/}
             </div>
           </div>
           <div className="flex-1 flex flex-row gap-4 min-h-0">
-            {/* Request Tasks */}
-            <div id="request-tasks" className="flex-1 flex flex-col min-h-0 w-1/3 bg-white border border-gray-300 rounded shadow gap-4 p-4">
+            {/* Task Details */}
+            <div id="task-details" className="flex-1 flex flex-col min-h-0 w-1/3 bg-white border border-gray-300 rounded shadow gap-4 p-4">
               <div className="flex-1 flex flex-col min-h-0 gap-4 min-h-0"> 
-                <div className="flex justify-center items-center"><h3>Request Tasks</h3></div>
-                <div id="request-tasks-list" className='flex-1 flex flex-col overflow-y-auto'>
-                  {requestDetails.RequestTasks?.map((task:any) => (
-                    <>
-                      {activeTask === task.RequestTask.id ? (
-                        <div className={'flex cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={task.id} onClick={() => {setActiveTask(task.RequestTask.id)}}>
-                            {task.EntityName !== '' ? (
-                            <div className='w-[80%] flex items-center h-[60px] p-2 font-bold text-[#005566]'>{task.EntityName}<br/>{task.RequestTask.Instructions}</div>
-                            ) : (
-                            <div className='w-[80%] flex items-center h-[60px] p-2 font-bold text-[#005566]'>{task.FirstName} {task.LastName} | {task.Email}<br/>{task.RequestTask.Instructions}</div>
-                            )}
-                            <div className='w-[20%] flex items-center text-center h-[60px] p-2 font-bold text-[#005566]'>{task.RequestTask.RequestTaskStatus.toUpperCase()}</div>
-                        </div>
-                      ) : (
-                        <div className={'flex cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={task.id} onClick={() => {setActiveTask(task.RequestTask.id)}}>
-                            
-                            {task.EntityName !== '' ? (
-                            <div className='w-[80%] flex items-center h-[60px] p-2'>{task.EntityName}<br/>{task.RequestTask.Instructions}</div>
-                            ) : (
-                            <div className='w-[80%] flex items-center h-[60px] p-2'>{task.FirstName} {task.LastName} | {task.Email}<br/>{task.RequestTask.Instructions}</div>
-                            )}
-                            <div className='w-[20%] flex items-center text-center h-[60px] p-2'>{task.RequestTask.RequestTaskStatus.toUpperCase()}</div>
-                        </div>
-                      )}
-                    </>
-                  ))}
+                <div className="flex justify-center items-center"><h3>Task Details</h3></div>
+                <div id="task-details-list" className='flex-1 flex flex-col overflow-y-auto'>
+                  <div className="flex flex-col mb-4">
+                    <p>Assignee:</p> 
+                    <p>{taskDetails.Assignee}</p>
+                  </div>
+                  <div className="flex flex-col mb-4">
+                    <p>Instructions:</p>
+                    <p>{taskDetails.Instructions}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -312,9 +296,8 @@ function ViewRequest ( props:Prop ) {
                     <section className="w-[95%] bg-white m-4 p-4 rounded shadow h-[100px] border border-gray-300 flex items-center">
                       <div className='w-full'>
                         <div className=" mb-4">{question.Name}:</div>
-                        {requestDetails.RequestTasks?.filter((task:any) => task.RequestTask.id === activeTask).map((task:any) => (
-                          <>
-                            {task.RequestTask.Responses?.filter((response:any) => response.Name === question.Name).map((response:any) => (  
+
+                            {taskDetails.Responses?.filter((response:any) => response.Name === question.Name).map((response:any) => (  
                               <>
                                 {(() => {
                                   switch (question.Type) {
@@ -327,7 +310,7 @@ function ViewRequest ( props:Prop ) {
                                     case 'file':
                                       return (
                                         <div  className='flex w-full'>
-                                          <div className='w-[86%]'>{response.Value}</div>
+                                          <div className='w-[86%] overflow-hidden'>{response.Value}</div>
                                           <div title='Download File' className='w-[7%] text-[20px] text-[#005566] cursor-pointer hover:text-[#005566]' onClick={() => handleDownload(response.Value, response.id)}><i className={"fa-sharp fa-thin fa-download "}></i></div>
                                           <a title='Open File in New Tab' className='w-[7%] cursor-pointer' href={import.meta.env.VITE_DOC_URL + 'request-documents/' + response.id} target="_blank" rel="noopener noreferrer"><div className='text-[20px] text-[#005566] cursor-pointer hover:text-[#D58936]'><i className={"fa-sharp fa-thin fa-up-right-from-square "}></i></div></a>
                                         </div>
@@ -346,8 +329,7 @@ function ViewRequest ( props:Prop ) {
                                 </div>
                               </>
                             ))}
-                          </>
-                        ))}
+
                       </div>
                       
                     </section>
@@ -363,4 +345,4 @@ function ViewRequest ( props:Prop ) {
 
 };
 
-export default ViewRequest;
+export default ViewTask;
