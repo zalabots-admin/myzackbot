@@ -26,11 +26,11 @@ const client = generateClient<Schema>();
 function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
 
     const [menuOpen, setMenuOpen] = useState(false);
-    const [activeItem, setActiveItem] = useState( {'Request Queue':true, 'Tasks Queue':true, 'Admin Portal':false} ); //Currently active navigation item
+    const [activeItem, setActiveItem] = useState( {'Request Queue':true, 'Tasks Queue':false, 'Admin Portal':false} ); //Currently active navigation item
     const [currentUserDetails, setCurrentUserDetails] = useState({firstName:'', lastName:'', emailAddress:'', OrgId:'', Role:''});
     const [activeTab, setActiveTab] = useState(0);
     const [activeTabId, setActiveTabId] = useState('1');
-    const [tabs, setTabs] = useState([{id: '1', name: 'Request Queue', show:true, status: 'N/A', type: 'queue'}, {id: '2', name: 'Tasks Queue', show:true, status: 'N/A', type: 'queue'}]); // Tabs for open requests and queues
+    const [tabs, setTabs] = useState([{id: '1', name: 'Request Queue', show:true, status: 'N/A', type: 'queue'}, {id: '2', name: 'Tasks Queue', show:false, status: 'N/A', type: 'queue'}]); // Tabs for open requests and queues
     const [eventData, setEventData] = useState<any>( [] ); // Event data from subscriptions
 
     const getUserAttributes = async () => {
@@ -104,7 +104,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
 
         const existingTab = tabs.find( ( tab ) => tab.id === oId );
         if ( existingTab ) {
-            setTabs( prevItems => prevItems.map( tab => tab.id === oId ? { ...tab, show:true } : tab ) );
+            setTabs( prevItems => prevItems.map( tab => tab.id === oId ? { ...tab, show:true, status: oStatus } : tab ) );
             setActiveTab( tabs.findIndex( ( tab ) => tab.id === oId ) );
             setActiveTabId( tabs.find( ( tab ) => tab.id === oId )!.id );
             return;
@@ -256,6 +256,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
             </div>
             {/* Rest of the page */}
             <div id="main" className="flex-1 flex flex-col min-h-0 m-4 overflow-hidden">
+                {/*Request Dashboard*/}
                 {(activeItem['Request Queue'] || activeItem['Tasks Queue']) && 
                     <>
                         <div className='w-full flex items-center justify-center my-2'>
@@ -277,7 +278,6 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                         </div>
                         <div id="panels" className="flex-1 flex min-h-0 p-4">
                             {tabs.map( (panel) => (
-                            
                                 <>
                                     {panel.name === 'Request Queue' ? (
                                         <Panel oIsActive={activeTabId === '1'} oIndex={'1'} oState={true}>
@@ -306,7 +306,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                                                             oOpenTabs={tabs}
                                                             oActiveIndex={activeTab}
                                                             oCurrentTab={activeTab}
-                                                            oSetOpenTabs={setActiveTab}
+                                                            oSetOpenTabs={setTabs}
                                                             oPanelId={panel.id}
                                                         />
                                                     ) : (
@@ -341,11 +341,12 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                         </div>
                     </>
                 }
+                {/*Administrator's Portal*/}
                 {activeItem['Admin Portal'] && 
                     <>
-                        <div className='w-full flex items-center justify-center mb-8'>
-                            <div className='w-full flex items-center justify-start mb-8'>
-                                <h2>Administrator's Portal</h2>
+                        <div className='w-full flex items-center justify-center my-2'>
+                            <div className='w-full flex items-center justify-start'>
+                                <p className="h2 text-3xl">Administrator's Portal</p>
                             </div>
                         </div>
                         <AdminPortal 

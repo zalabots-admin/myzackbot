@@ -44,9 +44,6 @@ function CreateRequest(props: Prop) {
     const [itemData, setItemData] = useState<any[]>( [{id:'1', Name:'Custom Question', Type:'custom'}] );
     const [searchedValue, setSearchedValue] = useState( "" );
     const [loading, setLoading] = useState( true );
-    //const [followUp, setFollowUp] = useState( false );
-    //const [emailResponse, setEmailResponse] = useState( false );
-    //const [autoComplete, setAutoComplete] = useState( false );
     const [sidebarOpen, setSideBarOpen] = useState( false );
     const [activeItem, setActiveItem] = useState( 0 );
     const [tabs, setTabs] = useState([{id: '1', name: 'Questions', show:true}, {id: '2', name: 'Tasks', show:true, status: 'N/A'}, {id: '3', name: 'Responses', show:false, status: 'N/A'}]); // Tabs for request builder
@@ -385,7 +382,6 @@ function CreateRequest(props: Prop) {
         setRequestQuestions( copyRequestQuestions );
         setRequestParticipants( copyParticipants );
         setRequestData( {...requestData, id: requestId, RequestStatus: oStatus} );
-
         if ( oStatus === 'Requested' ) {
             await createHistoryEvent('Request', props.oUser.firstName + ' ' + props.oUser.lastName, 'Request Created', requestId ? requestId : '', '');
             props.oCloseTab( props.oCurrentTab );
@@ -393,14 +389,14 @@ function CreateRequest(props: Prop) {
             notify();
             props.oSetOpenTabs(( prevItems:any ) => {
                 const updatedItems = [...prevItems];
-                updatedItems[props.oCurrentTab] = { ...updatedItems[props.oCurrentTab], name: requestData.RequestedFor };
+                updatedItems[props.oCurrentTab] = { ...updatedItems[props.oCurrentTab], name: requestData.RequestedFor, status: oStatus };
                 return updatedItems;
             });
         }
 
         await client.models.Request.update({ id: requestId, RequestStatus: oStatus });
 
-    }
+    };
 
     async function deleteDraftRequest() {
 
