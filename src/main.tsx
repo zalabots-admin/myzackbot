@@ -6,9 +6,10 @@ import ReactDOM from "react-dom/client";
 import { Amplify } from "aws-amplify";
 import outputs from "../amplify_outputs.json";
 import Task from "../src/assets/pages/Task";
-
-import './assets/styles/ZackBot.css'
 import Login from '../src/assets/pages/Login';
+import Sample from '../src/assets/pages/Sample';
+import './assets/styles/ZackBot.css'
+
 
 Amplify.configure(outputs);
 
@@ -17,6 +18,7 @@ function MyRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/request/sample/task/:taskId" element={<Sample />}></Route>
         <Route path="/request/:requestId/task/:taskId" element={<Task />}></Route>
         <Route path="/" element={<Login/>}></Route>
       </Routes>
