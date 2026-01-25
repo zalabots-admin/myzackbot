@@ -570,7 +570,7 @@ function CreateRequest(props: Prop) {
                     </Panel>
                     <Panel oIsActive={activeTabId === '2'} oIndex={'2'} oState={tabs.find(tab => tab.id === '2')?.show}>
                         <div id="panel-Tasks" className='flex-1 flex flex-col min-h-0 overflow-hidden'>
-                            <div className="grid grid-rows-[125px_1fr] w-full" >
+                            <div className="flex-1 flex flex-col min-h-0">
                                 <div className="p-2">
                                     <p>Upload Multiple Tasks Using the Upload Template or Individually Add Tasks Using the 'Add Task' Button</p>
                                     <div className="flex items-center w-full">
@@ -598,7 +598,7 @@ function CreateRequest(props: Prop) {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="p-2 h-[400px] overflow-y-auto">
+                                <div className="flex-1 flex flex-col p-2 overflow-y-auto">
                                     {requestParticipants.filter(participant => participant.ParticipantRole === 'Recipient' && !participant.deleted).map( ( participant, index ) => (
                                         <div key={index} className="w-full flex items-center bg-[#F4F4F4] border border-gray-300 p-2 mb-2 rounded">
                                             <div className="w-[8%] h-full flex flex-col items-center justify-center">
@@ -647,7 +647,7 @@ function CreateRequest(props: Prop) {
                         </div>
                     </Panel>
                     <Panel oIsActive={activeTabId === '3'} oIndex={'3'} oState={tabs.find(tab => tab.id === '3')?.show}>
-                        <div id="panel-Responses" className="grid grid-rows-[75px_1fr] w-full" >
+                        <div id="panel-Responses" className="flex-1 flex flex-col min-h-0 overflow-hidden w-full" >
                             <div className="flex justify-between items-center w-full p-4">
                                 <p>Response Recipients Will Receive Completed Task Responses via Email.</p>
                                 <SmallButton
@@ -655,7 +655,7 @@ function CreateRequest(props: Prop) {
                                     oText="Add Recipient"
                                 />
                             </div>
-                            <div className="p-2 h-[450px] overflow-y-auto">
+                            <div className="flex-1 flex flex-col p-2 overflow-y-auto">
                                 {requestParticipants.filter(participant => participant.ParticipantRole === 'Receiver').map( ( participant, index ) => (
                                     <div key={index} className="w-full flex items-center bg-[#F4F4F4] border border-gray-300 p-2 mb-2 rounded">
                                         <div className="w-[8%] h-full flex flex-col items-center justify-center">
