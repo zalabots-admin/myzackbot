@@ -42,6 +42,7 @@
     "autoprefixer": "^10.4.22",
     "aws-cdk": "^2.138.0",
     "aws-cdk-lib": "^2.138.0",
+    "baseline-browser-mapping": "^2.9.19",
     "constructs": "^10.3.0",
     "esbuild": "^0.20.2",
     "eslint": "^8.57.0",

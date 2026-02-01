@@ -1,8 +1,10 @@
 
 
 import { useState, useEffect } from 'react';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../../../../amplify/data/resource.ts'
 import BeatLoader from 'react-spinners/BeatLoader';
-import { formatDate, formatToLocalTime, getRequestViewData } from '../../functions/data'
+import { formatDate, formatToLocalTime, getRequestViewData, createHistoryEvent } from '../../functions/data'
 import { IconButtonMedium } from '../Buttons'
 
 import '../../styles/ProgressBar.css'
@@ -14,6 +16,8 @@ interface Prop {
   oCloseTab: any;
   oActiveTabId: string;
 }
+
+const client = generateClient<Schema>();
 
 
 function ViewRequest ( props:Prop ) {
@@ -101,6 +105,14 @@ function ViewRequest ( props:Prop ) {
 
   };
 
+  async function completeRequest() {
+    
+    await client.models.Request.update({ id: requestDetails.id, RequestStatus: 'Closed' });
+    await createHistoryEvent( 'Request', props.oUser.Username, 'Request Completed', requestDetails.id, '',  );
+    setRequestDetails( { ...requestDetails, RequestStatus: 'Closed' } );
+
+  };
+
   useEffect(() => {
   
       getRequest();
@@ -159,21 +171,25 @@ function ViewRequest ( props:Prop ) {
                 oTitle="Close Request"
                 oIcon="fa-sharp fa-thin fa-xmark"
               />
-              {/*<IconButtonMedium
-                oAction={() => {}}
-                oTitle="Cancel Request"
-                oIcon="fa-sharp fa-thin fa-trash-can-xmark"
-              />*/}
-              <IconButtonMedium
-                oAction={openTaskForm}
-                oTitle="Open Task Form"
-                oIcon="fa-sharp fa-thin fa-arrow-up-right-from-square"
-              />
-              <IconButtonMedium
-                oAction={() => {}}
-                oTitle="Complete Request"
-                oIcon="fa-sharp fa-thin fa-check"
-              />
+              { requestDetails.RequestStatus === 'Active' && (
+                <>
+                  {/*<IconButtonMedium
+                    oAction={() => {}}
+                    oTitle="Cancel Request"
+                    oIcon="fa-sharp fa-thin fa-trash-can-xmark"
+                  />*/}
+                  <IconButtonMedium
+                    oAction={openTaskForm}
+                    oTitle="Open Task Form"
+                    oIcon="fa-sharp fa-thin fa-arrow-up-right-from-square"
+                  />
+                  <IconButtonMedium
+                    oAction={completeRequest}
+                    oTitle="Complete Request"
+                    oIcon="fa-sharp fa-thin fa-check"
+                  />
+                </>
+              )}
             </div>
           </div>
           <div className="flex-1 flex flex-row gap-4 min-h-0">

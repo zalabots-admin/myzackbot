@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 import { generateClient } from 'aws-amplify/data';
@@ -8,12 +8,18 @@ import { LogOutButton, NavigationButton, StaticNavigationButton, StandardButton 
 import HeaderLogo from '../images/ZBT_Logo_Default.png'
 import { Tab, Panel } from '../components/Tabs';
 import { v4 as uuid } from "uuid";
-import AdminPortal from '../components/admin-portal/AdminPortal';
+// Import request manager components
 import RequestQueue from '../components/request-manager/RequestQueue';
 import TasksQueue from '../components/request-manager/TaskQueue';
 import CreateRequest from '../components/request-manager/CreateRequest';
 import ViewRequest from '../components/request-manager/ViewRequest';
 import ViewTask from '../components/request-manager/ViewTask';
+// Import admin portal components
+import ItemBuilder from '../components/admin-portal/ItemBulder';
+import FormBuilder from '../components/admin-portal/FormBuilder';
+import Organization from '../components/admin-portal/Organization';
+import Branding from '../components/admin-portal/Branding';
+import ListUsers from '../components/admin-portal/Users';
 
 interface Prop {
     oSignOut: any
@@ -30,7 +36,13 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
     const [currentUserDetails, setCurrentUserDetails] = useState({firstName:'', lastName:'', emailAddress:'', OrgId:'', Role:''});
     const [activeTab, setActiveTab] = useState(0);
     const [activeTabId, setActiveTabId] = useState('1');
-    const [tabs, setTabs] = useState([{id: '1', name: 'Request Queue', show:true, status: 'N/A', type: 'queue'}, {id: '2', name: 'Tasks Queue', show:false, status: 'N/A', type: 'queue'}]); // Tabs for open requests and queues
+    const [requestTabs, setRequestTabs] = useState([{id:'1', name:'Request Queue', show:true, status:'N/A', type:'queue'}, {id:'2', name:'Tasks Queue', show:false, status:'N/A', type:'queue'}]); // Tabs for open requests and queues
+    const [adminTabs] = useState([
+        {id:'1', name:'Request Items', show:true}, 
+        {id:'2', name:'Request Forms', show:true}, 
+        {id:'3', name:'Organization', show:true},
+        {id:'4', name:'Branding', show:true},
+        {id:'5', name:'Users', show:true}]); // Tabs for admin portal
     const [eventData, setEventData] = useState<any>( [] ); // Event data from subscriptions
 
     const getUserAttributes = async () => {
@@ -51,14 +63,16 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
 
     function setNavigationItem( oItem:string ) {
 
-        const newTabs = [...tabs];
+        const newTabs = [...requestTabs];
 
         let newActiveItem;
         if ( oItem === 'Admin Portal' ) {
             newActiveItem = { 'Request Queue':false, 'Tasks Queue':false, 'Admin Portal':true };
             newTabs.filter( ( tab ) => tab.name === 'Request Queue' )[0].show = false;
             newTabs.filter( ( tab ) => tab.name === 'Tasks Queue' )[0].show = false;
-            setTabs( newTabs );
+            setRequestTabs( newTabs );
+            setActiveTab( 0 );
+            setActiveTabId( '1' );
         } else {
             newActiveItem = { ... activeItem, 'Admin Portal': false };
             if ( newActiveItem[oItem as keyof typeof newActiveItem] === true ) { //Item is currently active, so deactivate it
@@ -74,10 +88,10 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
             } else { //Item is currently inactive, so activate it   
                 newActiveItem[oItem as keyof typeof newActiveItem] = true;
                 newTabs.filter( ( tab ) => tab.name === oItem )[0].show = true;
-                setActiveTab( tabs.findIndex( ( tab ) => tab.name === oItem ) );
+                setActiveTab( requestTabs.findIndex( ( tab ) => tab.name === oItem ) );
                 setActiveTabId( newTabs.find( ( tab ) => tab.name === oItem )!.id );
             }
-            setTabs( newTabs );
+            setRequestTabs( newTabs );
         };
 
         setActiveItem( newActiveItem );
@@ -94,23 +108,23 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
     function createNewRequest() {
 
         const newTabId = uuid();
-        setTabs( prevItems => [...prevItems, {id: newTabId, name: 'New Request', status: 'New', show:true, type: 'request'}] );
-        setActiveTab( tabs.length );
+        setRequestTabs( prevItems => [...prevItems, {id: newTabId, name: 'New Request', status: 'New', show:true, type: 'request'}] );
+        setActiveTab( requestTabs.length );
         setActiveTabId( newTabId );
 
     };
 
     async function openRequest( oId:string, oName:string, oStatus:string, oType:string ) {
 
-        const existingTab = tabs.find( ( tab ) => tab.id === oId );
+        const existingTab = requestTabs.find( ( tab ) => tab.id === oId );
         if ( existingTab ) {
-            setTabs( prevItems => prevItems.map( tab => tab.id === oId ? { ...tab, show:true, status: oStatus } : tab ) );
-            setActiveTab( tabs.findIndex( ( tab ) => tab.id === oId ) );
-            setActiveTabId( tabs.find( ( tab ) => tab.id === oId )!.id );
+            setRequestTabs( prevItems => prevItems.map( tab => tab.id === oId ? { ...tab, show:true, status: oStatus } : tab ) );
+            setActiveTab( requestTabs.findIndex( ( tab ) => tab.id === oId ) );
+            setActiveTabId( requestTabs.find( ( tab ) => tab.id === oId )!.id );
             return;
         } else {
-            setTabs( prevItems => [...prevItems, {id: oId, name: oName, status: oStatus, show:true, type: oType}] );
-            setActiveTab( tabs.length );
+            setRequestTabs( prevItems => [...prevItems, {id: oId, name: oName, status: oStatus, show:true, type: oType}] );
+            setActiveTab( requestTabs.length );
             setActiveTabId( oId );
         } 
 
@@ -118,28 +132,40 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
 
     function closeTab() {
 
-        const updatedTabs = [...tabs];
-        updatedTabs[activeTab].show = false;
-        setTabs( updatedTabs );
+        const tabsCopy = [...requestTabs];
+        tabsCopy[activeTab].show = false;
 
-        for ( let i = activeTab - 1; i >= 0; i-- ) {
-            if ( updatedTabs[i].show ) {
-                setActiveTab( i );
-                setActiveTabId( updatedTabs[i].id );
-                return;
+        for (let i = tabsCopy.length - 1; i > 1; i--) {
+            if (!tabsCopy[i].show) {
+                tabsCopy.splice(i, 1);
+            } else {
+                break;
             }
         }
 
-        for ( let j = activeTab + 1; j < updatedTabs.length; j++ ) {
-            if ( updatedTabs[j].show ) {
-                setActiveTab( j );
-                setActiveTabId( updatedTabs[j].id );
-                return;
-            }
+        setRequestTabs(tabsCopy);
+
+        // try left
+        let nextTab =
+        tabsCopy
+            .slice(0, activeTab)
+            .reverse()
+            .find(tab => tab.show);
+
+        // if not found, try right
+        if (!nextTab) {
+        nextTab = tabsCopy
+            .slice(activeTab + 1)
+            .find(tab => tab.show);
         }
 
-        setActiveTab( 0 );
-        setActiveTabId( updatedTabs[0].id );
+        // fallback
+        if (!nextTab) {
+        nextTab = tabsCopy[0];
+        }
+
+        setActiveTabId(nextTab.id);
+        setActiveTab(tabsCopy.findIndex(tab => tab.id === nextTab.id));
         
     };
 
@@ -270,14 +296,14 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                                 />
                             </div>
                         </div>
-                        <div id="tabs" className="flex flex-row bg-white">
-                            {tabs.map((tab, index) => (
-                                <Tab oAction={() => clickTab(index,tab.id)} oIndex={index} oText={tab.name} oIsActive={activeTab === index} oState={tab.show}/*oState={activeItem[tab.name as keyof typeof activeItem]}*/ />
+                        <div id="request-tabs" className="flex flex-row bg-white">
+                            {requestTabs.map((tab, index) => (
+                                <Tab oAction={() => clickTab(index,tab.id)} oIndex={index} oText={tab.name} oIsActive={activeTab === index} oState={tab.show} />
                             ))}
                             <div className="border-b border-gray-300 flex-grow "></div>
                         </div>
                         <div id="panels" className="flex-1 flex min-h-0 p-4">
-                            {tabs.map( (panel) => (
+                            {requestTabs.map( (panel) => (
                                 <>
                                     {panel.name === 'Request Queue' ? (
                                         <Panel oIsActive={activeTabId === '1'} oIndex={'1'} oState={true}>
@@ -303,10 +329,10 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                                                         <CreateRequest 
                                                             oUser={currentUserDetails}
                                                             oCloseTab={closeTab}
-                                                            oOpenTabs={tabs}
+                                                            oOpenTabs={requestTabs}
                                                             oActiveIndex={activeTab}
                                                             oCurrentTab={activeTab}
-                                                            oSetOpenTabs={setTabs}
+                                                            oSetOpenTabs={setRequestTabs}
                                                             oPanelId={panel.id}
                                                         />
                                                     ) : (
@@ -315,7 +341,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                                                                 <ViewRequest 
                                                                     oUser={currentUserDetails}
                                                                     oCloseTab={closeTab}
-                                                                    oOpenTabs={tabs}
+                                                                    oOpenTabs={requestTabs}
                                                                     oActiveTabId={activeTabId}
                                                                     oCurrentTab={activeTab}
                                                                 />
@@ -323,7 +349,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                                                                 <ViewTask
                                                                     oUser={currentUserDetails}
                                                                     oCloseTab={closeTab}
-                                                                    oOpenTabs={tabs}
+                                                                    oOpenTabs={requestTabs}
                                                                     oActiveTabId={activeTabId}
                                                                     oCurrentTab={activeTab}
                                                                 />
@@ -349,9 +375,60 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                                 <p className="h2 text-3xl">Administrator's Portal</p>
                             </div>
                         </div>
-                        <AdminPortal 
-                            oUserOrg={currentUserDetails.OrgId}
-                        />
+                        <div id="admin-tabs" className="flex flex-row bg-white">
+                            {adminTabs.map((tab, index) => (
+                                <Tab oAction={() => clickTab(index,tab.id)} oIndex={index} oText={tab.name} oIsActive={activeTab === index} oState={tab.show} oCustomClass="w-[160px] text-center" />
+                            ))}
+                            <div className="border-b border-gray-300 flex-grow "></div>
+                        </div>
+                        <div id="admin-panels" className="flex-1 flex min-h-0 p-4">
+                            {adminTabs.map((panel) => (
+                                <React.Fragment key={panel.name}>
+                                {(() => {
+                                    switch (panel.name) {
+                                    case 'Request Items':
+                                        return (
+                                        <Panel oIsActive={activeTabId === '1'} oIndex="1" oState>
+                                            <ItemBuilder oUserOrg={currentUserDetails.OrgId} />
+                                        </Panel>
+                                        );
+
+                                    case 'Request Forms':
+                                        return (
+                                        <Panel oIsActive={activeTabId === '2'} oIndex="2" oState>
+                                            <FormBuilder oUserOrg={currentUserDetails.OrgId} />
+                                        </Panel>
+                                        );
+
+                                    case 'Organization':
+                                        return (
+                                        <Panel oIsActive={activeTabId === '3'} oIndex="3" oState>
+                                            <Organization oUserOrg={currentUserDetails.OrgId} />
+                                        </Panel>
+                                        );
+
+                                    case 'Branding':
+                                        return (
+                                        <Panel oIsActive={activeTabId === '4'} oIndex="4" oState>
+                                            <Branding oUserOrg={currentUserDetails.OrgId} />
+                                        </Panel>
+                                        );
+
+                                    case 'Users':
+                                        return (
+                                        <Panel oIsActive={activeTabId === '5'} oIndex="5" oState>
+                                            <ListUsers oUserOrg={currentUserDetails.OrgId} />
+                                        </Panel>
+                                        );
+
+                                    default:
+                                        return null;
+                                    }
+                                })()}
+                                </React.Fragment>
+                            ))}
+                        </div>
+
                     </>
                 }
             </div>

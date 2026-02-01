@@ -16,10 +16,17 @@ interface ListItem {
   oActive?: boolean;
   isOverlay?: boolean;
   isDragging?: boolean;
-  oActiveItem?: number;
+  oActiveItem?: string | number;
   oList?: any[];
+  oDescription?: string;
 }
 
+export const dataTypes = () => {
+
+  return ( ['Text Field|text','Date Field|date','Number Field|number','Dropdown Menu|select', 'File Upload|file'] );
+
+};
+ 
 export const ListItem = ( props:ListItem ) => {
 
   return (
@@ -28,25 +35,25 @@ export const ListItem = ( props:ListItem ) => {
       {(() => {
         switch (props.oType) {
           case 'number':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-hashtag text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-hashtag text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
           case 'date':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-calendar-day text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-calendar-day text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
           case 'radio':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-circle-check text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-circle-check text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
           case 'checkbox':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-square-check text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-square-check text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
           case 'select':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-angle-double-down  text-[#005566]" + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-angle-double-down text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
           case 'question':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-angle-double-down text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-angle-double-down text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
           case 'textarea':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-paragraph text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-paragraph text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
           case 'file':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-file-lines text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-file-lines text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
           case 'form':
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-file-invoice text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-file-invoice text-lg text-[#FFFFFF]" ></i></div><div className="flex flex-col justify-center ml-4">{props.oName}<br/><span className="text-xs italic">{props.oDescription}</span></div></div>;
           default:
-            return <div key={props.oKey} className={"request-item" + (props.oActive ? ' notSelectable' : '')} onClick={() => {props.oClick(props.oKey)}}><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-font text-[#005566] " + (props.oActive ? ' notSelectable' : '')}></i></div><div>{props.oName}</div></div>;
+            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-font text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
         }
       })()}
     </>
@@ -62,10 +69,9 @@ export const DraggableListItem = ( props:ListItem ) => {
     transform: transform
       ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
       : undefined,
-    cursor: 'grab',
+    //cursor: 'grab',
     transition: 'opacity 0.2s ease',
     zIndex: props.isDragging ? 999 : 'auto',
-
   };
 
   return (
@@ -74,17 +80,17 @@ export const DraggableListItem = ( props:ListItem ) => {
       {(() => {
         switch (props.oType) {
           case 'number':
-            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-hashtag text-[#005566] " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
+            return <div ref={setNodeRef} className={`flex p-2 border shadow m-2 rounded-lg border-gray-300 bg-[#00556620] ${props.oActive ? `cursor-grab hover:border-[#EB7100]`:`opacity-50 cursor-not-allowed`}`} style={style} {...listeners} {...attributes} ><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 bg-[#005566]`}><i className="fa-sharp fa-hashtag text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
           case 'date':
-            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-calendar-day text-[#005566] " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
+            return <div ref={setNodeRef} className={`flex p-2 border shadow m-2 rounded-lg border-gray-300 bg-[#00556620] ${props.oActive ? `cursor-grab hover:border-[#EB7100]`:`opacity-50 cursor-not-allowed`}`} style={style} {...listeners} {...attributes} ><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 bg-[#005566]`}><i className="fa-sharp fa-calendar text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
           case 'select':
-            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-angle-double-down text-[#005566] " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
+            return <div ref={setNodeRef} className={`flex p-2 border shadow m-2 rounded-lg border-gray-300 bg-[#00556620] ${props.oActive ? `cursor-grab hover:border-[#EB7100]`:`opacity-50 cursor-not-allowed`}`} style={style} {...listeners} {...attributes} ><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 bg-[#005566]`}><i className="fa-sharp fa-angle-double-down text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
           case 'form':
-            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-file-invoice text-[#005566] " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
+            return <div ref={setNodeRef} className={`flex p-2 border shadow m-2 rounded-lg border-gray-300 bg-[#00556620] ${props.oActive ? `cursor-grab hover:border-[#EB7100]`:`opacity-50 cursor-not-allowed`}`} style={style} {...listeners} {...attributes} ><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 bg-[#005566]`}><i className="fa-sharp fa-file-invoice text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}<br/><span className="text-xs italic">{props.oDescription}</span></div></div>;
           case 'file':
-            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-file-lines text-[#005566] " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
+            return <div ref={setNodeRef} className={`flex p-2 border shadow m-2 rounded-lg border-gray-300 bg-[#00556620] ${props.oActive ? `cursor-grab hover:border-[#EB7100]`:`opacity-50 cursor-not-allowed`}`} style={style} {...listeners} {...attributes} ><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 bg-[#005566]`}><i className="fa-sharp fa-file-lines text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
             default:
-            return <div ref={setNodeRef} className={"request-item" + (props.oActive ? '' : ' notSelectable')} style={style} {...listeners} {...attributes} ><div className='request-item-icon'><i className={"fa-sharp fa-thin fa-font text-[#005566] " + (props.oActive ? '' : ' notSelectable')}></i></div><div>{props.oName}</div></div>;
+            return <div ref={setNodeRef} className={`flex p-2 border shadow m-2 rounded-lg border-gray-300 bg-[#00556620] ${props.oActive ? `cursor-grab hover:border-[#EB7100]`:`opacity-50 cursor-not-allowed`}`} style={style} {...listeners} {...attributes} ><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 bg-[#005566]`}><i className="fa-sharp fa-font text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
         }
       })()}
     </>
@@ -128,9 +134,9 @@ export const SortableFormItem = ( props:ListItem ) => {
 
   function handeleEdit( oId:any, oList?: any[] ) {
 
-    oList?.map((item:any, index:number) => {
+    oList?.map(( item:any ) => {
       if (item.id === oId) {
-        props.oSetActive(index);
+        props.oSetActive(oId);
         props.oOpenSidePanel(true);
       }
     });

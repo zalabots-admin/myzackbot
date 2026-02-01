@@ -2,7 +2,7 @@
 
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy, } from '@dnd-kit/sortable';
-import { SortableFormItem } from '../RequestItems.tsx';
+import { SortableFormItem } from './RequestItems.tsx';
 
 interface Prop {
   oItems: any[];

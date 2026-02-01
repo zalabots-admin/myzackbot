@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { getRequestData, createHistoryEvent, handleDataInputChange, handleGetDataInputChange, handleDataInputChangeFiltered, getRequestFormsAndItemsData } from '../../functions/data'
+import { getRequestData, createHistoryEvent, handleGetDataInputChange, handleDataInputChangeFiltered, getRequestFormsAndItemsData } from '../../functions/data'
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../../../amplify/data/resource.ts'
 import { DndContext, DragEndEvent, /*useSensor, useSensors, MouseSensor, TouchSensor*/ } from '@dnd-kit/core';
@@ -12,16 +12,15 @@ import Input from '../data-objects/Input';
 import Select from '../data-objects/Select';
 import Document from '../data-objects/Document.tsx';
 import { DraggableListItem } from '../RequestItems'
-import ZackbotEditor from '../admin-portal/Editor.tsx';
+import ZackbotEditor from '../Editor.tsx';
 import  SearchBar from '../SearchBar'
 import ToggleSwitch from '../../components/Toggle';
-import SideBar from '../SideBar';
-import { IconButtonMedium, SmallButton } from '../../components/Buttons';
+import RightSidePanel from '../SideBar';
+import { IconButtonMedium, SmallButton, StandardButton } from '../../components/Buttons';
 import { Tab, Panel } from '../Tabs.tsx';
 import Papa from "papaparse";
 import { Slide, ToastContainer, toast } from 'react-toastify';
 
-import '../../styles/SideBar.css'
 
 interface Prop {
   oUser: any;
@@ -45,7 +44,7 @@ function CreateRequest(props: Prop) {
     const [searchedValue, setSearchedValue] = useState( "" );
     const [loading, setLoading] = useState( true );
     const [sidebarOpen, setSideBarOpen] = useState( false );
-    const [activeItem, setActiveItem] = useState( 0 );
+    const [activeItem, setActiveItem] = useState( '' );
     const [tabs, setTabs] = useState([{id: '1', name: 'Questions', show:true}, {id: '2', name: 'Tasks', show:true, status: 'N/A'}, {id: '3', name: 'Responses', show:false, status: 'N/A'}]); // Tabs for request builder
     const [activeTab, setActiveTab] = useState(0);
     const [activeTabId, setActiveTabId] = useState('1');
@@ -137,7 +136,7 @@ function CreateRequest(props: Prop) {
                         DocumentId: '',
                         Order: requestQuestions.length + 1
                     }
-                    setActiveItem( requestQuestions.length );
+                    setActiveItem( clone.id );
                     handleViewSidebar();
                     setRequestQuestions((prev:any) => [...prev, clone]);
                 } else {
@@ -152,6 +151,7 @@ function CreateRequest(props: Prop) {
                         DocumentId: original.DocumentId,
                         Order: requestQuestions.length + 1
                     };
+                    setActiveItem( clone.id );
                     setRequestQuestions((prev:any) => [...prev, clone]);
                 }
                 
@@ -450,38 +450,6 @@ function CreateRequest(props: Prop) {
   return (
     
     <div className="flex-1 flex flex-row min-h-0 overflow-hidden">
-        <SideBar isOpen={sidebarOpen}>
-            <div className="flex flex-col h-full">
-                <div className="flex flex-col h-[125px] w-full">
-                    <div className='font-bold mb-2 text-[#005566] text-4xl'>Question Manager</div>
-                    <div className='font-bold text-[#005566] text-xl'>Edit Question Details</div>
-                </div>
-                <div className="flex-1">
-                    {requestQuestions.length > 0 && (
-                        <>
-                            <Select oKey="Type" oLabel="Data Type" oOptions={typeSelect}  oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Type} />
-                            <Input oKey="Name" oType="text" oLabel="Name" oSize="col12" oDescription="Internal reference only in the Request Builder" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Name} />
-                            <Input oKey="Label" oType="text" oLabel="Label" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Label} />
-                            <Input oKey="Description" oType="text" oLabel="Description" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Description} />
-                            { requestQuestions[activeItem].Type === "select" && (
-                                <>
-                                    <Input oKey='Options' oType='text' oLabel='Enter Options' oSize='col12' oDescription='Seperate each value with a comma. For ex: Option 1,Option 2,Option 3' isRequired={false} isEditable={true} oChange={(e) => handleDataInputChange(e, setRequestQuestions, activeItem)} oData={requestQuestions[activeItem].Options} />
-                                </>
-                            )}
-                            <div className="col12" style={{marginTop:'25px'}}>
-                                <div className="col12">Question Preview</div>
-                                <div className="col12 align-top-center">
-                                    <DataInputs oData={requestQuestions[activeItem]} oChange='' oEditable={true} />
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </div>
-                <div className="flex h-[100px] items-center justify-center w-full">
-                    <button className="standard" style={{bottom:'25'}} onClick={handleViewSidebar}>Save & Close</button>
-                </div>
-            </div>
-        </SideBar>
         {/*Request Details*/}
         <div className="flex-1 flex flex-col min-h-0 w-1/4 p-4 pr-2">
             <section className="flex-1 flex flex-col bg-white p-6 rounded shadow overflow-y-auto border border-gray-300">
@@ -538,9 +506,9 @@ function CreateRequest(props: Prop) {
                 </div>
                 <div id="panels" className="flex-1 flex min-h-0 p-4">
                     <Panel oIsActive={activeTabId === '1'} oIndex={'1'} oState={tabs.find(tab => tab.id === '1')?.show}>
-                        <div id="panel-Questions" className='flex-1 flex flex-col min-h-0 overflow-hidden'>
+                        <div id="panel-Questions" className='flex-1 flex flex-col min-h-0 overflow-hidden p-4'>
                             <DndContext onDragEnd={handleDragEnd}>
-                                <div className="flex-1 flex flex-row min-h-0 gap-4 p-4" >
+                                <div className="flex-1 flex flex-row min-h-0 gap-4 p-4overflow-y-auto overflow-x-hidden" >
                                     { loading ? (
                                         <div className='h-full w-full flex justify-center items-center'>
                                             <BeatLoader color = "#D58936" />
@@ -561,7 +529,7 @@ function CreateRequest(props: Prop) {
                                         </div>
                                     )}
                                     
-                                    <div className=" flex flex-col w-2/3">
+                                    <div className="flex flex-col w-2/3">
                                         <ZackbotEditor oItems={requestQuestions} oSetItems={setRequestQuestions} oIsEditable={true} oClick={setRequestQuestions} oSetActive={setActiveItem} oOpenSidePanel={handleViewSidebar} />
                                     </div>
                                 </div>
@@ -702,6 +670,43 @@ function CreateRequest(props: Prop) {
                 </div>
             </section>
         </div>
+        {sidebarOpen && 
+            <RightSidePanel isOpen={sidebarOpen}>
+                <div className="flex flex-col h-full">
+                    <div className="flex flex-col h-[125px] w-full">
+                        <div className='font-bold mb-2 text-[#EB7100] text-4xl'>Question Manager</div>
+                        <div className='font-bold text-[#EB7100] text-xl'>Edit Question Details</div>
+                    </div>
+                    <div className="flex-1">
+                        {requestQuestions.length > 0 && (
+                            <>
+                                <Select oKey="Type" oLabel="Data Type" oOptions={typeSelect}  oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestQuestions, activeItem)} oData={requestQuestions.find(q => q.id === activeItem)?.Type} />
+                                <Input oKey="Name" oType="text" oLabel="Name" oSize="col12" oDescription="Internal reference only in the Request Builder" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestQuestions, activeItem)} oData={requestQuestions.find(q => q.id === activeItem)?.Name} />
+                                <Input oKey="Label" oType="text" oLabel="Label" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestQuestions, activeItem)} oData={requestQuestions.find(q => q.id === activeItem)?.Label} />
+                                <Input oKey="Description" oType="text" oLabel="Description" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestQuestions, activeItem)} oData={requestQuestions.find(q => q.id === activeItem)?.Description} />
+                                { requestQuestions.find(q => q.id === activeItem)?.Type === "select" && (
+                                    <>
+                                        <Input oKey='Options' oType='text' oLabel='Enter Options' oSize='col12' oDescription='Seperate each value with a comma. For ex: Option 1,Option 2,Option 3' isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestQuestions, activeItem)} oData={requestQuestions.find(q => q.id === activeItem)?.Options} />
+                                    </>
+                                )}
+                                <div className="col12" style={{marginTop:'25px'}}>
+                                    <div className="col12">Question Preview</div>
+                                    <div className="col12 align-top-center">
+                                        <DataInputs oData={requestQuestions.find(q => q.id === activeItem)} oChange='' oEditable={true} />
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                    <div className="flex h-[100px] items-center justify-center w-full">
+                        <StandardButton 
+                            oAction={handleViewSidebar}
+                            oText='Save & Close'
+                        />
+                    </div>
+                </div>
+            </RightSidePanel>
+        }
         <ToastContainer
             position='bottom-left'
             transition={Slide}/>
