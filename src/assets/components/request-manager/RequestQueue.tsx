@@ -103,30 +103,32 @@ function RequestQueue( props:Prop ) {
     useEffect(() => {
 
         if ( props.oEvent != '' && props.oEvent != null && props.oEvent != undefined ) {
-            const eventData = JSON.parse( props.oEvent.data );
-            if ( props.oEvent.event === 'New') {
-                const currentRequests = [...requestData];
-                currentRequests.push( eventData );
-                setRequestData( currentRequests );
-                setFilteredData( currentRequests );
-                setNoRequests( false );
-            } else if ( props.oEvent.event === 'Update' ) {
-                const currentRequests = [...requestData];
-                const index = currentRequests.findIndex( (item) => item.id === eventData.id );
-                if ( index !== -1 ) {
-                    currentRequests[index] = eventData;
+            if ( props.oEvent.type === 'Request' ) {
+                const eventData = JSON.parse( props.oEvent.data );
+                if ( props.oEvent.event === 'New') {
+                    const currentRequests = [...requestData];
+                    currentRequests.push( eventData );
                     setRequestData( currentRequests );
                     setFilteredData( currentRequests );
+                    setNoRequests( false );
+                } else if ( props.oEvent.event === 'Update' ) {
+                    const currentRequests = [...requestData];
+                    const index = currentRequests.findIndex( (item) => item.id === eventData.id );
+                    if ( index !== -1 ) {
+                        currentRequests[index] = eventData;
+                        setRequestData( currentRequests );
+                        setFilteredData( currentRequests );
+                    };
+                } else if ( props.oEvent.event === 'Delete' ) {
+                    
+                    const currentRequests = requestData.filter( (item) => item.id !== eventData.id )
+                    setRequestData( currentRequests );
+                    setFilteredData( currentRequests );
+                    if ( currentRequests.length === 0 ) {
+                        setNoRequests( true );
+                    }
                 };
-            } else if ( props.oEvent.event === 'Delete' ) {
-                
-                const currentRequests = requestData.filter( (item) => item.id !== eventData.id )
-                setRequestData( currentRequests );
-                setFilteredData( currentRequests );
-                if ( currentRequests.length === 0 ) {
-                    setNoRequests( true );
-                }
-            };
+            }
         
         };
 

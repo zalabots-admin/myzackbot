@@ -8,13 +8,11 @@ import { LogOutButton, NavigationButton, StaticNavigationButton, StandardButton 
 import HeaderLogo from '../images/ZBT_Logo_Default.png'
 import { Tab, Panel } from '../components/Tabs';
 import { v4 as uuid } from "uuid";
-// Import request manager components
 import RequestQueue from '../components/request-manager/RequestQueue';
 import TasksQueue from '../components/request-manager/TaskQueue';
 import CreateRequest from '../components/request-manager/CreateRequest';
 import ViewRequest from '../components/request-manager/ViewRequest';
 import ViewTask from '../components/request-manager/ViewTask';
-// Import admin portal components
 import ItemBuilder from '../components/admin-portal/ItemBulder';
 import FormBuilder from '../components/admin-portal/FormBuilder';
 import Organization from '../components/admin-portal/Organization';
@@ -62,7 +60,6 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
         const currentUser = await client.models.Users.get({ id: userAttributes.email! });
         userDetails.Role = currentUser.data?.Role ?? '';
         setCurrentUserDetails( userDetails );
-        getNotifications();
 
     };
 
@@ -133,6 +130,33 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
 
     };
 
+    async function openNotification( oId:string, oRequestId:string, oType:string ) {
+
+        const oRequest = await client.models.Request.get( { id: oRequestId } );
+        if ( oRequest.data && oRequest.data.id && oRequest.data.RequestedFor && oRequest.data.RequestStatus ) {
+            openRequest( oRequest.data.id, oRequest.data.RequestedFor, oRequest.data.RequestStatus, oType );
+        }
+        await client.models.Notifications.update( {
+            id: oId,
+            Read: true
+        } );
+        setNotifications( prevNotifications => prevNotifications.map( ( notification ) => 
+            notification.id === oId ? { ...notification, Read: true } : notification
+        ) );
+        const updatedNotifications = notifications.filter( ( notification ) => notification.id !== oId );
+        //setNotifications( updatedNotifications );
+        setUnreadNotificationCount( updatedNotifications.length );
+    };
+
+    function closeNotificationManager () {
+
+        setSidebarOpen( false );
+        const unreadNotifications = notifications.filter( ( notification ) => notification.Read === false );
+        setNotifications( unreadNotifications );
+        setUnreadNotificationCount( unreadNotifications.length );
+
+    };
+
     async function openRequest( oId:string, oName:string, oStatus:string, oType:string ) {
 
         const existingTab = requestTabs.find( ( tab ) => tab.id === oId );
@@ -190,8 +214,9 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
 
     function createSubscriptions() {
 
+        //REQUEST SUBSCRIPTIONS
         client.models.Request.onCreate().subscribe({
-            next: (data) => { const newEvent = { event: 'New',data: JSON.stringify(data)}
+            next: (data) => { const newEvent = { event: 'New', type: 'Request', data: JSON.stringify(data)}
             setEventData( newEvent )
             }
         });
@@ -199,7 +224,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
         client.models.Request.onUpdate().subscribe({
         next: (data) => {
             if ( data != null && data != undefined ) {
-            const newEvent = { event: 'Update',data: JSON.stringify(data)}
+            const newEvent = { event: 'Update', type: 'Request', data: JSON.stringify(data)}
             setEventData( newEvent )
             }
         }
@@ -208,7 +233,23 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
         client.models.Request.onDelete().subscribe({
         next: (data) => {
             if ( data != null && data != undefined ) {
-            const newEvent = { event: 'Delete',data: JSON.stringify(data)}
+            const newEvent = { event: 'Delete', type: 'Request', data: JSON.stringify(data)}
+            setEventData( newEvent )
+            }
+        }
+        });
+
+        //NOTIFICATION SUBSCRIPTIONS
+        client.models.Notifications.onCreate().subscribe({
+            next: (data) => { const newEvent = { event: 'New', type: 'Notification', data: JSON.stringify(data)}
+            setEventData( newEvent )
+            }
+        });
+
+        client.models.Notifications.onUpdate().subscribe({
+        next: (data) => {
+            if ( data != null && data != undefined ) {
+            const newEvent = { event: 'Update', type: 'Notification', data: JSON.stringify(data)}
             setEventData( newEvent )
             }
         }
@@ -233,6 +274,28 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
         createSubscriptions();
 
     },[]);
+
+    useEffect( () => {
+
+        getNotifications();
+
+    }, [ currentUserDetails ] );
+
+    useEffect( () => {
+
+        if ( eventData && eventData.data ) {
+            if ( eventData.type === 'Notification' ) {
+                const notificationDetails = JSON.parse( eventData.data );
+                if ( notificationDetails.OrganizationID === currentUserDetails.OrgId ) {
+                    if ( eventData.event === 'New' && notificationDetails.Read === false ) {
+                        setNotifications( prevNotifications => [ ...prevNotifications, notificationDetails ] );
+                        setUnreadNotificationCount( prevCount => prevCount + 1 );
+                    }
+                }
+            }
+        }
+
+    }, [ eventData ] );
 
     return (
 
@@ -468,10 +531,15 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                         </div>
                         <div className="flex-1">
                             {notifications.map( ( notification ) => (
-                                <div key={notification.id} className="border-b border-gray-300 p-4">
-                                    <p className="font-semibold">{notification.Title}</p>
-                                    <p className="text-sm text-gray-600">{notification.Message}</p>
-                                    <p className="text-xs text-gray-400">{new Date(notification.CreatedAt).toLocaleString()}</p>
+                                <div key={notification.id} onClick={() => {openNotification(notification.id, notification.RequestID, notification.Type.toLowerCase() )}} className={`flex flex-row border rounded shadow p-4 gap-2 mb-4 ${ notification.Read ? 'border-gray-300 bg-gray-100 text-gray-600' : 'border-[#005566] bg-[#00556620] text-[#005566] hover:text-[#EB7100] hover:bg-gray-50 hover:border-[#EB7100] cursor-pointer'} `}>
+                                    <div className="flex items-center justify-center w-20">
+                                        <i className="fa-sharp fa-regular fa-comments-question-check text-3xl"></i>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-xl">{notification.Type} Notification</p>
+                                        <p className="text-sm text-gray-600">{notification.Message}</p>
+                                        <p className="text-xs text-gray-400">{new Date(notification.Date).toLocaleString()}</p>
+                                    </div>
                                 </div>
                             ) )}
                             {notifications.length === 0 && (
@@ -482,7 +550,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                         </div>
                         <div className="flex h-[100px] items-center justify-center w-full">
                             <StandardButton 
-                                oAction={() => setSidebarOpen(!sidebarOpen)}
+                                oAction={closeNotificationManager}
                                 oText='Close'
                             />
                         </div>
