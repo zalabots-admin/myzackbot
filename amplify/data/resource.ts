@@ -24,6 +24,7 @@ const schema = a.schema({
       Items: a.hasMany('Items', 'OrganizationID'),
       Forms: a.hasMany('Forms', 'OrganizationID'),
       Users: a.hasMany('Users', 'OrganizationID'),
+      Notifications: a.hasMany('Notifications', 'OrganizationID'),
     }).authorization((allow) => [allow.publicApiKey()]),
     Items: a
     .model({
@@ -71,12 +72,14 @@ const schema = a.schema({
       DeliveryMethod: a.string(),
       DueDate: a.string(),
       RequestStatus: a.string(),
+      FollowUpType: a.string(),
       FollowUpDate: a.string(),
       Organization: a.belongsTo('Organization', 'OrganizationID'),
       History: a.hasMany('RequestHistory', 'RequestID'),
       Participants: a.hasMany('RequestParticipants', 'RequestID'),
       RequestTasks: a.hasMany('RequestTasks', 'RequestID'),
       Questions: a.hasMany('RequestQuestions', 'RequestID'),
+      Notifications: a.hasMany('Notifications', 'RequestID'),
     })
     .secondaryIndexes(index => [
       index('FollowUpDate').sortKeys(['RequestStatus'])
@@ -92,6 +95,7 @@ const schema = a.schema({
       History: a.hasMany('RequestHistory', 'RequestTaskID'),
       Participants: a.hasMany('RequestParticipants', 'RequestTaskID'),
       Responses: a.hasMany('RequestResponses', 'RequestTaskID'),
+      Notifications: a.hasMany('Notifications', 'RequestTaskID'),
     })
     .secondaryIndexes(index => [
       index('RequestTaskStatus').sortKeys(['RequestID']),
@@ -156,6 +160,20 @@ const schema = a.schema({
       Role: a.string(),
       Active: a.boolean(),
       Organization: a.belongsTo('Organization', 'OrganizationID'),
+    })  
+    .authorization(allow => [allow.publicApiKey()]),
+    Notifications: a
+    .model({
+      OrganizationID: a.string().required(),
+      RequestID: a.string().required(),
+      RequestTaskID: a.string(),
+      Type: a.string(),
+      Message: a.string(),
+      Read: a.boolean(),
+      Date: a.string(),
+      Organization: a.belongsTo('Organization', 'OrganizationID'),
+      Request: a.belongsTo('Request', 'RequestID'),
+      RequestTask: a.belongsTo('RequestTasks', 'RequestTaskID'),
     })  
     .authorization(allow => [allow.publicApiKey()]),
 });

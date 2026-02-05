@@ -33,6 +33,7 @@ interface Prop {
 }
 
 const typeSelect = ['Text Field|text','Date Field|date','Number Field|number','Dropdown Menu|select', 'File Upload|file']
+const followUpSelect = ['Weekly (Begining of Week)|Weekly-Start','Weekly (End of Week)|Weekly-End','One & Three Days Out|Three/One','Daily|Daily', 'On This Date|Date']
 const client = generateClient<Schema>();
 
 function CreateRequest(props: Prop) {
@@ -461,7 +462,10 @@ function CreateRequest(props: Prop) {
                 <ToggleSwitch label="Auto Complete Request When All Tasks Are Completed" checked={requestData.AutoComplete} onChange={handleToggleAutoComplete} onColor="#4E6E5D" offColor="#CCCCCC" />
                 <ToggleSwitch label="Send Task Assignee Follow-Up Reminder" checked={requestData.FollowUp} onChange={handleToggleFollowUp} onColor="#4E6E5D" offColor="#CCCCCC" />
                 { requestData.FollowUp && (
-                    <Input oKey="FollowUpDate" oType="date" oLabel="Follow Up Date" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.FollowUpDate} />
+                    <Select oKey="FollowUpType" oLabel="Follow Up Cadence:" oOptions={followUpSelect} oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.FollowUpType} />
+                )}
+                { requestData.FollowUpType === 'Date' && (
+                    <Input oKey="FollowUpDate" oType="date" oLabel="Follow Up Date:" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestData)} oData={requestData.FollowUpDate} />
                 )}
             </section>
         </div>

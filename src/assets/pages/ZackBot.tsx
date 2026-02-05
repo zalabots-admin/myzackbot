@@ -20,6 +20,7 @@ import FormBuilder from '../components/admin-portal/FormBuilder';
 import Organization from '../components/admin-portal/Organization';
 import Branding from '../components/admin-portal/Branding';
 import ListUsers from '../components/admin-portal/Users';
+import RightSidePanel from '../components/SideBar';
 
 interface Prop {
     oSignOut: any
@@ -32,7 +33,7 @@ const client = generateClient<Schema>();
 function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
 
     const [menuOpen, setMenuOpen] = useState(false);
-    const [activeItem, setActiveItem] = useState( {'Request Queue':true, 'Tasks Queue':false, 'Admin Portal':false} ); //Currently active navigation item
+    const [activeItem, setActiveItem] = useState( {'Request Queue':true, 'Tasks Queue':false, 'Admin Portal':false, 'Notifications':true} ); //Currently active navigation item
     const [currentUserDetails, setCurrentUserDetails] = useState({firstName:'', lastName:'', emailAddress:'', OrgId:'', Role:''});
     const [activeTab, setActiveTab] = useState(0);
     const [activeTabId, setActiveTabId] = useState('1');
@@ -44,6 +45,9 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
         {id:'4', name:'Branding', show:true},
         {id:'5', name:'Users', show:true}]); // Tabs for admin portal
     const [eventData, setEventData] = useState<any>( [] ); // Event data from subscriptions
+    const [sidebarOpen, setSidebarOpen] = useState( false );
+    const [notifications, setNotifications] = useState<any[]>( [] );
+    const [unreadNotificationCount, setUnreadNotificationCount] = useState( 0 );
 
     const getUserAttributes = async () => {
         
@@ -58,8 +62,23 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
         const currentUser = await client.models.Users.get({ id: userAttributes.email! });
         userDetails.Role = currentUser.data?.Role ?? '';
         setCurrentUserDetails( userDetails );
+        getNotifications();
 
     };
+
+    async function getNotifications() {
+
+        const currentNotifications = await client.models.Notifications.list( {
+            filter: {
+                OrganizationID: { eq: currentUserDetails.OrgId },
+                Read: { eq: false }
+            }
+        } );
+
+        setNotifications( currentNotifications.data );
+        setUnreadNotificationCount( currentNotifications.data.length );
+        
+    }
 
     function setNavigationItem( oItem:string ) {
 
@@ -67,14 +86,14 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
 
         let newActiveItem;
         if ( oItem === 'Admin Portal' ) {
-            newActiveItem = { 'Request Queue':false, 'Tasks Queue':false, 'Admin Portal':true };
+            newActiveItem = { 'Request Queue':false, 'Tasks Queue':false, 'Admin Portal':true, 'Notifications':false };
             newTabs.filter( ( tab ) => tab.name === 'Request Queue' )[0].show = false;
             newTabs.filter( ( tab ) => tab.name === 'Tasks Queue' )[0].show = false;
             setRequestTabs( newTabs );
             setActiveTab( 0 );
             setActiveTabId( '1' );
         } else {
-            newActiveItem = { ... activeItem, 'Admin Portal': false };
+            newActiveItem = { ... activeItem, 'Admin Portal': false, 'Notifications': true };
             if ( newActiveItem[oItem as keyof typeof newActiveItem] === true ) { //Item is currently active, so deactivate it
                 newTabs.filter( ( tab ) => tab.name === oItem )[0].show = false;
                 newActiveItem[oItem as keyof typeof newActiveItem] = false;
@@ -238,6 +257,15 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
 
                 {/* Menu links - visible on larger screens */}
                 <div className="hidden lg:flex space-x-6">
+                    <div className={`${ activeItem['Admin Portal'] ? 'hidden' : 'relative inline-block'}`}>
+                        <span className={`${unreadNotificationCount > 0 ? 'absolute -top-2 -left-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#EB7100] text-xs font-semibold text-white' : 'hidden'}`}>{unreadNotificationCount}</span>
+                        <NavigationButton
+                            oAction={() => {setSidebarOpen(!sidebarOpen)}}
+                            oTitle="Notifications"
+                            oIcon="fa-sharp fa-regular fa-bell"
+                            oState={activeItem}
+                        />
+                    </div>
                     {( !activeItem['Tasks Queue']) && !activeItem['Admin Portal'] ? (
                         <StaticNavigationButton
                             oTitle="Request Queue"
@@ -245,11 +273,11 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                         />
                     ) : (
                         <NavigationButton
-                        oAction={() => {setNavigationItem( 'Request Queue' )}}
-                        oTitle="Request Queue"
-                        oIcon="fa-sharp fa-regular fa-comments-question-check"
-                        oState={activeItem}
-                    />
+                            oAction={() => {setNavigationItem( 'Request Queue' )}}
+                            oTitle="Request Queue"
+                            oIcon="fa-sharp fa-regular fa-comments-question-check"
+                            oState={activeItem}
+                        />
                     )}
                     {( !activeItem['Request Queue']) && !activeItem['Admin Portal'] ? (
                         <StaticNavigationButton
@@ -257,12 +285,12 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                             oIcon="fa-sharp fa-regular fa-clipboard-list-check"
                         />
                     ) : (
-                    <NavigationButton
-                        oAction={() => {setNavigationItem( 'Tasks Queue' )}}
-                        oTitle="Tasks Queue"
-                        oIcon="fa-sharp fa-regular fa-clipboard-list-check"
-                        oState={activeItem}
-                    />
+                        <NavigationButton
+                            oAction={() => {setNavigationItem( 'Tasks Queue' )}}
+                            oTitle="Tasks Queue"
+                            oIcon="fa-sharp fa-regular fa-clipboard-list-check"
+                            oState={activeItem}
+                        />
                     )}
                     { currentUserDetails.Role === 'admin' && (
                         <NavigationButton
@@ -432,6 +460,35 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                     </>
                 }
             </div>
+            {sidebarOpen && 
+                <RightSidePanel isOpen={sidebarOpen}>
+                    <div className="flex flex-col h-full">
+                        <div className="flex flex-col h-[125px] w-full">
+                            <div className='font-bold mb-2 text-[#EB7100] text-4xl'>Notification Manager</div>
+                        </div>
+                        <div className="flex-1">
+                            {notifications.map( ( notification ) => (
+                                <div key={notification.id} className="border-b border-gray-300 p-4">
+                                    <p className="font-semibold">{notification.Title}</p>
+                                    <p className="text-sm text-gray-600">{notification.Message}</p>
+                                    <p className="text-xs text-gray-400">{new Date(notification.CreatedAt).toLocaleString()}</p>
+                                </div>
+                            ) )}
+                            {notifications.length === 0 && (
+                                <div className="flex items-center justify-center h-full">
+                                    <p className="text-gray-500">No new notifications</p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex h-[100px] items-center justify-center w-full">
+                            <StandardButton 
+                                oAction={() => setSidebarOpen(!sidebarOpen)}
+                                oText='Close'
+                            />
+                        </div>
+                    </div>
+                </RightSidePanel>
+                    }
         </div>
 
     );

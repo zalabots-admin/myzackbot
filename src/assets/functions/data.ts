@@ -54,7 +54,7 @@ export async function getRequestData( oId:string ) {
 
     var currentRequest = await client.models.Request.get({ id: oId },
     {
-        selectionSet: ['id', 'AccountName', 'RequestedFor', 'createdAt', 'DueDate', 'RequestStatus', 'RequestType', 'FollowUpDate', 'DeliveryMethod', 'EmailResponse', 'AutoComplete', 'FollowUp',
+        selectionSet: ['id', 'AccountName', 'RequestedFor', 'createdAt', 'DueDate', 'RequestStatus', 'RequestType', 'FollowUpDate', 'DeliveryMethod', 'EmailResponse', 'AutoComplete', 'FollowUp', 'FollowUpType',
             'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole', 'Participants.EntityName', 'Participants.ParticipantType', 'Participants.RequestTask.Instructions',
             'Questions.id', 'Questions.Name', 'Questions.Description', 'Questions.Label', 'Questions.Order', 'Questions.Options', 'Questions.Type',
             'History.Event','History.Date','History.User','History.Description']
