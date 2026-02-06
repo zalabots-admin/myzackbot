@@ -221,14 +221,18 @@ export async function createHistoryEvent( oEvent:string, oUser:string, oDescript
 };
 
 // Format date to MM/DD/YYYY
-export function formatDate( dateString:string ) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-    });
-};
+export function formatDate(dateString: string) {
+
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day); // local time
+
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+
+}
 
 // Format UTC time to local time with AM/PM
 export function formatToLocalTime( utcString:string ) {
