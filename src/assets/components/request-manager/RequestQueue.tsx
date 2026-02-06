@@ -70,17 +70,9 @@ function RequestQueue( props:Prop ) {
         setFilteredData(sortedData);
     };
 
-    useEffect(() => { 
+    function filterData( oData:any ) {
 
-        if (props.oUserOrg != '' ) {
-            getRequests();
-        }
-
-    },[props.oUserOrg]);
-
-    useEffect(() => { 
-
-        const filteringData = requestData.filter(item => {
+        const filteringData = oData.filter((item: any) => {
             const lowerCaseSearchTerm = searchedValue.toLowerCase();
             return (
                 item.AccountName.toLowerCase().includes(lowerCaseSearchTerm) ||
@@ -98,6 +90,20 @@ function RequestQueue( props:Prop ) {
         });
         setFilteredData( sortedData );
 
+    }
+
+    useEffect(() => { 
+
+        if (props.oUserOrg != '' ) {
+            getRequests();
+        }
+
+    },[props.oUserOrg]);
+
+    useEffect(() => { 
+
+        filterData( requestData );
+
     },[searchedValue]);
 
     useEffect(() => {
@@ -109,7 +115,7 @@ function RequestQueue( props:Prop ) {
                     const currentRequests = [...requestData];
                     currentRequests.push( eventData );
                     setRequestData( currentRequests );
-                    setFilteredData( currentRequests );
+                    filterData( currentRequests );
                     setNoRequests( false );
                 } else if ( props.oEvent.event === 'Update' ) {
                     const currentRequests = [...requestData];
@@ -117,13 +123,12 @@ function RequestQueue( props:Prop ) {
                     if ( index !== -1 ) {
                         currentRequests[index] = eventData;
                         setRequestData( currentRequests );
-                        setFilteredData( currentRequests );
+                        filterData( currentRequests );
                     };
                 } else if ( props.oEvent.event === 'Delete' ) {
-                    
                     const currentRequests = requestData.filter( (item) => item.id !== eventData.id )
                     setRequestData( currentRequests );
-                    setFilteredData( currentRequests );
+                    filterData( currentRequests );
                     if ( currentRequests.length === 0 ) {
                         setNoRequests( true );
                     }
