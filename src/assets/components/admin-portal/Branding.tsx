@@ -51,7 +51,7 @@ function Branding(props: Prop) {
     };
 
     async function cancelEdit() {
-console.log( 'cancelEdit called', originalOrganizationData );
+
         setOrganizationData( originalOrganizationData );
         const uploadText = await setDocumentUploadText(originalOrganizationData.Logo ?? '');
         setDocumentData({ UploadText: uploadText });
@@ -72,14 +72,14 @@ console.log( 'cancelEdit called', originalOrganizationData );
         setOrganizationData( copyOrganizationData );
 
         if ( documentData.DocumentChange ) {
-            await client.models.Organization.update( { id: organizationData.id, Logo: organizationData.Logo, PrimaryColor: organizationData.PrimaryColor, SecondaryColor: organizationData.SecondaryColor, EmailContent: html } );
-            uploadDocument( documentData.documentData, 'organization-logos', organizationData.Logo );
+            await client.models.Organization.update( { id: organizationData.id, Logo: organizationData.Logo, PrimaryColor: organizationData.PrimaryColor, SecondaryColor: organizationData.SecondaryColor, EmailContent: html, LogoWidth: organizationData.LogoWidth } );
+            await uploadDocument( documentData.documentData, 'organization-logos', organizationData.Logo );
+            setImgURL( import.meta.env.VITE_DOC_URL + 'organization-logos/' + organizationData?.Logo );
         } else {
-            await client.models.Organization.update( { id: organizationData.id, PrimaryColor: organizationData.PrimaryColor, SecondaryColor: organizationData.SecondaryColor, EmailContent: html } );
+            await client.models.Organization.update( { id: organizationData.id, PrimaryColor: organizationData.PrimaryColor, SecondaryColor: organizationData.SecondaryColor, EmailContent: html, LogoWidth: organizationData.LogoWidth } );
         }
 
         setDocumentData({ ...documentData, DocumentChange: false });
-        setImgURL( import.meta.env.VITE_DOC_URL + 'organization-logos/' + copyOrganizationData?.Logo );
         setIsLoading( false );
         setIsEditable( false );
         
@@ -106,7 +106,7 @@ console.log( 'cancelEdit called', originalOrganizationData );
 
 
     return (
-        <div id="organization-manager" className="flex-1 flex flex-row min-h-0 overflow-hidden">
+        <div id="branding-manager" className="flex-1 flex flex-row min-h-0 overflow-hidden">
             <div className="flex-1 flex flex-col min-h-0 w-1/4 p-4">
                 <section className="flex-1 flex flex-col items-center min-h-0 bg-white p-6 pt-10 rounded shadow overflow-y-auto border border-gray-300">
                     {/* Header Section */}
@@ -144,8 +144,9 @@ console.log( 'cancelEdit called', originalOrganizationData );
                                             <Input oKey='PrimaryColor' oType='color' oLabel="Colors:" oSize="col12" isRequired={false} isEditable={isEditable} oChange={(e) => handleGetDataInputChange(e, setOrganizationData)} oData={organizationData.PrimaryColor}  />
                                             <Input oKey='SecondaryColor' oType='color' oLabel="" oSize="col12" isRequired={false} isEditable={isEditable} oChange={(e) => handleGetDataInputChange(e, setOrganizationData)} oData={organizationData.SecondaryColor}  />
                                         </div>
-                                        <div className="w-[80%] flex flex-col justify-center items-center">
-                                            <Document isRequired={false} isEditable={isEditable} oSize="col12" oChange={(e) => handleDocumentChange(e)} oData={{ UploadText: documentData.UploadText, DocumentId: documentData.DocumentLink, Label: 'Logo:',  }}  />
+                                        <div className="w-[80%] flex flex-row justify-center items-start gap-4">
+                                            <Document isRequired={false} isEditable={isEditable} oSize="col9" oChange={(e) => handleDocumentChange(e)} oData={{ UploadText: documentData.UploadText, DocumentId: documentData.DocumentLink, Label: 'Logo:',  }}  />
+                                            <Input oKey='LogoWidth' oType='text' oLabel="Logo Width (in px):" oSize="col3" isRequired={false} isEditable={isEditable} oChange={(e) => handleGetDataInputChange(e, setOrganizationData)} oData={organizationData.LogoWidth}  />
                                         </div>
                                         <div className="w-full">
                                             <p>Email Content:</p>
@@ -215,8 +216,8 @@ console.log( 'cancelEdit called', originalOrganizationData );
                                     <div className="h2 mb-4">Request Task Email Preview</div>
                                     <div className="flex-1 flex items-start justify-center overflow-y-auto overflow-x-hidden p-8 rounded shadow border border-gray-300">
                                         <div className="flex flex-col justify-center bg-[#f6f6f6] p-16">
-                                            <div className="flex justify-center bg-white p-8">
-                                                <img data-proportionally-constrained="true" data-responsive="false" width="100" src={imgURL}/>
+                                            <div className="flex justify-center bg-white p-8 w-full">
+                                                <img data-proportionally-constrained="true" data-responsive="false" width={organizationData.LogoWidth} src={imgURL}/>
                                             </div>
                                             <div className="flex flex-col items-center justify-center bg-white p-8 text-[43pt] text-center" style={{color: organizationData.PrimaryColor}}><p>New Information</p><p>Request</p></div>
                                             <div className="bg-white p-8" dangerouslySetInnerHTML={{ __html: organizationData.EmailContent }}></div>

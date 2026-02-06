@@ -17,6 +17,7 @@ const schema = a.schema({
       PrimaryColor: a.string(),
       SecondaryColor: a.string(),
       Logo: a.string(),
+      LogoWidth: a.string(),
       NewRequestTemplate: a.string(),
       FollowUpTemplate: a.string(),
       EmailContent: a.string(),
