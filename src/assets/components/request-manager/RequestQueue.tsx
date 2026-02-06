@@ -4,7 +4,7 @@ import { generateClient } from 'aws-amplify/data';
 import { type Schema } from '../../../../amplify/data/resource'
 import BeatLoader from "react-spinners/BeatLoader";
 import  SearchBar from '../SearchBar'
-import { formatDate, formatToLocalTime } from '../../functions/data';
+import { formatDate, formatDateTime } from '../../functions/data';
 import ZackBot from "../../images/ZBT_Logo_Default.png";
 
 
@@ -194,7 +194,7 @@ function RequestQueue( props:Prop ) {
                                     {/* Desktop */}
                                     <div className="hidden lg:flex">
                                     <div className="w-[15%] h-[50px] p-2 flex items-center">
-                                        {formatDate(item.createdAt)} {formatToLocalTime(item.createdAt)}
+                                        {formatDateTime(item.createdAt)}
                                     </div>
                                     <div className="w-[15%] h-[50px] p-2 flex items-center">
                                         {formatDate(item.DueDate)}
@@ -214,7 +214,7 @@ function RequestQueue( props:Prop ) {
                                     <div className="flex flex-col lg:hidden border-b">
                                     <div className="flex justify-between p-2">
                                         <span className="font-semibold">Created On:</span>
-                                        {formatDate(item.createdAt)} {formatToLocalTime(item.createdAt)}
+                                        {formatDateTime(item.createdAt)}
                                     </div>
                                     <div className="flex justify-between p-2">
                                         <span className="font-semibold">Due Date:</span>

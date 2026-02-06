@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../../amplify/data/resource'
 import { useParams } from 'react-router-dom';
-import { handleGetDataInputChange, handleFormDataInputChange, createHistoryEvent } from '../functions/data'
+import { handleGetDataInputChange, handleFormDataInputChange, createHistoryEvent, formatDate } from '../functions/data'
 import { getRequestTaskData } from '../functions/data'
 import BeatLoader from "react-spinners/BeatLoader";
 import DataInputs from '../components/data-objects/DataInputs'
@@ -181,7 +181,7 @@ useEffect(() => {
                                     <h2 className="text-lg font-bold mb-2" style={{color:secondaryColor}}>Request Details:</h2>
                                     <div style={{marginBottom:'10px'}}><strong>Request:</strong> {requestDetails.RequestedFor}</div>  
                                     <div style={{marginBottom:'10px'}}><strong>Insured:</strong> {requestDetails.AccountName}</div>
-                                    <div style={{marginBottom:'10px'}}><strong>Due Date:</strong> {requestDetails.DueDate}</div>
+                                    <div style={{marginBottom:'10px'}}><strong>Due Date:</strong> {formatDate(requestDetails.DueDate)}</div>
                                     <h2 className="text-lg font-bold mb-2 mt-4" style={{color:secondaryColor}}>Submitter's Details:</h2>
                                     <div className='w-full'>
                                         <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col12" isRequired={true} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestSubmitter)} oData={requestSubmitter.FirstName} />
