@@ -210,7 +210,7 @@ useEffect(() => {
     },[]);
 
   return (
-    <div className="min-h-screen bg-gray-100 lg:overflow-x-hidden">
+    <div className="min-h-screen bg-gray-100 w-full overflow-hidden">
       {loading ? (
         <div className="col12 flex items-center justify-center h-screen">
           <BeatLoader color="#D58936" />
@@ -218,7 +218,7 @@ useEffect(() => {
       ) : (
         <>
           {/* Sticky Header */}
-          <div className="sticky top-0 w-full lg:w-[70%] mx-auto z-10">
+          <div className="top-0 w-full lg:w-[70%] mx-auto z-10">
             <header
               style={{ backgroundColor: primaryColor }}
               className="h-[125px] text-white p-4 font-semibold rounded-b flex flex-col justify-center"
@@ -293,7 +293,7 @@ useEffect(() => {
                 </section>
 
                 {/* Right Column */}
-                <section className="w-full lg:w-[65%] bg-white p-6 rounded shadow lg:overflow-y-auto h-fit lg:h-[calc(100vh-150px)] pb-20">
+                <section className="w-full lg:w-[65%] bg-white p-6 rounded shadow overflow-y-auto h-[calc(100vh-150px)] pb-20">
                   <div className="flex flex-col gap-4">
                     {requestQuestions.map((item: any, index: number) => (
                       <div className="w-full flex justify-center" key={index}>
@@ -363,6 +363,7 @@ useEffect(() => {
         <div
           className="lg:hidden w-full flex justify-center py-3 cursor-grab active:cursor-grabbing touch-none"
           onPointerDown={onDragStart}
+          onClick={() => setTranslateY(EXPANDED_Y)}
         >
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
