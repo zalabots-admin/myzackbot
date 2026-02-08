@@ -8,7 +8,6 @@ import { getRequestTaskData } from '../functions/data'
 import BeatLoader from "react-spinners/BeatLoader";
 import DataInputs from '../components/data-objects/DataInputs'
 import Input from '../components/data-objects/Input';
-import { NewInput } from '../components/data-objects/Input_New';
 import { uploadDocument } from '../functions/document'
 import { v4 as uuidv4 } from 'uuid';
 //import clsx from "clsx";
