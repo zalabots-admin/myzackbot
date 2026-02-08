@@ -409,17 +409,15 @@ useEffect(() => {
                 oData={requestSubmitter.LastName}
               />
                  <Input
-                oKey="LastName"
-                oType="text"
-                oSize='col12'
-                oLabel="Last Name"
-                isRequired
-                isEditable
-                oChange={(e: any) =>
-                  handleGetDataInputChange(e, setRequestSubmitter)
-                }
-                oData={requestSubmitter.LastName}
-              />
+                      oKey="Email"
+                      oType="text"
+                      oLabel="Email"
+                      oSize="col12"
+                      isRequired={false}
+                      isEditable={true}
+                      oChange={(e) => handleGetDataInputChange(e, setRequestSubmitter)}
+                      oData={requestSubmitter.Email}
+                    />
               
             </div>
 
