@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import BeatLoader from 'react-spinners/BeatLoader';
-import { formatDate, formatToLocalTime, getTaskViewData } from '../../functions/data'
+import { formatDate, formatDateTime, formatToLocalTime, formatUTCDate, getTaskViewData } from '../../functions/data'
 import { IconButtonMedium } from '../Buttons'
 
 import '../../styles/ProgressBar.css'
@@ -28,7 +28,7 @@ function ViewTask ( props:Prop ) {
   const getTask = async () => {
 
     const currentTask = await getTaskViewData( props.oOpenTabs[props.oCurrentTab].id );
-console.log( 'Current Task Data:', currentTask );
+
     setTaskDetails( currentTask.data );
     setHistoryDetails( currentTask.data?.Request.History );
     setQuestionDetails( currentTask.data?.Request.Questions );
@@ -53,14 +53,14 @@ console.log( 'Current Task Data:', currentTask );
           steps.forEach(( step:any ) => {
               if ( item.Description === step.description ) {
                   step.completed = 'true';
-                  step.date = formatDate( item.Date );
+                  step.date = formatUTCDate( item.Date );
                   step.time = formatToLocalTime( item.Date );
                   step.user = item.User;
                   step.description = item.Description;
               }
               if ( item.Description === 'Task is Undeliverable' ) {
                   steps[2].completed = 'error';
-                  steps[2].date = formatDate( item.Date );
+                  steps[2].date = formatUTCDate( item.Date );
                   steps[2].time = formatToLocalTime( item.Date );
                   steps[2].user = item.User;
                   steps[2].description = item.Description;
@@ -143,14 +143,14 @@ console.log( 'Current Task Data:', currentTask );
             </div>
             <div className="flex flex-col w-[15%]">
               <p>Created On:</p>
-              <p>{formatDate( taskDetails.createdAt )}</p>
+              <p>{formatDateTime( taskDetails.createdAt )}</p>
             </div>
             <div className="flex flex-col w-[15%]">
               <p>Due Date:</p>
               <p>{formatDate( taskDetails.Request.DueDate )}</p>
             </div>
             <div className="flex flex-col w-[15%]">
-              <p>Status:</p>
+              <p>Request Status:</p>
               <p>{taskDetails.Request.RequestStatus}</p>
             </div>
             <div className="flex flex-grow items-center justify-end flex-row gap-2">
@@ -189,6 +189,10 @@ console.log( 'Current Task Data:', currentTask );
                   <div className="flex flex-col mb-4">
                     <p>Instructions:</p>
                     <p>{taskDetails.Instructions}</p>
+                  </div>
+                  <div className="flex flex-col mb-4">
+                    <p>Task Status:</p>
+                    <p>{taskDetails.RequestTaskStatus}</p>
                   </div>
                 </div>
               </div>
@@ -297,7 +301,7 @@ console.log( 'Current Task Data:', currentTask );
                       <div className='w-full'>
                         <div className=" mb-4">{question.Name}:</div>
 
-                            {taskDetails.Responses?.filter((response:any) => response.Name === question.Name).map((response:any) => (  
+                            {taskDetails.Responses?.filter((response:any) => response.RequestQuestionID === question.id).map((response:any) => (  
                               <>
                                 {(() => {
                                   switch (question.Type) {

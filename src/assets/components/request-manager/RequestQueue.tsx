@@ -6,6 +6,7 @@ import BeatLoader from "react-spinners/BeatLoader";
 import  SearchBar from '../SearchBar'
 import { formatDate, formatDateTime } from '../../functions/data';
 import ZackBot from "../../images/ZBT_Logo_Default.png";
+import { WorkflowStatusIndicator } from "./StatusIndicator";
 
 
 interface Prop {
@@ -206,7 +207,7 @@ function RequestQueue( props:Prop ) {
                                         {item.RequestedFor}
                                     </div>
                                     <div className="w-[10%] h-[50px] p-2 flex items-center">
-                                        {item.RequestStatus.toUpperCase()}
+                                        <WorkflowStatusIndicator status={item.RequestStatus} showLabel={true} pulse={false} />
                                     </div>
                                     </div>
 

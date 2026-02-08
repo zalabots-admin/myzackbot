@@ -132,15 +132,18 @@ const schema = a.schema({
       DocumentId: a.string(),
       Order: a.integer(),
       Request: a.belongsTo('Request', 'RequestID'),
+      Responses: a.hasMany('RequestResponses', 'RequestQuestionID'),
     }).authorization(allow => [allow.publicApiKey()]),
     RequestResponses: a
     .model({
       RequestID: a.string(),
       RequestTaskID: a.string(),
+      RequestQuestionID: a.string(),
       Name: a.string(),
       Value: a.string(),
       IsDocument: a.boolean(),
       RequestTask: a.belongsTo('RequestTasks', 'RequestTaskID'),
+      RequestQuestion: a.belongsTo('RequestQuestions', 'RequestQuestionID'),
     }).authorization(allow => [allow.publicApiKey()]),
     RequestHistory: a
     .model({

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../../amplify/data/resource'
 import { useParams } from 'react-router-dom';
@@ -8,8 +8,10 @@ import { getRequestTaskData } from '../functions/data'
 import BeatLoader from "react-spinners/BeatLoader";
 import DataInputs from '../components/data-objects/DataInputs'
 import Input from '../components/data-objects/Input';
+import { NewInput } from '../components/data-objects/Input_New';
 import { uploadDocument } from '../functions/document'
 import { v4 as uuidv4 } from 'uuid';
+//import clsx from "clsx";
 
 import '../styles/Task.css';
 
@@ -28,6 +30,17 @@ function Task () {
     const [editable, setEditable] = useState( false );
     const { requestId } = useParams<{ requestId: string }>();
     const { taskId } = useParams<{ taskId: string }>();    
+    //const [isTrayOpen, setIsTrayOpen] = useState(false);
+    const COLLAPSED_Y = 70; // percent hidden
+const EXPANDED_Y = 0;
+
+const [translateY, setTranslateY] = useState(COLLAPSED_Y);
+const [isDragging, setIsDragging] = useState(false);
+
+const startY = useRef(0);
+const startTranslate = useRef(0);
+const trayRef = useRef<HTMLDivElement>(null);
+const isTrayOpen = translateY < 30;
     //const [imgURL, setImgURL] = useState<string>( '' );
 
   const getRequest = async () => {
@@ -41,7 +54,7 @@ function Task () {
     setRequestDetails( currentRequest.data );
     setRequestQuestions( currentRequest.data?.Questions.sort((a: any, b: any) => a['Order'] - b['Order']) );
     currentRequest.data?.Questions.map( ( question:any ) => {
-        const existingResponse = currentRequest.data?.RequestTask.Responses.find( ( response:any ) => response.Name === question.Name );
+        const existingResponse = currentRequest.data?.RequestTask.Responses.find( ( response:any ) => response.RequestQuestionID === question.id );
         if ( existingResponse ) {
             question.Value = existingResponse.Value;
             question.answerId = existingResponse.id;
@@ -119,7 +132,7 @@ function Task () {
                 if ( item.New ) {
                     const oId = uuidv4();
                     uploadDocument( item.Document, 'request-documents',  oId )
-                    await client.models.RequestResponses.create({ id: oId, RequestID: requestId!, RequestTaskID: taskId!, Name: item.Name, Value: item.Document.name, IsDocument: true });
+                    await client.models.RequestResponses.create({ id: oId, RequestID: requestId!, RequestTaskID: taskId!,  RequestQuestionID: item.id, Name: item.Name, Value: item.Document.name, IsDocument: true });
                     setRequestQuestions((prevQuestions:any) => {
                         const updatedQuestions = [...prevQuestions];
                         updatedQuestions[prevQuestions.findIndex((i:any) => i.id === item.id)] = { ...updatedQuestions[prevQuestions.findIndex((i:any) => i.id === item.id)], New: false, answerId: oId };
@@ -127,7 +140,7 @@ function Task () {
                     });    
                 }        
             } else {
-                await client.models.RequestResponses.create({ RequestID: requestId!, RequestTaskID: taskId!, Name: item.Name, Value: item.Value, IsDocument: false });
+                await client.models.RequestResponses.create({ RequestID: requestId!, RequestTaskID: taskId!,  RequestQuestionID: item.id, Name: item.Name, Value: item.Value, IsDocument: false });
             }
         }
     });
@@ -144,87 +157,274 @@ function Task () {
     
     }
 
-useEffect(() => {
+    const onDragStart = (e: React.PointerEvent) => {
+  startY.current = e.clientY;
+  startTranslate.current = translateY;
+  setIsDragging(true);
+};
 
-    getRequest();
+const onDragMove = (e: React.PointerEvent) => {
+  if (!isDragging) return;
 
-},[]);
+  const delta = e.clientY - startY.current;
+  const percentDelta = (delta / window.innerHeight) * 100;
+
+  let next = startTranslate.current + percentDelta;
+  next = Math.min(COLLAPSED_Y, Math.max(EXPANDED_Y, next));
+
+  setTranslateY(next);
+};
+
+const onDragEnd = () => {
+  setIsDragging(false);
+  setTranslateY(translateY > 35 ? COLLAPSED_Y : EXPANDED_Y);
+};
+
+    useEffect(() => {
+
+        getRequest();
+
+    },[]);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 overflow-x-hidden">
+      {loading ? (
+        <div className="col12 flex items-center justify-center h-screen">
+          <BeatLoader color="#D58936" />
+        </div>
+      ) : (
         <>
-        { loading ? (
-            <div className='col12 align-center-center' style={{height:'100vh'}}>
-                <BeatLoader color = "#D58936" />
+          {/* Sticky Header */}
+          <div className="sticky top-0 w-full lg:w-[70%] mx-auto z-10">
+            <header
+              style={{ backgroundColor: primaryColor }}
+              className="h-[125px] text-white p-4 font-semibold rounded-b flex flex-col justify-center"
+            >
+              <div className="text-xl">{requestDetails?.Organization?.Name}</div>
+              <div>Information Request</div>
+            </header>
+          </div>
+
+          {/* Completed state */}
+          {requestDetails.RequestTask.RequestTaskStatus === "Submitted" ||
+          requestDetails.RequestTask.RequestTaskStatus === "Completed" ? (
+            <div className="w-full h-screen flex items-center justify-center text-2xl font-semibold">
+              This request has been completed
             </div>
-        ) : (
+          ) : (
             <>
-                <div className="sticky top-0 w-full lg:w-[70%] mx-auto">
-                <header
-                    style={{ backgroundColor: primaryColor }}
-                    className="h-[125px] text-white p-4 font-semibold rounded-b flex flex-col justify-center"
-                >
-                    <div className="text-xl">{requestDetails?.Organization?.Name}</div>
-                    <div>Information Request</div>
-                </header>
-                </div>
-                <>
-                    {requestDetails.RequestTask.RequestTaskStatus === 'Submitted' || requestDetails.RequestTask.RequestTaskStatus === 'Completed' ? (
-                        <div className='w-full h-screen flex items-center justify-center text-2xl font-semibold'>
-                            This request has been completed
+              <main className="w-full lg:w-[70%] mx-auto p-4 flex flex-col lg:flex-row gap-4 bg-gray-50">
+                
+                {/* Desktop Left Column */}
+                <section className="hidden lg:block w-full lg:w-[35%] bg-white p-6 rounded shadow lg:overflow-y-auto h-fit lg:h-[calc(100vh-150px)]">
+                  <div className="w-full flex flex-col gap-4">
+                    <h2 className="text-lg font-bold mb-2" style={{color: secondaryColor}}>Request Details:</h2>
+                    <div><strong>Request:</strong> {requestDetails.RequestedFor}</div>
+                    <div><strong>Insured:</strong> {requestDetails.AccountName}</div>
+                    <div><strong>Due Date:</strong> {formatDate(requestDetails.DueDate)}</div>
+                    <h2 className="text-lg font-bold mt-4 mb-2" style={{color: secondaryColor}}>Submitter's Details:</h2>
+                    <NewInput label="Email" placeholder="you@example.com" helperText="Must be at least 6 characters"/>
+                    <NewInput label="Company" disabled value="Acme Inc." />
+                    <Input
+                      oKey="FirstName"
+                      oType="text"
+                      oLabel="First Name"
+                      oSize="col12"
+                      isRequired={true}
+                      isEditable={true}
+                      oChange={(e) => handleGetDataInputChange(e, setRequestSubmitter)}
+                      oData={requestSubmitter.FirstName}
+                    />
+                    <Input
+                      oKey="LastName"
+                      oType="text"
+                      oLabel="Last Name"
+                      oSize="col12"
+                      isRequired={true}
+                      isEditable={true}
+                      oChange={(e) => handleGetDataInputChange(e, setRequestSubmitter)}
+                      oData={requestSubmitter.LastName}
+                    />
+                    <Input
+                      oKey="Email"
+                      oType="text"
+                      oLabel="Email"
+                      oSize="col12"
+                      isRequired={false}
+                      isEditable={true}
+                      oChange={(e) => handleGetDataInputChange(e, setRequestSubmitter)}
+                      oData={requestSubmitter.Email}
+                    />
+                    {requestSubmitter.FirstName && requestSubmitter.LastName && 
+                      (requestDetails.RequestTask.RequestTaskStatus === "Email Opened" || requestDetails.RequestTask.RequestTaskStatus === "Delivered") && (
+                        <div className="flex justify-center mt-2">
+                          <button
+                            className="w-40 px-4 py-2 text-white font-semibold rounded-full shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition"
+                            style={{ backgroundColor: primaryColor }}
+                            onClick={startForm}
+                          >
+                            Start
+                          </button>
                         </div>
-                    ) : (
-                        <main className="w-full lg:w-[70%] mx-auto h-[calc(100vh-125px)] overflow-y-auto lg:overflow-hidden p-4 flex flex-col lg:flex-row gap-4 bg-gray-50">
-                            {/* Left Column: 100% on small, 35% on large */}
-                            <section className="w-full lg:w-[35%] bg-white p-6 rounded shadow lg:overflow-y-auto h-fit lg:h-[calc(100vh-150px)]">
-                                <div className="w-full flex justify-center flex-col gap-4">
-                                    <h2 className="text-lg font-bold mb-2" style={{color:secondaryColor}}>Request Details:</h2>
-                                    <div style={{marginBottom:'10px'}}><strong>Request:</strong> {requestDetails.RequestedFor}</div>  
-                                    <div style={{marginBottom:'10px'}}><strong>Insured:</strong> {requestDetails.AccountName}</div>
-                                    <div style={{marginBottom:'10px'}}><strong>Due Date:</strong> {formatDate(requestDetails.DueDate)}</div>
-                                    <h2 className="text-lg font-bold mb-2 mt-4" style={{color:secondaryColor}}>Submitter's Details:</h2>
-                                    <div className='w-full'>
-                                        <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col12" isRequired={true} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestSubmitter)} oData={requestSubmitter.FirstName} />
-                                        <Input oKey='LastName' oType='text' oLabel="Last Name" oSize="col12" isRequired={true} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestSubmitter)} oData={requestSubmitter.LastName} />
-                                        <Input oKey='Email' oType='text' oLabel="Email" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleGetDataInputChange(e, setRequestSubmitter)} oData={requestSubmitter.Email} />
-                                    </div>
-                                    <div className="w-full flex justify-center">
-                                        { requestSubmitter.FirstName !== '' && requestSubmitter.LastName !== '' && (requestDetails.RequestTask.RequestTaskStatus === 'Email Opened' || requestDetails.RequestTask.RequestTaskStatus === 'Delivered') && (
-                                            <div className='p-4'>
-                                                <button className="w-40 px-4 py-2 text-white font-semibold rounded-full shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition" onClick={startForm} style={{ backgroundColor: primaryColor }}>Start</button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </section>
-                            {/* Right Column: 100% on small, 65% on large */}
-                            <section className="w-full lg:w-[65%] bg-white p-6 rounded shadow lg:overflow-y-auto h-fit lg:h-[calc(100vh-150px)]">
-                                <div className="w-full flex justify-center flex-col gap-4">
-                                    { requestQuestions.map( ( item:any, index:number ) => (
-                                        <div className="w-full flex justify-center" key={index}>
-                                        { item.Type === 'file' ? (
-                                            <DataInputs oData={item} key={index} oEditable={editable} oChange={(e:any) => handleDocumentChange(e, index)} />
-                                        ) : (
-                                            <DataInputs oData={item} key={index} oEditable={editable} oChange={(e:any) => handleFormDataInputChange(e, setRequestQuestions, index)} />
-                                        )}
-                                        </div>
-                                    )) }                               
-                                    <div className="w-full flex justify-center">
-                                        {requestDetails.RequestTask.RequestTaskStatus === 'In Progress' && (
-                                            <>
-                                                <button  className="m-2 w-40 px-4 py-2 text-white font-semibold rounded-full shadow-md hover:bg-white hover:cursor-pointer transition-colors duration-300" style={{ backgroundColor: primaryColor, borderColor: primaryColor }} onClick={() => saveForm('In Progress')}>Save</button>
-                                                <button  className="m-2 w-40 px-4 py-2 text-white font-semibold rounded-full shadow-md hover:bg-white hover:cursor-pointer transition-colors duration-300" style={{ backgroundColor: primaryColor, borderColor: primaryColor }} onClick={() => saveForm('Submitted')}>Submit</button>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            </section>
-                        </main>
+                      )
+                    }
+                  </div>
+                </section>
+
+                {/* Right Column */}
+                <section className="w-full lg:w-[65%] bg-white p-6 rounded shadow lg:overflow-y-auto h-fit lg:h-[calc(100vh-150px)]">
+                  <div className="flex flex-col gap-4">
+                    {requestQuestions.map((item: any, index: number) => (
+                      <div className="w-full flex justify-center" key={index}>
+                        {item.Type === "file" ? (
+                          <DataInputs
+                            oData={item}
+                            key={index}
+                            oEditable={editable}
+                            oChange={(e: any) => handleDocumentChange(e, index)}
+                          />
+                        ) : (
+                          <DataInputs
+                            oData={item}
+                            key={index}
+                            oEditable={editable}
+                            oChange={(e: any) => handleFormDataInputChange(e, setRequestQuestions, index)}
+                          />
+                        )}
+                      </div>
+                    ))}
+
+                    {requestDetails.RequestTask.RequestTaskStatus === "In Progress" && (
+                      <div className="flex justify-center mt-2">
+                        <button
+                          className="m-2 w-40 px-4 py-2 text-white font-semibold rounded-full shadow-md hover:bg-white hover:cursor-pointer transition-colors duration-300"
+                          style={{ backgroundColor: primaryColor, borderColor: primaryColor }}
+                          onClick={() => saveForm("In Progress")}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="m-2 w-40 px-4 py-2 text-white font-semibold rounded-full shadow-md hover:bg-white hover:cursor-pointer transition-colors duration-300"
+                          style={{ backgroundColor: primaryColor, borderColor: primaryColor }}
+                          onClick={() => saveForm("Submitted")}
+                        >
+                          Submit
+                        </button>
+                      </div>
                     )}
-                </>
+                  </div>
+                </section>
+              </main>
+
+              {/* Mobile Bottom Sheet */}
+              {/* Backdrop */}
+      <div
+        className={`
+          fixed inset-0 z-40 transition-all duration-300
+          ${isTrayOpen ? "bg-black/30 backdrop-blur-sm" : "pointer-events-none opacity-0"}
+          lg:hidden
+        `}
+        onClick={() => setTranslateY(COLLAPSED_Y)}
+      />
+
+      {/* Tray */}
+      <section
+        ref={trayRef}
+        style={{ transform: `translateY(${translateY}%)` }}
+        className={`
+          fixed bottom-0 left-0 right-0 z-50
+          bg-gray-100 rounded-t-2xl shadow-xl border-t border-gray-300
+          transition-transform duration-300 ease-out
+          lg:hidden
+        `}
+      >
+        {/* Drag Handle */}
+        <div
+          className="lg:hidden w-full flex justify-center py-3 cursor-grab active:cursor-grabbing"
+          onPointerDown={onDragStart}
+          onPointerMove={onDragMove}
+          onPointerUp={onDragEnd}
+          onPointerCancel={onDragEnd}
+        >
+          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+        </div>
+
+        {/* Content */}
+        <div className="p-6 max-h-[85vh] overflow-y-auto lg:hidden">
+          <div className="flex flex-col gap-4">
+            <h2 className="text-lg font-bold" style={{ color: secondaryColor }}>
+              Request Details
+            </h2>
+
+            <div><strong>Request:</strong> {requestDetails.RequestedFor}</div>
+            <div><strong>Insured:</strong> {requestDetails.AccountName}</div>
+            <div><strong>Due Date:</strong> {formatDate(requestDetails.DueDate)}</div>
+
+            <h2 className="text-lg font-bold mt-4" style={{ color: secondaryColor }}>
+              Submitter&apos;s Details
+            </h2>
+
+            <div className="space-y-3">
+              <NewInput
+                label="Email"
+                placeholder="you@example.com"
+                helperText="Must be at least 6 characters"
+              />
+
+              <NewInput label="Company" disabled value="Acme Inc." />
+
+              <Input
+                oKey="FirstName"
+                oType="text"
+                oSize='col12'
+                oLabel="First Name"
+                isRequired
+                isEditable
+                oChange={(e: any) =>
+                  handleGetDataInputChange(e, setRequestSubmitter)
+                }
+                oData={requestSubmitter.FirstName}
+              />
+
+              <Input
+                oKey="LastName"
+                oType="text"
+                oSize='col12'
+                oLabel="Last Name"
+                isRequired
+                isEditable
+                oChange={(e: any) =>
+                  handleGetDataInputChange(e, setRequestSubmitter)
+                }
+                oData={requestSubmitter.LastName}
+              />
+
+              
+            </div>
+
+            {/* Action */}
+            {requestSubmitter.FirstName &&
+              requestSubmitter.LastName &&
+              ["Email Opened", "Delivered"].includes(
+                requestDetails.RequestTask.RequestTaskStatus
+              ) && (
+                <div className="flex justify-center pt-4">
+                  <button
+                    onClick={startForm}
+                    className="w-40 px-4 py-2 text-white font-semibold rounded-full shadow-md"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    Start
+                  </button>
+                </div>
+              )}
+          </div>
+        </div>
+      </section>
             </>
-        )}
+          )}
         </>
+      )}
     </div>
   );
 };

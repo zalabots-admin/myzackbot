@@ -5,6 +5,7 @@ import  SearchBar from '../SearchBar'
 import { getTasksData, formatDate } from '../../functions/data';
 //import { ViewTask } from './ViewTask';
 import ZackBot from "../../images/ZBT_Logo_Default.png";
+import { WorkflowStatusIndicator } from "./StatusIndicator";
 
 
 interface Prop {
@@ -194,7 +195,7 @@ function TaskQueue( props:Prop ) {
                                         <div className='w-[20%] flex items-center h-[50px] p-2'>{item.Request.RequestedFor}</div>
                                         <div className='w-[20%] flex items-center h-[50px] p-2'>{item.Assignee}</div>
                                         <div className='w-[20%] flex items-center h-[50px] p-2'>{item.Instructions}</div>
-                                        <div className='w-[10%] flex items-center h-[50px] p-2'>{item.RequestTaskStatus.toUpperCase()}</div>
+                                        <WorkflowStatusIndicator status={item.RequestTaskStatus} showLabel={true} pulse={false} />
                                     </div>
                                     {/* Mobile View */}
                                     <div className="flex flex-col lg:hidden border-b">

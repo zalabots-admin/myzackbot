@@ -98,7 +98,7 @@ export async function getTasksData( oId:string ) {
 
 };
 
-// Get all data for a specific request and task - Populates Task in Request View
+// Get all data for a specific request and task - Populates Task in Request View & Task Form
 export async function getRequestTaskData( oRequestId:string, oTaskId:string ) {
 
     const currentRequest = await client.models.Request.get({ id: oRequestId },
@@ -111,7 +111,7 @@ export async function getRequestTaskData( oRequestId:string, oTaskId:string ) {
     const currentTask = await client.models.RequestTasks.get({ id: oTaskId },
     {
         selectionSet: ['RequestTaskStatus', 
-            'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument',
+            'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument', 'Responses.RequestQuestionID',
             'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole']
     } );
 
@@ -142,7 +142,7 @@ export async function getRequestViewData( oRequestId:string ) {
             ParticipantRole: { eq: 'Recipient' }
         },
         selectionSet: [
-            'id', 'FirstName', 'LastName', 'EntityName', 'Email', 'ParticipantRole','RequestTask.RequestTaskStatus', 'RequestTask.Instructions', 'RequestTask.id', 'RequestTask.Responses.id', 'RequestTask.Responses.Name', 'RequestTask.Responses.Value', 'RequestTask.Responses.IsDocument'
+            'id', 'FirstName', 'LastName', 'EntityName', 'Email', 'ParticipantRole','RequestTask.RequestTaskStatus', 'RequestTask.Instructions', 'RequestTask.id', 'RequestTask.Responses.id', 'RequestTask.Responses.Name', 'RequestTask.Responses.Value', 'RequestTask.Responses.IsDocument', 'RequestTask.Responses.RequestQuestionID'
         ]
     });
 
@@ -167,7 +167,7 @@ export async function getTaskViewData( oTaskId:string ) {
         selectionSet: ['id', 'RequestID', 'Instructions', 'RequestTaskStatus', 'createdAt',
             'Request.AccountName', 'Request.RequestedFor', 'Request.DueDate', 'Request.RequestStatus', 'Request.RequestType', 'Request.FollowUpDate',
             'Participants.id','Participants.FirstName','Participants.LastName', 'Participants.EntityName','Participants.Email','Participants.ParticipantRole',
-            'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument',
+            'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument', 'Responses.RequestQuestionID',
             'Request.Questions.id', 'Request.Questions.Name', 'Request.Questions.Type', 'Request.Questions.Order',
             'Request.History.Event','Request.History.Date','Request.History.User','Request.History.Description', 'Request.History.RequestTaskID'
         ]
@@ -255,10 +255,26 @@ export function formatDateTime(dateString: string) {
     let hours = date.getHours();
     const minutes = String(date.getMinutes()).padStart(2, '0');
 
-    const ampm = hours >= 12 ? 'pm' : 'am';
+    const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12 || 12; // convert 0 → 12
     const formattedHours = String(hours).padStart(2, '0');
 
     return `${month}/${day}/${year} ${formattedHours}:${minutes} ${ampm}`;
+
+}
+
+// Format UTC time to local date
+export function formatUTCDate(utcDate: string | Date): string {
+
+  const date = typeof utcDate === "string"
+    ? new Date(utcDate)
+    : utcDate;
+
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  }).format(date);
 
 }
