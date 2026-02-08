@@ -30,18 +30,63 @@ function Task () {
     const [editable, setEditable] = useState( false );
     const { requestId } = useParams<{ requestId: string }>();
     const { taskId } = useParams<{ taskId: string }>();    
-    //const [isTrayOpen, setIsTrayOpen] = useState(false);
-    const COLLAPSED_Y = 70; // percent hidden
+    //const [imgURL, setImgURL] = useState<string>( '' );
+
+const trayRef = useRef<HTMLDivElement>(null);
+const COLLAPSED_Y = 95;
 const EXPANDED_Y = 0;
 
-const [translateY, setTranslateY] = useState(COLLAPSED_Y);
+const [translateY, setTranslateY] = useState( EXPANDED_Y );
 const [isDragging, setIsDragging] = useState(false);
 
 const startY = useRef(0);
 const startTranslate = useRef(0);
-const trayRef = useRef<HTMLDivElement>(null);
-const isTrayOpen = translateY < 30;
-    //const [imgURL, setImgURL] = useState<string>( '' );
+
+const isOpen = translateY < 30;
+
+const onDragStart = (e: React.PointerEvent) => {
+  startY.current = e.clientY;
+  startTranslate.current = translateY;
+  setIsDragging(true);
+
+  document.body.style.userSelect = "none";
+};
+
+useEffect(() => {
+  if (!isDragging) return;
+
+  const onMove = (e: PointerEvent) => {
+    const delta = e.clientY - startY.current;
+    const percentDelta = (delta / window.innerHeight) * 100;
+
+    let next = startTranslate.current + percentDelta;
+    next = Math.max(EXPANDED_Y, Math.min(COLLAPSED_Y, next));
+
+    setTranslateY(next);
+  };
+
+  const onEnd = () => {
+    setIsDragging(false);
+    document.body.style.userSelect = "";
+
+    setTranslateY((prev) => (prev > 35 ? COLLAPSED_Y : EXPANDED_Y));
+  };
+
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", onEnd);
+  window.addEventListener("pointercancel", onEnd);
+
+  return () => {
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onEnd);
+    window.removeEventListener("pointercancel", onEnd);
+  };
+}, [isDragging]);
+
+useEffect(() => {
+  document.body.style.overflow = isOpen ? "hidden" : "";
+}, [isOpen]);
+
 
   const getRequest = async () => {
 
@@ -76,6 +121,7 @@ const isTrayOpen = translateY < 30;
     setLoading( false );
     if ( currentRequest.data && currentRequest.data.RequestTask.RequestTaskStatus === 'In Progress' ) {
         setEditable( true );
+        setTranslateY( COLLAPSED_Y );
     }
 
   };    
@@ -93,6 +139,7 @@ const isTrayOpen = translateY < 30;
     copyRequestDetails.RequestTask = { ...copyRequestDetails.RequestTask, RequestTaskStatus: 'In Progress' };
     setRequestDetails( copyRequestDetails );
     setEditable( true );  
+    setTranslateY( COLLAPSED_Y );
     await createHistoryEvent('Task', requestSubmitter.FirstName + ' ' + requestSubmitter.LastName, 'Task In Progress', requestId ? requestId : '', taskId ? taskId : '');
 
   }
@@ -157,29 +204,6 @@ const isTrayOpen = translateY < 30;
     
     }
 
-    const onDragStart = (e: React.PointerEvent) => {
-  startY.current = e.clientY;
-  startTranslate.current = translateY;
-  setIsDragging(true);
-};
-
-const onDragMove = (e: React.PointerEvent) => {
-  if (!isDragging) return;
-
-  const delta = e.clientY - startY.current;
-  const percentDelta = (delta / window.innerHeight) * 100;
-
-  let next = startTranslate.current + percentDelta;
-  next = Math.min(COLLAPSED_Y, Math.max(EXPANDED_Y, next));
-
-  setTranslateY(next);
-};
-
-const onDragEnd = () => {
-  setIsDragging(false);
-  setTranslateY(translateY > 35 ? COLLAPSED_Y : EXPANDED_Y);
-};
-
     useEffect(() => {
 
         getRequest();
@@ -187,7 +211,7 @@ const onDragEnd = () => {
     },[]);
 
   return (
-    <div className="min-h-screen bg-gray-100 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-100 lg:overflow-x-hidden">
       {loading ? (
         <div className="col12 flex items-center justify-center h-screen">
           <BeatLoader color="#D58936" />
@@ -223,8 +247,6 @@ const onDragEnd = () => {
                     <div><strong>Insured:</strong> {requestDetails.AccountName}</div>
                     <div><strong>Due Date:</strong> {formatDate(requestDetails.DueDate)}</div>
                     <h2 className="text-lg font-bold mt-4 mb-2" style={{color: secondaryColor}}>Submitter's Details:</h2>
-                    <NewInput label="Email" placeholder="you@example.com" helperText="Must be at least 6 characters"/>
-                    <NewInput label="Company" disabled value="Acme Inc." />
                     <Input
                       oKey="FirstName"
                       oType="text"
@@ -272,7 +294,7 @@ const onDragEnd = () => {
                 </section>
 
                 {/* Right Column */}
-                <section className="w-full lg:w-[65%] bg-white p-6 rounded shadow lg:overflow-y-auto h-fit lg:h-[calc(100vh-150px)]">
+                <section className="w-full lg:w-[65%] bg-white p-6 rounded shadow lg:overflow-y-auto h-fit lg:h-[calc(100vh-150px)] pb-20">
                   <div className="flex flex-col gap-4">
                     {requestQuestions.map((item: any, index: number) => (
                       <div className="w-full flex justify-center" key={index}>
@@ -321,7 +343,7 @@ const onDragEnd = () => {
       <div
         className={`
           fixed inset-0 z-40 transition-all duration-300
-          ${isTrayOpen ? "bg-black/30 backdrop-blur-sm" : "pointer-events-none opacity-0"}
+          ${isOpen ? "bg-black/30 backdrop-blur-sm" : "pointer-events-none opacity-0"}
           lg:hidden
         `}
         onClick={() => setTranslateY(COLLAPSED_Y)}
@@ -340,17 +362,14 @@ const onDragEnd = () => {
       >
         {/* Drag Handle */}
         <div
-          className="lg:hidden w-full flex justify-center py-3 cursor-grab active:cursor-grabbing"
+          className="lg:hidden w-full flex justify-center py-3 cursor-grab active:cursor-grabbing touch-none"
           onPointerDown={onDragStart}
-          onPointerMove={onDragMove}
-          onPointerUp={onDragEnd}
-          onPointerCancel={onDragEnd}
         >
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
 
         {/* Content */}
-        <div className="p-6 max-h-[85vh] overflow-y-auto lg:hidden">
+        <div className="p-6 h-[80vh] overflow-y-auto lg:hidden">
           <div className="flex flex-col gap-4">
             <h2 className="text-lg font-bold" style={{ color: secondaryColor }}>
               Request Details
@@ -365,14 +384,6 @@ const onDragEnd = () => {
             </h2>
 
             <div className="space-y-3">
-              <NewInput
-                label="Email"
-                placeholder="you@example.com"
-                helperText="Must be at least 6 characters"
-              />
-
-              <NewInput label="Company" disabled value="Acme Inc." />
-
               <Input
                 oKey="FirstName"
                 oType="text"
@@ -398,7 +409,18 @@ const onDragEnd = () => {
                 }
                 oData={requestSubmitter.LastName}
               />
-
+                 <Input
+                oKey="LastName"
+                oType="text"
+                oSize='col12'
+                oLabel="Last Name"
+                isRequired
+                isEditable
+                oChange={(e: any) =>
+                  handleGetDataInputChange(e, setRequestSubmitter)
+                }
+                oData={requestSubmitter.LastName}
+              />
               
             </div>
 
