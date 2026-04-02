@@ -90,6 +90,7 @@ const schema = a.schema({
     .model({
       OrganizationID: a.string().required(),
       RequestID: a.string().required(),
+      Number: a.integer(),
       Instructions: a.string(),
       RequestTaskStatus: a.string(),
       Request: a.belongsTo('Request', 'RequestID'),
@@ -142,6 +143,7 @@ const schema = a.schema({
       Name: a.string(),
       Value: a.string(),
       IsDocument: a.boolean(),
+      Status: a.string(),
       RequestTask: a.belongsTo('RequestTasks', 'RequestTaskID'),
       RequestQuestion: a.belongsTo('RequestQuestions', 'RequestQuestionID'),
     }).authorization(allow => [allow.publicApiKey()]),

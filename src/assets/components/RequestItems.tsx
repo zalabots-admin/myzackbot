@@ -26,38 +26,61 @@ export const dataTypes = () => {
   return ( ['Text Field|text','Date Field|date','Number Field|number','Dropdown Menu|select', 'File Upload|file'] );
 
 };
+
+export const questionTypeIcons = ( oType: string ) => {
+
+  var oIcon;
+  switch ( oType ) {
+    case 'number':
+      oIcon = "fa-sharp fa-hashtag";
+      break;
+    case 'date':
+      oIcon = "fa-sharp fa-calendar";
+      break;
+    case 'radio':
+      oIcon = "fa-sharp fa-circle-check";
+      break;
+    case 'checkbox':
+      oIcon = "fa-sharp fa-square-check";
+      break;
+    case 'select':
+      oIcon = "fa-sharp fa-angle-double-down";
+      break;
+    case 'textarea':
+      oIcon = "fa-sharp fa-paragraph";
+      break;
+    case 'file':
+      oIcon = "fa-sharp fa-file";
+      break;
+    case 'form':
+      oIcon = "fa-sharp fa-file-invoice";
+      break;
+    default:
+      oIcon = "fa-sharp fa-font";
+  }
+
+  return ( oIcon );
+
+}
  
 export const ListItem = ( props:ListItem ) => {
 
+  const oIcon = questionTypeIcons(props.oType || 'text');
+
   return (
       
-    <>
-      {(() => {
-        switch (props.oType) {
-          case 'number':
-            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-hashtag text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
-          case 'date':
-            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-calendar-day text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
-          case 'radio':
-            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-circle-check text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
-          case 'checkbox':
-            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-square-check text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
-          case 'select':
-            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-angle-double-down text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
-          case 'question':
-            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-angle-double-down text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
-          case 'textarea':
-            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-paragraph text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
-          case 'file':
-            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-file-lines text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
-          case 'form':
-            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-file-invoice text-lg text-[#FFFFFF]" ></i></div><div className="flex flex-col justify-center ml-4">{props.oName}<br/><span className="text-xs italic">{props.oDescription}</span></div></div>;
-          default:
-            return <div key={props.oKey} className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`} onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}><i className="fa-sharp fa-font text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
-        }
-      })()}
-    </>
-      
+      <div  key={props.oKey}
+        className={`flex items-center p-2 border shadow m-2 rounded-lg ${props.oActiveItem === props.oKey ? `border-[#EB7100] bg-[#EB710020]` : `border-[#005566] bg-[#00556620] hover:border-[#EB7100]`} ${props.oActive ? `opacity-50 cursor-not-allowed`:`cursor-pointer`}`}
+        onClick={props.oActive ? undefined : () => {props.oClick(props.oKey)}}>
+          <div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 ${props.oActiveItem === props.oKey ? 'bg-[#EB7100]':'bg-[#005566]'}`}>
+            <i className={`${oIcon} text-lg text-[#FFFFFF]`}></i>
+          </div>
+          <div className="flex flex-col justify-center items-start ml-4">
+            {props.oName}
+            {props.oDescription && <div className="text-xs italic">{props.oDescription}</div>}
+          </div>
+      </div>
+    
   );
 }
 
@@ -86,7 +109,7 @@ export const DraggableListItem = ( props:ListItem ) => {
           case 'select':
             return <div ref={setNodeRef} className={`flex p-2 border shadow m-2 rounded-lg border-gray-300 bg-[#00556620] ${props.oActive ? `cursor-grab hover:border-[#EB7100]`:`opacity-50 cursor-not-allowed`}`} style={style} {...listeners} {...attributes} ><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 bg-[#005566]`}><i className="fa-sharp fa-angle-double-down text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
           case 'form':
-            return <div ref={setNodeRef} className={`flex p-2 border shadow m-2 rounded-lg border-gray-300 bg-[#00556620] ${props.oActive ? `cursor-grab hover:border-[#EB7100]`:`opacity-50 cursor-not-allowed`}`} style={style} {...listeners} {...attributes} ><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 bg-[#005566]`}><i className="fa-sharp fa-file-invoice text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}<br/><span className="text-xs italic">{props.oDescription}</span></div></div>;
+            return <div ref={setNodeRef} className={`flex p-2 border shadow m-2 rounded-lg border-gray-300 bg-[#00556620] ${props.oActive ? `cursor-grab hover:border-[#EB7100]`:`opacity-50 cursor-not-allowed`}`} style={style} {...listeners} {...attributes} ><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 bg-[#005566]`}><i className="fa-sharp fa-file-invoice text-lg text-[#FFFFFF]"></i></div><div className="flex flex-col justify-center items-start ml-4">{props.oName}<br/><span className="text-xs italic">{props.oDescription}</span></div></div>;
           case 'file':
             return <div ref={setNodeRef} className={`flex p-2 border shadow m-2 rounded-lg border-gray-300 bg-[#00556620] ${props.oActive ? `cursor-grab hover:border-[#EB7100]`:`opacity-50 cursor-not-allowed`}`} style={style} {...listeners} {...attributes} ><div className={`flex justify-center items-center aspect-square rounded-full shadow p-2 bg-[#005566]`}><i className="fa-sharp fa-file-lines text-lg text-[#FFFFFF]"></i></div><div className="flex justify-center items-center ml-4">{props.oName}</div></div>;
             default:

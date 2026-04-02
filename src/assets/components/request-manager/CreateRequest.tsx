@@ -330,6 +330,7 @@ function CreateRequest(props: Prop) {
     async function saveRequest( oStatus: string) {
 
         var request: string | any = {};
+        var oTaskCount = 0;
         if (requestData.id === undefined ) {
             request = await client.models.Request.create({ ...requestData, RequestStatus: 'New', OrganizationID: props.oUser.OrgId });
         } else {
@@ -339,11 +340,12 @@ function CreateRequest(props: Prop) {
         const requestId = request.data?.id;
         const copyParticipants = [...requestParticipants];
         copyParticipants.map( async ( participant ) => {
-
+    
             if ( participant.id.startsWith('T') ) {
                 participant.id = participant.id.slice(1);
                 if ( participant.ParticipantRole === 'Recipient' ) {
-                    const task = await client.models.RequestTasks.create({ OrganizationID: props.oUser.OrgId, RequestID: requestId, RequestTaskStatus: 'New', Instructions: participant.Instructions });
+                    oTaskCount = oTaskCount + 1;
+                    const task = await client.models.RequestTasks.create({ OrganizationID: props.oUser.OrgId, RequestID: requestId, RequestTaskStatus: 'New', Instructions: participant.Instructions, Number: oTaskCount });
                     const taskId = task.data?.id;
                     createHistoryEvent('Task', 'ZackBot', 'Task Created', requestId ? requestId : '', taskId ? taskId : '');
                     await client.models.RequestParticipants.create({ RequestID: requestId, RequestTaskID: taskId, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
@@ -356,8 +358,9 @@ function CreateRequest(props: Prop) {
                 };
                 await client.models.RequestParticipants.delete({ id: participant.id });
             } else {
+                oTaskCount = oTaskCount + 1;
                 await client.models.RequestParticipants.update({ id: participant.id, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType});
-                await client.models.RequestTasks.update({ id: participant.RequestTaskID, Instructions: participant.Instructions });
+                await client.models.RequestTasks.update({ id: participant.RequestTaskID, Instructions: participant.Instructions, Number: oTaskCount });
             }
         });
 
@@ -527,14 +530,16 @@ function CreateRequest(props: Prop) {
                                             </div>
                                             <div>
                                                 {itemData.filter((row:any) => row.Name.toString().toLowerCase().includes(searchedValue.toString().toLowerCase())).map(( item:any ) => (
-                                                    <DraggableListItem oKey={item.id} oName={item.Name} oType={item.Type} oActive={true} />
+                                                    <DraggableListItem oKey={item.id} oName={item.Name} oType={item.Type} oActive={true} oDescription={item.Description} />
                                                 ))}
                                             </div>
                                         </div>
                                     )}
                                     
                                     <div className="flex flex-col w-2/3">
-                                        <ZackbotEditor oItems={requestQuestions} oSetItems={setRequestQuestions} oIsEditable={true} oClick={setRequestQuestions} oSetActive={setActiveItem} oOpenSidePanel={handleViewSidebar} />
+                                      
+                                            <ZackbotEditor oItems={requestQuestions} oSetItems={setRequestQuestions} oIsEditable={true} oClick={setRequestQuestions} oSetActive={setActiveItem} oOpenSidePanel={handleViewSidebar} />
+                                        
                                     </div>
                                 </div>
                             </DndContext>

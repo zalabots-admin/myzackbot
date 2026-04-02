@@ -372,7 +372,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                 </div>
             </div>
             {/* Rest of the page */}
-            <div id="main" className="flex-1 flex flex-col min-h-0 m-4 overflow-hidden">
+            <div id="main" className="flex-1 flex flex-col min-h-0 m-2 overflow-hidden">
                 {/*Request Dashboard*/}
                 {(activeItem['Request Queue'] || activeItem['Tasks Queue']) && 
                     <>
@@ -393,7 +393,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                             ))}
                             <div className="border-b border-gray-300 flex-grow "></div>
                         </div>
-                        <div id="panels" className="flex-1 flex min-h-0 p-4">
+                        <div id="panels" className="flex-1 flex min-h-0 p-2">
                             {requestTabs.map( (panel) => (
                                 <>
                                     {panel.name === 'Request Queue' ? (

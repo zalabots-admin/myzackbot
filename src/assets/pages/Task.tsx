@@ -102,12 +102,14 @@ useEffect(() => {
         if ( existingResponse ) {
             question.Value = existingResponse.Value;
             question.answerId = existingResponse.id;
+            question.Status = existingResponse.Status;
             if ( question.Type === 'file' ) {
                 question.UploadText = 'File: ' + existingResponse.Value;
             }
         } else {
             question.Value = '';
             question.answerId = '';
+            question.Status = 'Pending';
             if ( question.Type === 'file' ) {
                 question.UploadText = 'Drag & Drop or Click to Upload';
             }
@@ -159,11 +161,12 @@ useEffect(() => {
     }
 
     requestQuestions.map( async ( item:any ) => {
-        if ( item.answerId != '' ) {
+      console.log( item.Value, item.answerId );
+        if ( item.answerId != '' && ( item.Value !== '' && item.Value !== null ) ) {
             if ( item.Type === 'file' ) {
                 if ( item.New ) {
                     uploadDocument( item.Document, 'request-documents',  item.answerId )
-                    await client.models.RequestResponses.update({ id: item.answerId, Name: item.Name, Value: item.Document.name, IsDocument: true });
+                    await client.models.RequestResponses.update({ id: item.answerId, Name: item.Name, Value: item.Document.name, IsDocument: true, Status: 'Completed' });
                     setRequestQuestions((prevQuestions:any) => {
                         const updatedQuestions = [...prevQuestions];
                         updatedQuestions[prevQuestions.findIndex((i:any) => i.id === item.id)] = { ...updatedQuestions[prevQuestions.findIndex((i:any) => i.id === item.id)], New: false };
@@ -171,14 +174,14 @@ useEffect(() => {
                     });
                 }
             } else {
-                await client.models.RequestResponses.update({ id: item.answerId, Name: item.Name, Value: item.Value, IsDocument: false });
+                await client.models.RequestResponses.update({ id: item.answerId, Name: item.Name, Value: item.Value, IsDocument: false, Status: 'Completed' });
             }
         } else if ( item.Value !== '' && item.Value !== null ) {
             if ( item.Type === 'file' ) {
                 if ( item.New ) {
                     const oId = uuidv4();
                     uploadDocument( item.Document, 'request-documents',  oId )
-                    await client.models.RequestResponses.create({ id: oId, RequestID: requestId!, RequestTaskID: taskId!,  RequestQuestionID: item.id, Name: item.Name, Value: item.Document.name, IsDocument: true });
+                    await client.models.RequestResponses.create({ id: oId, RequestID: requestId!, RequestTaskID: taskId!,  RequestQuestionID: item.id, Name: item.Name, Value: item.Document.name, IsDocument: true, Status: 'Completed' });
                     setRequestQuestions((prevQuestions:any) => {
                         const updatedQuestions = [...prevQuestions];
                         updatedQuestions[prevQuestions.findIndex((i:any) => i.id === item.id)] = { ...updatedQuestions[prevQuestions.findIndex((i:any) => i.id === item.id)], New: false, answerId: oId };
@@ -186,9 +189,11 @@ useEffect(() => {
                     });    
                 }        
             } else {
-                await client.models.RequestResponses.create({ RequestID: requestId!, RequestTaskID: taskId!,  RequestQuestionID: item.id, Name: item.Name, Value: item.Value, IsDocument: false });
+                await client.models.RequestResponses.create({ RequestID: requestId!, RequestTaskID: taskId!,  RequestQuestionID: item.id, Name: item.Name, Value: item.Value, IsDocument: false, Status: 'Completed' });
             }
-        }
+        } else if ( item.Value === '' && item.answerId != '' ) {
+          await client.models.RequestResponses.update({ id: item.answerId, Status: 'Pending' });
+        };
     });
 
   }
@@ -295,7 +300,7 @@ useEffect(() => {
                 {/* Right Column */}
                 <section className="w-full lg:w-[65%] bg-white p-6 rounded shadow overflow-y-auto h-[calc(100vh-150px)] pb-20">
                   <div className="flex flex-col gap-4">
-                    {requestQuestions.map((item: any, index: number) => (
+                    {requestQuestions.filter((items: any) => items.Status !== 'Waived').map((item: any, index: number) => (
                       <div className="w-full flex justify-center" key={index}>
                         {item.Type === "file" ? (
                           <DataInputs

@@ -10,35 +10,40 @@ interface WorkflowStatusIndicatorProps {
 }
 
 const STATUS_MAP = {
-  NEW: { color: "bg-slate-400", label: "New" },
-  SENT: { color: "bg-blue-400", label: "Sent" },
-  DELIVERED: { color: "bg-blue-600", label: "Delivered" },
-  EMAIL_OPENED: { color: "bg-indigo-500", label: "Email Opened" },
-  IN_PROGRESS: { color: "bg-yellow-500", label: "In Progress" },
-  PAST_DUE: { color: "bg-orange-500", label: "Past Due" },
-  EXPIRED: { color: "bg-amber-700", label: "Expired" },
-  CANCELLED: { color: "bg-red-500", label: "Cancelled" },
-  SUBMITTED: { color: "bg-emerald-600", label: "Submitted" },
-  DRAFT: { color: "bg-gray-400", label: "Draft" },
-  REQUESTED: { color: "bg-blue-500", label: "Requested" },
-  ACTIVE: { color: "bg-green-500", label: "Active" },
-  CLOSED: { color: "bg-gray-500", label: "Closed" },
+  NEW: { color: "bg-[#505050]", label: "New", pulse: false },
+  SENT: { color: "bg-[#003399]", label: "Sent", pulse: false },
+  DELIVERED: { color: "bg-[#003399]", label: "Delivered", pulse: false },
+  BOUNCED: { color: "bg-[#EB7100]", label: "Bounced", pulse: true },
+  EMAIL_OPENED: { color: "bg-[#003399]", label: "Email Opened", pulse: false },
+  IN_PROGRESS: { color: "bg-[#4E6E5D]", label: "In Progress", pulse: false },
+  PAST_DUE: { color: "bg-[#EB7100]", label: "Past Due", pulse: true },
+  EXPIRED: { color: "bg-[#EB7100]", label: "Expired", pulse: true },
+  CANCELLED: { color: "bg-[#505050]", label: "Cancelled", pulse: true },
+  SUBMITTED: { color: "bg-[#003399]", label: "Submitted", pulse: false },
+  DRAFT: { color: "bg-[#505050]", label: "Draft", pulse: false },
+  REQUESTED: { color: "bg-[#003399]", label: "Requested", pulse: false },
+  ACTIVE: { color: "bg-[#4E6E5D]", label: "Active", pulse: false },
+  CLOSED: { color: "bg-[#505050]", label: "Closed", pulse: false },
+  PENDING : { color: "bg-[#4E6E5D]", label: "Pending", pulse: false },
+  COMPLETED : { color: "bg-[#003399]", label: "Completed", pulse: false },
+  WAIVED : { color: "bg-[#EB7100]", label: "Waived", pulse: true },
 } as const;
 
 const DEFAULT_STATUS = {
   color: "bg-gray-400",
   label: "Unknown",
+  pulse: false,
 };
 
 export const WorkflowStatusIndicator = ({
   status,
   showLabel = true,
-  pulse = false,
+  //pulse = false,
   size = "lg",
 }: WorkflowStatusIndicatorProps) => {
   const normalizedStatus = status.toUpperCase().replace(/\s+/g, "_");
 
-  const { color, label } =
+  const { color, label, pulse } =
     STATUS_MAP[normalizedStatus as keyof typeof STATUS_MAP] ??
     DEFAULT_STATUS;
 

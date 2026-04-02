@@ -5,6 +5,7 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../../../amplify/data/resource.ts'
 import BeatLoader from 'react-spinners/BeatLoader';
 import { formatDate, formatToLocalTime, getRequestViewData, createHistoryEvent, formatDateTime, formatUTCDate } from '../../functions/data'
+import { questionTypeIcons } from '../RequestItems.tsx';
 import { IconButtonMedium } from '../Buttons'
 
 import '../../styles/ProgressBar.css'
@@ -30,6 +31,7 @@ function ViewRequest ( props:Prop ) {
   const [activeTask, setActiveTask] = useState( '' );
   const [historySteps, setHistorySteps] = useState<any>( [] );
   const [taskAssignee, setTaskAssignee] = useState( '' );
+  const [taskAssigneeEmail, setTaskAssigneeEmail] = useState( '' );
   const [taskInstructions, setTaskInstructions] = useState( '' );
   const [taskStatus, setTaskStatus] = useState( '' );
   
@@ -40,7 +42,11 @@ function ViewRequest ( props:Prop ) {
     setRequestDetails( currentRequest.data );
     setHistoryDetails( currentRequest.data?.History );
     setQuestionDetails( currentRequest.data?.Questions );
-    setActiveTask( currentRequest.data?.RequestTasks[0]?.RequestTask.id );
+    setActiveTask(
+      currentRequest.data?.RequestTasks?.find(
+        (t: any) => t.RequestTask.Number === 1
+      )?.RequestTask.id
+    );
     setLoading( false );
 
   };
@@ -59,7 +65,6 @@ function ViewRequest ( props:Prop ) {
       historyDetails.filter(( event:any ) => event.RequestTaskID === activeTask || event.RequestTaskID === null ).forEach(( item:any ) => {
 
           steps.forEach(( step:any ) => {
-            console.log( item.Date );
               if ( item.Description === step.description ) {
                   step.completed = 'true';
                   step.date = formatUTCDate( item.Date );
@@ -96,12 +101,59 @@ function ViewRequest ( props:Prop ) {
 
   };
 
+  async function handleReset( oResponseId:string ) {
+    
+    await client.models.RequestResponses.update({ id: oResponseId, Status: 'Pending', Value: '' });
+    const copyRequestDetails = [ ...requestDetails.RequestTasks ];
+    const responseIndex = copyRequestDetails.find((task:any) => task.RequestTask.id === activeTask).RequestTask.Responses.findIndex((response:any) => response.id === oResponseId);
+    copyRequestDetails.find((task:any) => task.RequestTask.id === activeTask).RequestTask.Responses[responseIndex].Status = 'Pending';
+    copyRequestDetails.find((task:any) => task.RequestTask.id === activeTask).RequestTask.Responses[responseIndex].Value = '';
+    setRequestDetails( { ...requestDetails, RequestTasks: [...copyRequestDetails] } );
+    //await createHistoryEvent( 'Request Task Response', props.oUser.Username, 'Question Reset', requestDetails.id, activeTask, oResponseId );
+
+  };
+
   async function handleCopy( oText:string )  {
     try {
       await navigator.clipboard.writeText( oText );
     } catch (err) {
       console.error("Failed to copy: ", err);
     }
+  };
+
+  async function handleWaive( oResponseId:string, oQuestionId:string ) {
+    if ( oResponseId === 'n/a' ) {
+      const newResponse = await client.models.RequestResponses.create({ RequestID: requestDetails.id, RequestTaskID: activeTask, RequestQuestionID: oQuestionId, Status: 'Waived' });
+      const copyRequestDetails = [ ...requestDetails.RequestTasks ];
+      copyRequestDetails.find((task:any) => task.RequestTask.id === activeTask).RequestTask.Responses.push( { id: newResponse.data?.id, RequestTaskID: activeTask, RequestQuestionID: oQuestionId, Status: 'Waived' } );
+      setRequestDetails( { ...requestDetails, RequestTasks: [...copyRequestDetails] } );
+      //await createHistoryEvent( 'Request Task Response', props.oUser.Username, 'Question Waived', requestDetails.id, activeTask, 'n/a' );
+    } else {
+      await client.models.RequestResponses.update({ id: oResponseId, Status: 'Waived' });
+      const copyRequestDetails = [ ...requestDetails.RequestTasks ];
+      copyRequestDetails.find((task:any) => task.RequestTask.id === activeTask).RequestTask.Responses.find((response:any) => response.id === oResponseId).Status = 'Waived';
+      setRequestDetails( { ...requestDetails, RequestTasks: [...copyRequestDetails] } );
+      //await createHistoryEvent( 'Request Task Response', props.oUser.Username, 'Question Waived', requestDetails.id, activeTask, oResponseId );
+    }
+
+  }
+
+  async function handleComplete( oResponseId:string, oQuestionId:string ) {
+    
+    if ( oResponseId === 'n/a' ) {
+      const newResponse = await client.models.RequestResponses.create({ RequestID: requestDetails.id, RequestTaskID: activeTask, RequestQuestionID: oQuestionId, Status: 'Closed' });
+      const copyRequestDetails = [ ...requestDetails.RequestTasks ];
+      copyRequestDetails.find((task:any) => task.RequestTask.id === activeTask).RequestTask.Responses.push( { id: newResponse.data?.id, RequestTaskID: activeTask, RequestQuestionID: oQuestionId, Status: 'Closed' } );
+      setRequestDetails( { ...requestDetails, RequestTasks: [...copyRequestDetails] } );
+      //await createHistoryEvent( 'Request Task Response', props.oUser.Username, 'Question Completed', requestDetails.id, activeTask, 'n/a' );
+    } else {
+      await client.models.RequestResponses.update({ id: oResponseId, Status: 'Closed' });
+      const copyRequestDetails = [ ...requestDetails.RequestTasks ];
+      copyRequestDetails.find((task:any) => task.RequestTask.id === activeTask).RequestTask.Responses.find((response:any) => response.id === oResponseId).Status = 'Closed';
+      setRequestDetails( { ...requestDetails, RequestTasks: [...copyRequestDetails] } );
+      //await createHistoryEvent( 'Request Task Response', props.oUser.Username, 'Question Completed', requestDetails.id, activeTask, oResponseId );
+    }
+
   };
 
   function openTaskForm() {
@@ -138,11 +190,12 @@ function ViewRequest ( props:Prop ) {
     if (activeTask === '') return;
     setTaskInstructions(requestDetails.RequestTasks[requestDetails.RequestTasks.findIndex((task:any) => task.RequestTask.id === activeTask)].RequestTask.Instructions);
     setTaskStatus(requestDetails.RequestTasks[requestDetails.RequestTasks.findIndex((task:any) => task.RequestTask.id === activeTask)].RequestTask.RequestTaskStatus);
-    if ( requestDetails.RequestTasks[requestDetails.RequestTasks.findIndex((task:any) => task.RequestTask.id === activeTask)].EntityName !== '' ) {
-      setTaskAssignee(requestDetails.RequestTasks[requestDetails.RequestTasks.findIndex((task:any) => task.RequestTask.id === activeTask)].EntityName);
-    } else {
-      setTaskAssignee(requestDetails.RequestTasks[requestDetails.RequestTasks.findIndex((task:any) => task.RequestTask.id === activeTask)].FirstName + ' ' + requestDetails.RequestTasks[requestDetails.RequestTasks.findIndex((task:any) => task.RequestTask.id === activeTask)].LastName);
-    };
+    setTaskAssigneeEmail(requestDetails.RequestTasks[requestDetails.RequestTasks.findIndex((task:any) => task.RequestTask.id === activeTask)].Email);
+    ///if ( requestDetails.RequestTasks[requestDetails.RequestTasks.findIndex((task:any) => task.RequestTask.id === activeTask)].EntityName !== '' ) {
+      setTaskAssignee(requestDetails.RequestTasks[requestDetails.RequestTasks.findIndex((task:any) => task.RequestTask.id === activeTask)].Assignee);
+    //} else {
+    //  setTaskAssignee(requestDetails.RequestTasks[requestDetails.RequestTasks.findIndex((task:any) => task.RequestTask.id === activeTask)].FirstName + ' ' + requestDetails.RequestTasks[requestDetails.RequestTasks.findIndex((task:any) => task.RequestTask.id === activeTask)].LastName);
+    //};
 
   },[activeTask]);
 
@@ -211,28 +264,25 @@ function ViewRequest ( props:Prop ) {
               <div className="flex-1 flex flex-col min-h-0 gap-4 min-h-0"> 
                 <div className="flex justify-center items-center"><h3>Request Tasks</h3></div>
                 <div id="request-tasks-list" className='flex-1 flex flex-col overflow-y-auto'>
-                  {requestDetails.RequestTasks?.map((task:any) => (
+                  {requestDetails.RequestTasks?.sort((a:any, b:any) => a.RequestTask.Number - b.RequestTask.Number).map((task:any) => (
                     <>
-                      {activeTask === task.RequestTask.id ? (
-                        <div className={'flex cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={task.id} onClick={() => {setActiveTask(task.RequestTask.id)}}>
-                            {task.EntityName !== '' ? (
-                            <div className='w-[80%] flex items-center h-[60px] p-2 font-bold text-[#005566]'>{task.EntityName}<br/>{task.RequestTask.Instructions}</div>
-                            ) : (
-                            <div className='w-[80%] flex items-center h-[60px] p-2 font-bold text-[#005566]'>{task.FirstName} {task.LastName} | {task.Email}<br/>{task.RequestTask.Instructions}</div>
-                            )}
-                            <div className='w-[20%] flex items-center text-center h-[60px] p-2 font-bold text-[#005566]'>{task.RequestTask.RequestTaskStatus.toUpperCase()}</div>
+                      <div  key={task.RequestTask.id} onClick={() => setActiveTask( task.RequestTask.id )}
+                        className={`flex flex-row items-start p-2 border shadow m-2 rounded-lg ${activeTask === task.RequestTask.id ? `border-[#005566] bg-[#00556620]` : `border-gray-300 bg-gray-100 hover:cursor-pointer hover:border-[#EB7100]`}`}>
+                        <div className={`w-fit flex flex-col flex-center justify-center h-full text-center py-2 px-4 border-r ${activeTask === task.RequestTask.id ? `border-[#005566]` : `border-gray-300`}`}>
+                          
+                            <span className="text-sm">TASK</span>
+                            <span className="text-xl">{task.RequestTask.Number}</span>
+                          
                         </div>
-                      ) : (
-                        <div className={'flex cursor-pointer hover:bg-[#00556640] transition-colors duration-200 ease-in-out even:bg-[#F4F4F4]'} key={task.id} onClick={() => {setActiveTask(task.RequestTask.id)}}>
-                            
-                            {task.EntityName !== '' ? (
-                            <div className='w-[80%] flex items-center h-[60px] p-2'>{task.EntityName}<br/>{task.RequestTask.Instructions}</div>
-                            ) : (
-                            <div className='w-[80%] flex items-center h-[60px] p-2'>{task.FirstName} {task.LastName} | {task.Email}<br/>{task.RequestTask.Instructions}</div>
-                            )}
-                            <div className='w-[20%] flex items-center text-center h-[60px] p-2'>{task.RequestTask.RequestTaskStatus.toUpperCase()}</div>
+                        <div className="w-2/3 flex flex-col h-full p-2 pl-4">
+                          <div className="font-bold">{task.Assignee}</div>
+                          <div className="text-sm">{task.RequestTask.Instructions}</div>
                         </div>
-                      )}
+                        <div className="w-1/4 flex items-center justify-start h-full">
+                          <WorkflowStatusIndicator status={task.RequestTask.RequestTaskStatus} showLabel={true} pulse={false} />
+                        </div>
+                      </div>
+        
                     </>
                   ))}
                 </div>
@@ -244,6 +294,10 @@ function ViewRequest ( props:Prop ) {
                 <div className="flex flex-col w-1/4">
                   <p>Task Assignee:</p>
                   <p>{taskAssignee}</p>
+                </div>
+                <div className="flex flex-col w-1/4">
+                  <p>Assignee Email:</p>
+                  <p>{taskAssigneeEmail}</p>
                 </div>
                 <div className="flex flex-col w-1/4">
                   <p>Instructions:</p>
@@ -283,8 +337,8 @@ function ViewRequest ( props:Prop ) {
                                                   </div>
                                               )}
                                           </div>
-                                          <div className="align-center-left">
-                                              <div className="col12"><h4>{item.description}</h4></div>
+                                          <div className="align-center-left font-family-roboto">
+                                              <div className="col12 font-bold">{item.description}</div>
                                               <div className="col12">{item.date} at {item.time} </div>
                                               <div className="col12">By: {item.user}</div>
                                           </div>
@@ -337,7 +391,7 @@ function ViewRequest ( props:Prop ) {
                                                   </div>
                                               )}
                                           </div>
-                                          <div className="align-center-left">
+                                          <div className="align-center-left font-family-roboto">
                                               <div className="col12"><h4>{item.description}</h4></div>
                                               <div className="col12">{item.date} at {item.time} </div>
                                               <div className="col12">By: {item.user}</div>
@@ -354,49 +408,68 @@ function ViewRequest ( props:Prop ) {
                   <div className="flex-1 flex flex-col min-h-0 gap-4 min-h-0"> 
                     <div className="flex justify-center items-center"><h3>Task Response</h3></div>
                     <div id="request-questions-list" className='flex-1 flex flex-col overflow-y-auto overflow-x-hidden'>
-                      {questionDetails?.sort((a:any, b:any) => a.Order - b.Order).map((question:any) => (
-                        <section className="w-[95%] bg-white m-4 p-4 rounded shadow h-[100px] border border-gray-300 flex items-center">
-                          <div className='w-full'>
-                            <div className=" mb-4">{question.Name}:</div>
-                            {requestDetails.RequestTasks?.filter((task:any) => task.RequestTask.id === activeTask).map((task:any) => (
-                              <>
-                                {task.RequestTask.Responses?.filter((response:any) => response.RequestQuestionID === question.id).map((response:any) => (  
-                                  <>
-                                    {(() => {
-                                      switch (question.Type) {
-                                        case 'date':
-                                          return (
-                                            <div  className='flex w-full'>
-                                              {response.Value !== '' ? <><div className='w-[93%]'>{formatDate(response.Value)}</div><div title='Copy Response' className='w-[7%] text-[20px] text-[#005566] cursor-pointer hover:text-[#D58936]' onClick={() => handleCopy(formatDate(response.Value))}><i className={"fa-sharp fa-thin fa-clone "}></i></div></> : null}
-                                            </div>
-                                          )
-                                        case 'file':
-                                          return (
-                                            <div  className='flex w-full'>
-                                              <div className='w-[86%]'>{response.Value}</div>
-                                              <div title='Download File' className='w-[7%] text-[20px] text-[#005566] cursor-pointer hover:text-[#005566]' onClick={() => handleDownload(response.Value, response.id)}><i className={"fa-sharp fa-thin fa-download "}></i></div>
-                                              <a title='Open File in New Tab' className='w-[7%] cursor-pointer' href={import.meta.env.VITE_DOC_URL + 'request-documents/' + response.id} target="_blank" rel="noopener noreferrer"><div className='text-[20px] text-[#005566] cursor-pointer hover:text-[#D58936]'><i className={"fa-sharp fa-thin fa-up-right-from-square "}></i></div></a>
-                                            </div>
-                                        )
-                                        default:
-                                          return (
-                                            <div  className='flex w-full'>
-                                                {response.Value !== '' ? <><div className='w-[93%]'>{response.Value}</div><div title='Copy Response' className='w-[7%] text-[20px] text-[#005566] cursor-pointer' onClick={() => handleCopy(response.Value)}><i className={"fa-sharp fa-thin fa-clone "}></i></div></> : null}
-                                            </div>
-                                          )
-                                      }
-                                    })()}
-                                    
-                                    <div className='w-[10%] flex flex-col justify-between items-end'>
-                                      
+                      {questionDetails?.sort((a:any, b:any) => a.Order - b.Order).map((question:any) => ( 
+                        <div className="bg-white m-4 rounded shadow border border-gray-300 flex items-center" key={question.id}> 
+                          {requestDetails.RequestTasks?.filter((task:any) => task.RequestTask.id === activeTask).map((task:any) => ( 
+                            <>
+                            {(() => {
+                              const response = task.RequestTask.Responses.find((response:any) => response.RequestQuestionID === question.id); 
+                              return (
+                                <>
+                              <div key={task.RequestTask.id} className="w-1/4 flex flex-col justify-center items-start bg-gray-100 h-full rounded-tl rounded-bl p-4">
+                                <WorkflowStatusIndicator status={response?.Status ?? 'Pending'} showLabel={true} pulse={false} />
+                              </div>
+                              <div className="w-1/2 flex flex-col h-full p-2 pl-4"> 
+                                <div className="flex flex-row gap-2 items-center mb-2"> 
+                                  <i className={`${questionTypeIcons(question.Type)} text-[#4E6E5D] text-xl`}></i> 
+                                  <div>{question.Name}:</div> 
+                                </div> 
+                                <div className="flex justify-start items-start"> 
+                                    {question.Type === 'date' ? ( 
+                                    response?.Value ? formatDate( response?.Value ) : <br />
+                                    ) : question.Type === 'file' ? ( 
+                                    <div>{response?.Value ? question.Name + '_response' : <br />}</div> 
+                                    ) : ( 
+                                    <div>{response?.Value ? response?.Value : <br />}</div> 
+                                    )} 
+                                </div>
+                              </div>
+                              <div className="w-1/4 flex flex-col h-full p-2"> 
+                                <div className="flex justify-center items-start border-l border-gray-300 p-2 h-full w-full">
+                                  {response?.Status === 'Waived' || response?.Status === 'Closed' ? ( 
+                                    <div className="flex flex-row justify-center items-center gap-3 h-full"> 
+                                      <i title="Reset Question" className="fa-sharp fa-rotate-left text-[#4E6E5D] text-xl cursor-pointer" onClick={() => handleReset(response?.id)}></i>
+                                    </div> 
+                                  ) : response?.Status === 'Completed' ? ( 
+                                    <> 
+                                      {question.Type === 'file' ? ( 
+                                        <div className="flex flex-row justify-center items-center gap-3 h-full"> 
+                                          <i title="Download File" className="fa-sharp fa-download text-[#4E6E5D] text-xl cursor-pointer" onClick={() => handleDownload(response?.Value, response.id)}></i> 
+                                          <a href={import.meta.env.VITE_DOC_URL + 'request-documents/' + response?.id} target="_blank" rel="noopener noreferrer"><i title="View File" className="fa-sharp fa-up-right-from-square text-[#4E6E5D] text-xl cursor-pointer"></i></a>
+                                        </div> 
+                                      ) : ( 
+                                        <div className="flex flex-row justify-center items-center gap-3 h-full"> 
+                                          <i title="Copy Response" className="fa-sharp fa-clone text-[#4E6E5D] text-xl cursor-pointer" onClick={() => handleCopy(response?.Value)}></i> 
+                                        </div> 
+                                      )} 
+                                    </> 
+                                  ) : response?.Status === 'Entered' ? ( 
+                                    <div className="flex flex-row justify-center items-center gap-3 h-full">
                                     </div>
-                                  </>
-                                ))}
+                                  ) : ( 
+                                    <div className="flex flex-row justify-center items-center gap-3 h-full">
+                                      <i title="Waive Question" className="fa-sharp fa-hand-wave text-[#4E6E5D] text-xl cursor-pointer" onClick={() => handleWaive(response?.id ? response.id : 'n/a', question.id)}></i> 
+                                      <i title="Mark Closed" className="fa-sharp fa-check text-[#4E6E5D] text-xl cursor-pointer" onClick={() => handleComplete(response?.id ? response.id : 'n/a', question.id)}></i>  
+                                    </div> 
+                                  )}
+                                </div>
+                              </div>
                               </>
-                            ))}
-                          </div>
-                          
-                        </section>
+                              )
+                            })()}
+                            </>
+                          ))}
+                        </div>
                       ))}
                     </div>
                   </div>

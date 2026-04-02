@@ -111,7 +111,7 @@ export async function getRequestTaskData( oRequestId:string, oTaskId:string ) {
     const currentTask = await client.models.RequestTasks.get({ id: oTaskId },
     {
         selectionSet: ['RequestTaskStatus', 
-            'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument', 'Responses.RequestQuestionID',
+            'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument', 'Responses.RequestQuestionID', 'Responses.Status',
             'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole']
     } );
 
@@ -142,9 +142,17 @@ export async function getRequestViewData( oRequestId:string ) {
             ParticipantRole: { eq: 'Recipient' }
         },
         selectionSet: [
-            'id', 'FirstName', 'LastName', 'EntityName', 'Email', 'ParticipantRole','RequestTask.RequestTaskStatus', 'RequestTask.Instructions', 'RequestTask.id', 'RequestTask.Responses.id', 'RequestTask.Responses.Name', 'RequestTask.Responses.Value', 'RequestTask.Responses.IsDocument', 'RequestTask.Responses.RequestQuestionID'
+            'id', 'FirstName', 'LastName', 'EntityName', 'Email', 'ParticipantRole','RequestTask.RequestTaskStatus', 'RequestTask.Instructions', 'RequestTask.id', 'RequestTask.Number', 'RequestTask.Responses.id', 'RequestTask.Responses.Name', 'RequestTask.Responses.Value', 'RequestTask.Responses.IsDocument', 'RequestTask.Responses.RequestQuestionID', 'RequestTask.Responses.Status',
         ]
     });
+
+    for ( const task of currentTasks.data ) {
+        if (task.EntityName === '' ) {
+            (task as any).Assignee = task.FirstName + ' ' + task.LastName;
+        } else {
+            (task as any).Assignee = task.EntityName;
+        }   
+    }
 
 
     const enrichedRequest = {
