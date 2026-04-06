@@ -98,6 +98,30 @@ export async function getTasksData( oId:string ) {
 
 };
 
+export async function getNewTasksData( oId:string ) {
+
+    const currentTask = await client.models.RequestTasks.get({ id: oId },
+    {
+        selectionSet: ['id', 'RequestID', 'Instructions', 'RequestTaskStatus', 'createdAt',
+            'Request.AccountName', 'Request.RequestedFor', 'Request.DueDate', 
+            'Participants.id','Participants.FirstName','Participants.LastName', 'Participants.EntityName','Participants.Email','Participants.ParticipantRole'
+        ]
+    });  
+
+        const filteredParticipants = currentTask.data?.Participants?.filter( ( participant ) => participant.ParticipantRole === 'Recipient' );
+        if ( filteredParticipants && filteredParticipants[0] ) {
+            if ( filteredParticipants[0].EntityName === '' ) {
+                (currentTask.data as any).Assignee = filteredParticipants[0].FirstName + ' ' + filteredParticipants[0].LastName;
+            } else {
+                (currentTask.data as any).Assignee = filteredParticipants[0].EntityName;
+            }
+        }
+
+
+    return currentTask.data;
+
+};
+
 // Get all data for a specific request and task - Populates Task in Request View & Task Form
 export async function getRequestTaskData( oRequestId:string, oTaskId:string ) {
 
@@ -202,7 +226,7 @@ export async function getRequestFormsAndItemsData( oId:string ) {
             'id', 'Name',
             'Items.id', 'Items.Name', 'Items.Type', 'Items.Label', 'Items.Description', 'Items.Options', 'Items.Layout', 'Items.DocumentId',
             'Forms.id', 'Forms.Name', 'Forms.Type', 'Forms.Description',
-            'Forms.FormItems.id', 'Forms.FormItems.Name', 'Forms.FormItems.Type', 'Forms.FormItems.Label', 'Forms.FormItems.Description', 'Forms.FormItems.Options', 'Forms.FormItems.Layout', 'Forms.FormItems.DocumentId', 'Forms.FormItems.Order'
+            'Forms.FormItems.id', 'Forms.FormItems.Name', 'Forms.FormItems.Type', 'Forms.FormItems.Label', 'Forms.FormItems.Description', 'Forms.FormItems.Options', 'Forms.FormItems.Layout', 'Forms.FormItems.DocumentId', 'Forms.FormItems.Order', 'Forms.FormItems.ItemID'
             ]
     });
 

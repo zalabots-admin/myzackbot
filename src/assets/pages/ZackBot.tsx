@@ -239,6 +239,31 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
         }
         });
 
+        //TASK SUBSCRIPTIONS
+        client.models.RequestTasks.onCreate().subscribe({
+            next: (data) => { const newEvent = { event: 'New', type: 'Task', data: JSON.stringify(data)}
+            setEventData( newEvent )
+            }
+        });
+
+        client.models.RequestTasks.onUpdate().subscribe({
+        next: (data) => {
+            if ( data != null && data != undefined ) {
+                const newEvent = { event: 'Update', type: 'Task', data: JSON.stringify(data)}
+                setEventData( newEvent )
+            }
+        }
+        });
+
+        client.models.RequestTasks.onDelete().subscribe({
+        next: (data) => {
+            if ( data != null && data != undefined ) {
+            const newEvent = { event: 'Delete', type: 'Task', data: JSON.stringify(data)}
+            setEventData( newEvent )
+            }
+        }
+        });
+
         //NOTIFICATION SUBSCRIPTIONS
         client.models.Notifications.onCreate().subscribe({
             next: (data) => { const newEvent = { event: 'New', type: 'Notification', data: JSON.stringify(data)}
@@ -255,7 +280,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
         }
         });
 
-    }
+    };
 
     Hub.listen('auth', ({ payload }) => {
     switch (payload.event) {
@@ -411,7 +436,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                                                     <TasksQueue 
                                                         oUserOrg={currentUserDetails.OrgId}
                                                         oOpenRequest={openRequest}
-                                                        //oEvent={eventData}
+                                                        oEvent={eventData}
                                                     />
                                                 </Panel>
                                             ) : (
@@ -435,6 +460,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                                                                     oOpenTabs={requestTabs}
                                                                     oActiveTabId={activeTabId}
                                                                     oCurrentTab={activeTab}
+                                                                    oEvent={eventData}
                                                                 />
                                                             ) : (
                                                                 <ViewTask
@@ -443,6 +469,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                                                                     oOpenTabs={requestTabs}
                                                                     oActiveTabId={activeTabId}
                                                                     oCurrentTab={activeTab}
+                                                                    oEvent={eventData}
                                                                 />
                                                             )}
                                                         </>

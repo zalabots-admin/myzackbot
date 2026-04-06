@@ -13,6 +13,7 @@ interface Prop {
   oUser: any;
   oCloseTab: any;
   oActiveTabId: string;
+  oEvent: any;
 }
 
 
@@ -120,6 +121,23 @@ function ViewTask ( props:Prop ) {
     validateHistoryEvents();
 
   },[activeTask]);
+
+  useEffect(() => {
+
+    if ( props.oEvent != '' && props.oEvent != null && props.oEvent != undefined ) {
+      if ( props.oEvent.type === 'Task' ) {
+        const eventData = JSON.parse( props.oEvent.data );
+        if ( props.oEvent.event === 'Update') {
+          setTaskDetails( ( prevDetails:any ) => {
+            const copyDetails = { ...prevDetails };
+             copyDetails.RequestTaskStatus = eventData.RequestTaskStatus;
+            return copyDetails;
+          });
+        };
+      };
+    };
+
+  },[props.oEvent]);
 
 
   return (

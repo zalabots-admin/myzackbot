@@ -17,6 +17,7 @@ interface Prop {
   oUser: any;
   oCloseTab: any;
   oActiveTabId: string;
+  oEvent: any;
 }
 
 const client = generateClient<Schema>();
@@ -198,6 +199,26 @@ function ViewRequest ( props:Prop ) {
     //};
 
   },[activeTask]);
+
+  useEffect(() => {
+
+    if ( props.oEvent != '' && props.oEvent != null && props.oEvent != undefined ) {
+      if ( props.oEvent.type === 'Task' ) {
+        const eventData = JSON.parse( props.oEvent.data );
+        if ( props.oEvent.event === 'Update') {
+          setRequestDetails( ( prevDetails:any ) => {
+             const copyDetails = { ...prevDetails };
+             copyDetails.RequestTasks.filter((task:any) => task.RequestTask.id === eventData.id).forEach((task:any) => task.RequestTask.RequestTaskStatus = eventData.RequestTaskStatus );
+             if ( activeTask === eventData.id ) {
+              setTaskStatus( eventData.RequestTaskStatus );
+            }
+             return copyDetails;
+            })
+        };
+      };
+    };
+
+  },[props.oEvent]);
 
 
   return (

@@ -2,8 +2,7 @@
 import { useState, useEffect } from "react";
 import BeatLoader from "react-spinners/BeatLoader";
 import  SearchBar from '../SearchBar'
-import { getTasksData, formatDate } from '../../functions/data';
-//import { ViewTask } from './ViewTask';
+import { getTasksData, formatDate, getNewTasksData } from '../../functions/data';
 import ZackBot from "../../images/ZBT_Logo_Default.png";
 import { WorkflowStatusIndicator } from "./StatusIndicator";
 
@@ -11,7 +10,7 @@ import { WorkflowStatusIndicator } from "./StatusIndicator";
 interface Prop {
   oUserOrg: string;
   oOpenRequest: any;
-  //oEvent: any;
+  oEvent: any;
 }
 
 
@@ -99,37 +98,60 @@ function TaskQueue( props:Prop ) {
 
     },[searchedValue]);
 
-    /*useEffect(() => {
+    useEffect(() => {
 
-        if ( props.oEvent != '' && props.oEvent != null && props.oEvent != undefined ) {
-            const eventData = JSON.parse( props.oEvent.data );
-            if ( props.oEvent.event === 'New') {
-                const currentTasks = [...taskData];
-                currentTasks.push( eventData );
-                setTaskData( currentTasks );
-                setFilteredData( currentTasks );
-                setNoTasks( false );
-            } else if ( props.oEvent.event === 'Update' ) {
-                const currentTasks = [...taskData];
-                const index = currentTasks.findIndex( (item) => item.id === eventData.id );
-                if ( index !== -1 ) {
-                    currentTasks[index] = eventData;
-                    setTaskData( currentTasks );
-                    setFilteredData( currentTasks );
-                };
-            } else if ( props.oEvent.event === 'Delete' ) {
-                
-                const currentTasks = taskData.filter( (item) => item.id !== eventData.id )
-                setTaskData( currentTasks );
-                setFilteredData( currentTasks );
-                if ( currentTasks.length === 0 ) {
-                    setNoTasks( true );
-                }
-            };
-        
-        };
+        const handleEvent = async () => {
+        if (!props.oEvent || props.oEvent === '') return;
 
-    },[props.oEvent]);*/
+        if (props.oEvent.type === 'Task') {
+            const eventData = JSON.parse(props.oEvent.data);
+
+            if (props.oEvent.event === 'New') {
+                const taskRequestData = await getNewTasksData(eventData.id);
+                setTaskData(prev => [...prev, taskRequestData]);
+                setFilteredData(prev => [...prev, taskRequestData]);
+                setNoTasks(false);
+
+            } else if (props.oEvent.event === 'Update') {
+
+                setTaskData(prev => {
+                    const updated = [...prev];
+                    const index = updated.findIndex((item) => item.id === eventData.id);
+                    if (index !== -1) {
+                        updated[index] = {
+                            ...updated[index],
+                            RequestTaskStatus: eventData.RequestTaskStatus,
+                        };
+                    }
+                    return updated;
+                });
+
+                setFilteredData(prev => {
+                    const updated = [...prev];
+                    const index = updated.findIndex((item) => item.id === eventData.id);
+                    if (index !== -1) {
+                        updated[index] = {
+                            ...updated[index],
+                            RequestTaskStatus: eventData.RequestTaskStatus,
+                        };
+                    }
+                    return updated;
+                });
+
+            } else if (props.oEvent.event === 'Delete') {
+                setTaskData(prev => {
+                    const filtered = prev.filter((item) => item.id !== eventData.id);
+                    if (filtered.length === 0) setNoTasks(true);
+                    return filtered;
+                });
+                setFilteredData(prev => prev.filter((item) => item.id !== eventData.id));
+            }
+        }
+    };
+
+    handleEvent();
+    
+}, [props.oEvent]); 
 
 
   return (

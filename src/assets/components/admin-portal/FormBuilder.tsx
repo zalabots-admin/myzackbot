@@ -100,6 +100,7 @@ function FormBuilder ( props:Prop ) {
                     Layout: '',
                     DocumentId: '',
                     Order: formItemData.length + 1,
+                    ItemID: 'custom',
                 };
                 setSidePanelOpen(!sidePanelOpen);
                 setFormItemData((prev:any) => [...prev, clone]);
@@ -116,6 +117,7 @@ function FormBuilder ( props:Prop ) {
                     Layout: original.Layout,
                     DocumentId: original.DocumentId,
                     Order: formItemData.length + 1,
+                    ItemID: original.id,
                 };
                 setFormItemData((prev:any) => [...prev, clone]);
                 setActiveItem(clone.id);
@@ -314,17 +316,15 @@ function FormBuilder ( props:Prop ) {
                                             />
                                         </div>
                                     ) : (
-                                        <div className="flex flex-row w-full">
-                                            <div className="flex w-2/3 justify-end">
-                                                <SmallButton
-                                                    oAction={cancelEdit}
-                                                    oText="Cancel"
-                                                />
-                                                <SmallButton
-                                                    oAction={saveEdit}
-                                                    oText="Update"
-                                                />
-                                            </div>
+                                        <div className="flex w-2/3 justify-end">
+                                            <SmallButton
+                                                oAction={cancelEdit}
+                                                oText="Cancel"
+                                            />
+                                            <SmallButton
+                                                oAction={saveEdit}
+                                                oText="Update"
+                                            />
                                         </div>
                                     )}
                                 </>

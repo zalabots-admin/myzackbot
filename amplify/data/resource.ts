@@ -51,6 +51,7 @@ const schema = a.schema({
     FormItems: a
     .model({
       FormID: a.string().required(),
+      ItemID: a.string(),
       Name: a.string().required(),
       Type: a.string().required(),
       Label: a.string().required(),
@@ -124,6 +125,7 @@ const schema = a.schema({
     RequestQuestions: a
     .model({
       RequestID: a.string(),
+      ItemID: a.string(),
       Name: a.string(),
       Type: a.string(),
       Label: a.string(),

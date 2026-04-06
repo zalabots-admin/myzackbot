@@ -68,7 +68,7 @@ function CreateRequest(props: Prop) {
         const customItems = RequestItems.filter((item: any) => item.Type === 'custom');
         setItemData( [...customItems, ...sortedItems] );
         setLoading( false );
-    
+
     };
 
     async function getRequest( oId:string )  {
@@ -112,7 +112,7 @@ function CreateRequest(props: Prop) {
                     const formItems:any = [...requestQuestions];
                     original.FormItems.sort((a: any, b: any) => a['Order'] - b['Order']).map((formItem: any) => {
                         clone = {
-                            id: 'T' + uuidv4(),
+                            id: 'Temp' + uuidv4(),
                             Name: formItem.Name,
                             Type: formItem.Type,
                             Label: formItem.Label,
@@ -120,14 +120,15 @@ function CreateRequest(props: Prop) {
                             Options: formItem.Options,
                             Layout: formItem.Layout,
                             DocumentId: formItem.DocumentId,
-                            Order: requestQuestions.length + 1
+                            Order: requestQuestions.length + 1,
+                            ItemID: formItem.ItemID
                         };
                         formItems.push(clone);
                     });
                         setRequestQuestions(formItems);
                 } else if ( original.Type === 'custom' ) {
                     clone = {
-                        id: 'T' + uuidv4(),
+                        id: 'Temp' + uuidv4(),
                         Name: original.Name,
                         Type: 'text',
                         Label: '',
@@ -135,14 +136,15 @@ function CreateRequest(props: Prop) {
                         Options: '',
                         Layout: '',
                         DocumentId: '',
-                        Order: requestQuestions.length + 1
+                        Order: requestQuestions.length + 1,
+                        ItemID: 'custom'
                     }
                     setActiveItem( clone.id );
                     handleViewSidebar();
                     setRequestQuestions((prev:any) => [...prev, clone]);
                 } else {
                     clone = {
-                        id: 'T' + uuidv4(),
+                        id: 'Temp' + uuidv4(),
                         Name: original.Name,
                         Type: original.Type,
                         Label: original.Label,
@@ -150,7 +152,8 @@ function CreateRequest(props: Prop) {
                         Options: original.Options,
                         Layout: original.Layout,
                         DocumentId: original.DocumentId,
-                        Order: requestQuestions.length + 1
+                        Order: requestQuestions.length + 1,
+                        ItemID: original.id
                     };
                     setActiveItem( clone.id );
                     setRequestQuestions((prev:any) => [...prev, clone]);
@@ -252,7 +255,6 @@ function CreateRequest(props: Prop) {
                     result.data[i].id = 'T' + uuidv4();
                     result.data[i].ParticipantRole = 'Recipient';
                 }
-                console.log("JSON result:", result.data);
                 setRequestParticipants(result.data);
             },
             error: ( error:any ) => {
@@ -366,8 +368,9 @@ function CreateRequest(props: Prop) {
 
         const copyRequestQuestions = [...requestQuestions];
         copyRequestQuestions.map( async ( item, index ) => {
-            if ( item.id.startsWith('T') ) {
-                item.id = item.id.slice(1);
+
+            if ( item.id.startsWith('Temp') ) {
+                item.id = item.id.slice(4);
                 await client.models.RequestQuestions.create( {...item, RequestID: requestId, Order: index + 1} );
             } else if ( item.deleted ) {
                 await client.models.RequestQuestions.delete({ id: item.id });
@@ -401,7 +404,7 @@ function CreateRequest(props: Prop) {
         await client.models.Request.delete({ id: requestData.id });
         props.oCloseTab( props.oCurrentTab );
         
-    }
+    };
 
     /*const sensors = useSensors(
         useSensor(MouseSensor, {
