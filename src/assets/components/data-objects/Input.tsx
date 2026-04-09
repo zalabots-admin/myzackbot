@@ -15,7 +15,7 @@ interface Prop {
 
 function Input ( props:Prop ) {
 
-  const classSize= "flex flex-col p-1 " + props.oSize
+  const classSize= "flex flex-col " + props.oSize
 
   return (
       
@@ -25,13 +25,13 @@ function Input ( props:Prop ) {
         {props.isEditable ? (
           <div className={classSize}>
             <div><label className="text-sm">{props.oLabel}</label><span className="text-sm text-[#FD6800]"> *</span></div>
-            <input key={props.oKey} className="w-full border border-gray-300 rounded-sm p-2 outline-none mb-2 bg-white h-8" name={props.oKey} required type={props.oType} value={props.oData} onChange={props.oChange}></input>
+            <input key={props.oKey} className="w-full border border-gray-300 rounded-sm p-2 outline-none bg-white h-8" name={props.oKey} required type={props.oType} value={props.oData} onChange={props.oChange}></input>
             <div className="text-sm text-gray-500 italic">{props.oDescription}</div>
           </div> 
         ) : (
           <div className={classSize}>
             <label className="text-sm">{props.oLabel}</label>
-            <input key={props.oKey} className="w-full border border-gray-300 rounded-sm p-2 outline-none mb-2 bg-white h-8" name={props.oKey} readOnly disabled required type={props.oType} value={props.oData} onChange={props.oChange}></input>
+            <input key={props.oKey} className="w-full border border-gray-300 rounded-sm p-2 outline-none bg-white h-8" name={props.oKey} readOnly disabled required type={props.oType} value={props.oData} onChange={props.oChange}></input>
             <div className="text-sm text-gray-500 italic">{props.oDescription}</div>
           </div>             
         )}
@@ -41,13 +41,13 @@ function Input ( props:Prop ) {
         {props.isEditable ? (
           <div className={classSize}>
             <label className="text-sm">{props.oLabel}</label>
-            <input key={props.oKey} className="w-full border border-gray-300 rounded-sm p-2 outline-none mb-2 bg-white h-8" name={props.oKey} type={props.oType} value={props.oData} onChange={props.oChange}></input>
+            <input key={props.oKey} className="w-full border border-gray-300 rounded-sm p-2 outline-none bg-white h-8" name={props.oKey} type={props.oType} value={props.oData} onChange={props.oChange}></input>
             <div className="text-sm text-gray-500 italic">{props.oDescription}</div>
           </div> 
         ) : (
           <div className={classSize}>
             <label className="text-sm">{props.oLabel}</label>
-            <input key={props.oKey} className="w-full border border-gray-300 rounded-sm p-2 outline-none mb-2 bg-white h-8" name={props.oKey} readOnly disabled type={props.oType} value={props.oData} onChange={props.oChange}></input>
+            <input key={props.oKey} className="w-full border border-gray-300 rounded-sm p-2 outline-none bg-white h-8" name={props.oKey} readOnly disabled type={props.oType} value={props.oData} onChange={props.oChange}></input>
             <div className="text-sm text-gray-500 italic">{props.oDescription}</div>
           </div>
         )}

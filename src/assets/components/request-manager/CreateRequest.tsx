@@ -39,6 +39,7 @@ const client = generateClient<Schema>();
 function CreateRequest(props: Prop) {
 
     const [requestData, setRequestData] = useState<any>( { DeliveryMethod: 'Standard', RequestType: 'Standard' } );
+    const [requestTasks, setRequestTasks] = useState<any[]>( [] );
     const [requestParticipants, setRequestParticipants] = useState<any[]>( [] );
     const [requestQuestions, setRequestQuestions] = useState<any[]>( [] );
     const [itemData, setItemData] = useState<any[]>( [{id:'1', Name:'Custom Question', Type:'custom'}] );
@@ -83,6 +84,8 @@ function CreateRequest(props: Prop) {
         setRequestParticipants( sortedParticipants ?? [] );
         const sortedItems = (currentRequest.data as any)?.Questions?.sort((a: any, b: any) => Number(a.Order) - Number(b.Order));
         setRequestQuestions( sortedItems ?? [] );
+        const sortedTasks = (currentRequest.data as any)?.RequestTasks?.sort((a: any, b: any) => Number(a.Number) - Number(b.Number));
+        setRequestTasks( sortedTasks ?? [] );
 
     }
 
@@ -183,7 +186,7 @@ function CreateRequest(props: Prop) {
  
         if ( checked === false ) {
             requestParticipants.filter(participant => participant.ParticipantRole === 'Receiver').map( async ( participant ) => {
-                if ( !participant.id.startsWith('T') ) {
+                if ( !participant.id.startsWith('Temp') ) {
                     await client.models.RequestParticipants.delete({ id: participant.id });
                 } 
             });
@@ -201,14 +204,14 @@ function CreateRequest(props: Prop) {
                 }
             }
         } else {
-            addParticipant( 'Receiver' );
+            addParticipant( 'Receiver', '' );
             const updatedTabs = [...tabs];
             const responseTabIndex = updatedTabs.findIndex(tab => tab.name === 'Responses');
             if (responseTabIndex !== -1) {
                 updatedTabs[responseTabIndex].show = true;
                 setTabs(updatedTabs);
-                setActiveTab( responseTabIndex );
-                setActiveTabId( updatedTabs[responseTabIndex].id );
+                //setActiveTab( responseTabIndex );
+                //setActiveTabId( updatedTabs[responseTabIndex].id );
             }
         }
 
@@ -281,27 +284,64 @@ function CreateRequest(props: Prop) {
 
     };
 
-    function deleteParticipant( oId:string ) {
+    function addRequestTask() {
 
-        const copyParticipants = [...requestParticipants];
-        const index = copyParticipants.findIndex(participant => participant.id === oId);
-        if ( copyParticipants[index].id.startsWith('T') ) {
-            setRequestParticipants((prevItems:any) => prevItems.filter((item:any) => item.id !== oId));
-        } else {
-            setRequestParticipants((prevItems:any) =>
-                prevItems.map((item:any) =>
-                item.id === oId ? { ...item, deleted: true } : item
-                )
-            );
-        }
-       // setRequestParticipants(copyParticipants);
+        const newTaskId = 'Temp' + uuidv4();
+        const copyRequestTasks = [...requestTasks];
+        copyRequestTasks.push( { id: newTaskId, Instructions: '', Number: copyRequestTasks.length + 1 } )
+        setRequestTasks( copyRequestTasks );
+        addParticipant( 'Recipient', newTaskId );
+    };
 
+    function duplicateRequestTask( oTask:string ) {
+
+        const newTaskId = 'Temp' + uuidv4();
+        const copyRequestTasks = [...requestTasks];
+        const tasksToDuplicate = copyRequestTasks.filter(task => task.id === oTask ) 
+        setRequestTasks((prev:any) => [...prev, ...tasksToDuplicate.map((task:any) => ({ ...task, id: newTaskId, Number: prev.length + 1 }))]);
+        const recipientsToDuplicate = requestParticipants.filter(participant => participant.RequestTaskID === oTask);
+        recipientsToDuplicate.map( recipient => {
+            duplicateParticipant( recipient.id, newTaskId );
+        });
     }
 
-    function addParticipant( oType:string ) {
+    function deleteRequestTask(oId: string) {
+
+        const copyRequestTasks = [...requestTasks];
+        const recipientsToDelete = requestParticipants.filter(participant => participant.RequestTaskID === oId);
+        const index = copyRequestTasks.findIndex(task => task.id === oId);
+
+        if (copyRequestTasks[index].id.startsWith('Temp')) {
+            setRequestTasks((prevItems: any) => {
+                const filtered = prevItems.filter((item: any) => item.id !== oId);
+                return filtered.map((item: any, i: number) => ({ ...item, Number: i + 1 }));
+            });
+        } else {
+            setRequestTasks((prevItems: any) => {
+                const updated = prevItems.map((item: any) =>
+                    item.id === oId ? { ...item, deleted: true } : item
+                );
+                // Only renumber non-deleted items, keep deleted items in place
+                let counter = 1;
+                return updated.map((item: any) => 
+                    item.deleted ? item : { ...item, Number: counter++ }
+                );
+            });
+        }
+
+        recipientsToDelete.forEach(recipient => {
+            deleteParticipant(recipient.id);
+        });
+    }
+
+    function addParticipant( oType:string, oTask:string,) {
 
         const copyRequestParticipants = [...requestParticipants];
-        copyRequestParticipants.push( { id:'T' + uuidv4(), FirstName: '', LastName: '', EntityName: '', Email: '', ParticipantRole: oType, ParticipantType: 'Individual' } )
+        if ( oType === 'Recipient' ) {
+            copyRequestParticipants.push( { id:'Temp' + uuidv4(), FirstName: '', LastName: '', EntityName: '', Email: '', ParticipantRole: oType, ParticipantType: 'Individual', RequestTaskID: oTask } )
+        } else {
+            copyRequestParticipants.push( { id:'Temp' + uuidv4(), FirstName: '', LastName: '', EntityName: '', Email: '', ParticipantRole: oType, ParticipantType: 'Individual' } )
+        }
         setRequestParticipants( copyRequestParticipants );
         
         if ( oType === 'Recipient' ) {
@@ -317,78 +357,143 @@ function CreateRequest(props: Prop) {
 
     };
 
-    function duplicateParticipant( oType:string ) {
+    function duplicateParticipant( oRecipient:string, oTask?:string  ) {
 
+        const newParticipantId = 'Temp' + uuidv4();
         const copyRequestParticipants = [...requestParticipants];
-        const requestRecipients = copyRequestParticipants.filter(participant => participant.ParticipantRole === oType);
-
-        const index = requestRecipients.length-1;
-        const newRecipient = { ...requestRecipients[index], id: 'T' + uuidv4() };
-        copyRequestParticipants.push( newRecipient )
-        setRequestParticipants( copyRequestParticipants );
+        const participantsToDuplicate = copyRequestParticipants.filter(participant => participant.id === oRecipient )
+        setRequestParticipants((prev:any) => [...prev, ...participantsToDuplicate.map((participant:any) => ({ ...participant, id: newParticipantId, RequestTaskID: oTask ? oTask : participant.RequestTaskID }))]);
 
     }
 
-    async function saveRequest( oStatus: string) {
+    function deleteParticipant( oId:string ) {
+
+        const copyParticipants = [...requestParticipants];
+        const index = copyParticipants.findIndex(participant => participant.id === oId);
+        if ( copyParticipants[index].id.startsWith('Temp') ) {
+            setRequestParticipants((prevItems:any) => prevItems.filter((item:any) => item.id !== oId));
+        } else {
+            setRequestParticipants((prevItems:any) =>
+                prevItems.map((item:any) =>
+                item.id === oId ? { ...item, deleted: true } : item
+                )
+            );
+        }
+
+    };
+
+    async function saveRequest(oStatus: string) {
 
         var request: string | any = {};
-        var oTaskCount = 0;
-        if (requestData.id === undefined ) {
+        if (requestData.id === undefined) {
             request = await client.models.Request.create({ ...requestData, RequestStatus: 'New', OrganizationID: props.oUser.OrgId });
         } else {
             request = await client.models.Request.update({ ...requestData, RequestStatus: 'New' });
         }
 
         const requestId = request.data?.id;
+        const copyRequestTasks = [...requestTasks];
         const copyParticipants = [...requestParticipants];
-        copyParticipants.map( async ( participant ) => {
-    
-            if ( participant.id.startsWith('T') ) {
-                participant.id = participant.id.slice(1);
-                if ( participant.ParticipantRole === 'Recipient' ) {
-                    oTaskCount = oTaskCount + 1;
-                    const task = await client.models.RequestTasks.create({ OrganizationID: props.oUser.OrgId, RequestID: requestId, RequestTaskStatus: 'New', Instructions: participant.Instructions, Number: oTaskCount });
-                    const taskId = task.data?.id;
-                    createHistoryEvent('Task', 'ZackBot', 'Task Created', requestId ? requestId : '', taskId ? taskId : '');
-                    await client.models.RequestParticipants.create({ RequestID: requestId, RequestTaskID: taskId, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
-                } else {
-                    await client.models.RequestParticipants.create({ RequestID: requestId, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
-                }
-            } else if ( participant.deleted ) {
-                if ( participant.ParticipantRole === 'Recipient' ) {
-                    await client.models.RequestTasks.delete({ id: participant.RequestTaskID });
-                };
-                await client.models.RequestParticipants.delete({ id: participant.id });
+
+        // ✅ await all task operations
+        await Promise.all(copyRequestTasks.map(async (task) => {
+
+            // ✅ capture original ID before slicing for participant matching
+            const originalTaskId = task.id;
+
+            if (task.id.startsWith('Temp')) {
+                task.id = task.id.slice(4);
+                const newTask = await client.models.RequestTasks.create({ id: task.id, OrganizationID: props.oUser.OrgId, RequestID: requestId, RequestTaskStatus: 'New', Instructions: task.Instructions, Number: task.Number });
+                const taskId = newTask.data?.id;
+                createHistoryEvent('Task', 'ZackBot', 'Task Created', requestId ?? '', taskId ?? '');
+
+                // ✅ match on originalTaskId (still has 'Temp' prefix), slice participant id only
+                await Promise.all(copyParticipants
+                    .filter(p => p.RequestTaskID === originalTaskId && p.ParticipantRole === 'Recipient')
+                    .map(async (participant) => {
+                        if (participant.id.startsWith('Temp')) {
+                            participant.id = participant.id.slice(4);
+                            participant.RequestTaskID = taskId;
+                            await client.models.RequestParticipants.create({ id: participant.id, RequestID: requestId, RequestTaskID: taskId, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
+                        } else if (participant.deleted) {
+                            await client.models.RequestParticipants.delete({ id: participant.id });
+                        } else {
+                            await client.models.RequestParticipants.update({ id: participant.id, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
+                        }
+                    })
+                );
+
+            } else if (task.deleted) {
+                await client.models.RequestTasks.delete({ id: task.id });
+
+                await Promise.all(copyParticipants
+                    .filter(p => p.RequestTaskID === originalTaskId && p.ParticipantRole === 'Recipient')
+                    .map(async (participant) => {
+                        if (!participant.id.startsWith('Temp')) {
+                            await client.models.RequestParticipants.delete({ id: participant.id });
+                        }
+                    })
+                );
+
             } else {
-                oTaskCount = oTaskCount + 1;
-                await client.models.RequestParticipants.update({ id: participant.id, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType});
-                await client.models.RequestTasks.update({ id: participant.RequestTaskID, Instructions: participant.Instructions, Number: oTaskCount });
+                await client.models.RequestTasks.update({ id: task.id, Instructions: task.Instructions, Number: task.Number });
+
+                await Promise.all(copyParticipants
+                    .filter(p => p.RequestTaskID === originalTaskId && p.ParticipantRole === 'Recipient')
+                    .map(async (participant) => {
+                        if (participant.id.startsWith('Temp')) {
+                            participant.id = participant.id.slice(4);
+                            participant.RequestTaskID = task.id;
+                            await client.models.RequestParticipants.create({ id: participant.id, RequestID: requestId, RequestTaskID: task.id, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
+                        } else if (participant.deleted) {
+                            await client.models.RequestParticipants.delete({ id: participant.id });
+                        } else {
+                            await client.models.RequestParticipants.update({ id: participant.id, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
+                        }
+                    })
+                );
             }
-        });
+        }));
 
+        // ✅ await non-recipient participants
+        await Promise.all(copyParticipants
+            .filter(p => p.ParticipantRole === 'Receiver')
+            .map(async (participant) => {
+                if (participant.id.startsWith('Temp')) {
+                    participant.id = participant.id.slice(4);
+                    await client.models.RequestParticipants.create({ id: participant.id, RequestID: requestId, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
+                } else if (participant.deleted) {
+                    await client.models.RequestParticipants.delete({ id: participant.id });
+                } else {
+                    await client.models.RequestParticipants.update({ id: participant.id, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
+                }
+            })
+        );
+
+        // ✅ await questions
         const copyRequestQuestions = [...requestQuestions];
-        copyRequestQuestions.map( async ( item, index ) => {
-
-            if ( item.id.startsWith('Temp') ) {
+        await Promise.all(copyRequestQuestions.map(async (item, index) => {
+            if (item.id.startsWith('Temp')) {
                 item.id = item.id.slice(4);
-                await client.models.RequestQuestions.create( {...item, RequestID: requestId, Order: index + 1} );
-            } else if ( item.deleted ) {
+                await client.models.RequestQuestions.create({ ...item, RequestID: requestId, Order: index + 1 });
+            } else if (item.deleted) {
                 await client.models.RequestQuestions.delete({ id: item.id });
             } else {
-                await client.models.RequestQuestions.update( {...item, Order: index + 1} );
+                await client.models.RequestQuestions.update({ ...item, Order: index + 1 });
             }
-            
-        });
+        }));
 
-        setRequestQuestions( copyRequestQuestions );
-        setRequestParticipants( copyParticipants );
-        setRequestData( {...requestData, id: requestId, RequestStatus: oStatus} );
-        if ( oStatus === 'Requested' ) {
-            await createHistoryEvent('Request', props.oUser.firstName + ' ' + props.oUser.lastName, 'Request Created', requestId ? requestId : '', '');
-            props.oCloseTab( props.oCurrentTab );
+        setRequestQuestions(copyRequestQuestions);
+        setRequestParticipants(copyParticipants);
+        setRequestTasks(copyRequestTasks);
+        setRequestData({ ...requestData, id: requestId, RequestStatus: oStatus });
+
+        if (oStatus === 'Requested') {
+            await createHistoryEvent('Request', props.oUser.firstName + ' ' + props.oUser.lastName, 'Request Created', requestId ?? '', '');
+            props.oCloseTab(props.oCurrentTab);
         } else {
             notify();
-            props.oSetOpenTabs(( prevItems:any ) => {
+            props.oSetOpenTabs((prevItems: any) => {
                 const updatedItems = [...prevItems];
                 updatedItems[props.oCurrentTab] = { ...updatedItems[props.oCurrentTab], name: requestData.RequestedFor, status: oStatus };
                 return updatedItems;
@@ -396,7 +501,6 @@ function CreateRequest(props: Prop) {
         }
 
         await client.models.Request.update({ id: requestId, RequestStatus: oStatus });
-
     };
 
     async function deleteDraftRequest() {
@@ -487,24 +591,24 @@ function CreateRequest(props: Prop) {
                         <IconButtonMedium
                             oAction={() => {props.oCloseTab( props.oCurrentTab )}}
                             oTitle="Close Request"
-                            oIcon="fa-sharp fa-thin fa-xmark"
+                            oIcon="fa-sharp fa-regular fa-xmark"
                         />
                         { requestData.RequestStatus === 'Draft' && (
                             <IconButtonMedium
                                 oAction={deleteDraftRequest}
                                 oTitle="Delete Request"
-                                oIcon="fa-sharp fa-thin fa-trash"
+                                oIcon="fa-sharp fa-regular fa-trash"
                             />
                         )}
                         <IconButtonMedium
                             oAction={() => {saveRequest( 'Draft' )}}
                             oTitle="Save Request"
-                            oIcon="fa-sharp fa-thin fa-floppy-disk"
+                            oIcon="fa-sharp fa-regular fa-floppy-disk"
                         />
                         <IconButtonMedium
                             oAction={() => {saveRequest( 'Requested' )}}
                             oTitle="Send Request"
-                            oIcon="fa-sharp fa-thin fa-paper-plane-top"
+                            oIcon="fa-sharp fa-regular fa-paper-plane-top"
                         />
                     </div> 
                 </div>
@@ -521,7 +625,7 @@ function CreateRequest(props: Prop) {
                                 <div className="flex-1 flex flex-row min-h-0 gap-4 p-4overflow-y-auto overflow-x-hidden" >
                                     { loading ? (
                                         <div className='h-full w-full flex justify-center items-center'>
-                                            <BeatLoader color = "#D58936" />
+                                            <BeatLoader color = "#EB7100" />
                                         </div>
                                     ) : (
                                         <div className='flex-1 flex flex-col w-1/3'>
@@ -550,7 +654,7 @@ function CreateRequest(props: Prop) {
                     </Panel>
                     <Panel oIsActive={activeTabId === '2'} oIndex={'2'} oState={tabs.find(tab => tab.id === '2')?.show}>
                         <div id="panel-Tasks" className='flex-1 flex flex-col min-h-0 overflow-hidden'>
-                            <div className="flex-1 flex flex-col min-h-0">
+                            <div className="flex-1 flex flex-col min-h-0 p-4">
                                 <div className="p-2">
                                     <p>Upload Multiple Tasks Using the Upload Template or Individually Add Tasks Using the 'Add Task' Button</p>
                                     <div className="flex items-center w-full">
@@ -561,67 +665,85 @@ function CreateRequest(props: Prop) {
                                             <IconButtonMedium
                                                 oAction={handleDownload}
                                                 oTitle="Download Template"
-                                                oIcon="fa-sharp fa-thin fa-download"
+                                                oIcon="fa-sharp fa-regular fa-download"
                                             />
                                         </div>
                                         <div className="flex justify-end items-center w-[30%]">
-                                            { requestParticipants.filter(participant => participant.ParticipantRole === 'Recipient').length > 0 && (
-                                                <SmallButton
-                                                    oAction={() => duplicateParticipant('Recipient')}
-                                                    oText="Duplicate Task"
-                                                />
-                                            )}
                                             <SmallButton
-                                                oAction={() => addParticipant('Recipient')}
+                                                oAction={() => addRequestTask()}
                                                 oText="Add Task"
                                             />
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex-1 flex flex-col p-2 overflow-y-auto">
-                                    {requestParticipants.filter(participant => participant.ParticipantRole === 'Recipient' && !participant.deleted).map( ( participant, index ) => (
-                                        <div key={index} className="w-full flex items-center bg-[#F4F4F4] border border-gray-300 p-2 mb-2 rounded">
-                                            <div className="w-[8%] h-full flex flex-col items-center justify-center">
-                                                <p>Task</p>
-                                                <h2>{index + 1}</h2>
-                                            </div>
-                                            <div className="w-[60%] flex items-center">
-                                                <div className="w-[65%] flex items-center">
-                                                    {participant.ParticipantType === 'Individual' ? (
-                                                        <>
-                                                            <div className="w-[25%] flex flex-row items-center justify-center">
-                                                                <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#005566]"} title="Individual Task"></i>
-                                                                <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#DADADA]  hover:text-[#D58936]"} title="Entity Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Entity')}}></i>
-                                                            </div>
-                                                            <div className="w-[75%] flex flex-row items-center justify-center">
-                                                                <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.FirstName} />
-                                                                <Input oKey='LastName' oType='text' oLabel="Last Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.LastName} />
-                                                            </div>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <div className="w-[25%] flex flex-row items-center justify-center">
-                                                                <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#DADADA] hover:text-[#D58936]"} title="Individual Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Individual')}}></i>
-                                                                <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#005566]"} title="Entity Task"></i>
-                                                            </div>
-                                                            <div className="w-[75%] flex flex-row items-center justify-center">
-                                                                <Input oKey='EntityName' oType='text' oLabel="Entity Name" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.EntityName} />
-                                                            </div>
-                                                        </>
-                                                    )}
+                                    
+                                    {requestTasks.filter(task => !task.deleted).map( ( task, index ) => {
+                                        task.Number = index + 1;
+                                        return (
+                                            <div key={task.id} className="w-full flex items-center bg-[#00556620] border border-gray-300 p-4 mb-2 rounded shadow">
+                                                <div className="w-[10%] h-full flex flex-col items-center justify-start pt-2 text-[#005566]">
+                                                    <p>Task</p>
+                                                    <p className='text-2xl font-bold'>{task.Number}</p>
                                                 </div>
-                                                <div className="w-[35%] flex items-center">
-                                                    <Input oKey='Email' oType='text' oLabel="Email" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Email} />
+                                                <div className="w-[80%] h-full flex flex-col items-start justify-start gap-4">
+                                                    <Input oKey='Instructions' oType='text' oLabel="Unique Task Instructions" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestTasks, task.id)} oData={task.Instructions} />
+                                                    {requestParticipants.filter(participant => participant.RequestTaskID === task.id && !participant.deleted).map( ( participant, index ) => (
+                                                        <div key={participant.id} className="w-full flex items-center bg-gray-100 border border-gray-300 p-2 mt-2 rounded shadow">
+                                                            <div className="w-[12%] flex flex-row items-center justify-start pl-2">Recipient {index + 1}:</div>
+                                                            <div className="w-[85%] flex flex-row items-center justify-center gap-2">
+                                                                {participant.ParticipantType === 'Individual' ? (
+                                                                    <>
+                                                                        <div className="w-[18%] flex flex-row items-center justify-center">
+                                                                            <i className={"fa-classic fa-regular fa-user text-3xl cursor-pointer text-[#005566]"} title="Individual Task"></i>
+                                                                            <i className={"fa-classic fa-regular fa-building text-3xl cursor-pointer text-[#DADADA]  hover:text-[#EB7100]"} title="Entity Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Entity')}}></i>
+                                                                        </div>
+                                                                        <div className="w-[55%] flex flex-row items-center justify-center">
+                                                                            <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.FirstName} />
+                                                                            <Input oKey='LastName' oType='text' oLabel="Last Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.LastName} />
+                                                                        </div>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <div className="w-[18%] flex flex-row items-center justify-center">
+                                                                            <i className={"fa-classic fa-regular fa-user text-3xl cursor-pointer text-[#DADADA] hover:text-[#EB7100]"} title="Individual Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Individual')}}></i>
+                                                                            <i className={"fa-classic fa-regular fa-building text-3xl cursor-pointer text-[#005566]"} title="Entity Task"></i>
+                                                                        </div>
+                                                                        <div className="w-[55%] flex flex-row items-center justify-center">
+                                                                            <Input oKey='EntityName' oType='text' oLabel="Entity Name" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.EntityName} />
+                                                                        </div>
+                                                                    </>
+                                                                )}
+                                                                <div className="w-[45%] flex flex-row items-center justify-center">
+                                                                    <Input oKey='Email' oType='text' oLabel="Email" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Email} />
+                                                                </div>
+                                                            </div>
+                                                            <div className="w-[5%] flex flex-row items-center justify-end pr-2">
+                                                                <i className={"fa-sharp fa-regular fa-xmark text-2xl cursor-pointer text-[#005566]  hover:text-[#EB7100]"} title="Remove Recipient" onClick={() => {deleteParticipant(participant.id)}}></i>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="w-[10%] h-full flex flex-col items-center justify-start gap-2">
+                                                    <IconButtonMedium
+                                                        oAction={() => {addParticipant('Recipient',task.id)}}
+                                                        oTitle="Add Recipient"
+                                                        oIcon="fa-classic fa-regular fa-user-circle-plus"
+                                                    />
+                                                    <IconButtonMedium
+                                                        oAction={() => {duplicateRequestTask(task.id)}}
+                                                        oTitle="Duplicate Task"
+                                                        oIcon="fa-sharp fa-regular fa-clone-plus"
+                                                    />
+                                                    <IconButtonMedium
+                                                        oAction={() => {deleteRequestTask(task.id)}}
+                                                        oTitle="Delete Task"
+                                                        oIcon="fa-sharp fa-regular fa-xmark"
+                                                    />
                                                 </div>
                                             </div>
-                                            <div className="w-[28%] flex items-center justinfy-center">
-                                                 <Input oKey='Instructions' oType='text' oLabel="Unique Task Instructions" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.Instructions} />
-                                            </div>
-                                            <div className="w-[4%] h-full flex flex-col items-center justify-center">
-                                                <i className={"fa-classic fa-thin fa-xmark text-2xl cursor-pointer text-[#005566]  hover:text-[#D58936]"} title="Delete Task" onClick={() => {deleteParticipant(participant.id)}}></i>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                             </div>
                         </div>
@@ -631,24 +753,24 @@ function CreateRequest(props: Prop) {
                             <div className="flex justify-between items-center w-full p-4">
                                 <p>Response Recipients Will Receive Completed Task Responses via Email.</p>
                                 <SmallButton
-                                    oAction={() => addParticipant('Receiver')}
+                                    oAction={() => addParticipant('Receiver', '')}
                                     oText="Add Recipient"
                                 />
                             </div>
                             <div className="flex-1 flex flex-col p-2 overflow-y-auto">
-                                {requestParticipants.filter(participant => participant.ParticipantRole === 'Receiver').map( ( participant, index ) => (
-                                    <div key={index} className="w-full flex items-center bg-[#F4F4F4] border border-gray-300 p-2 mb-2 rounded">
-                                        <div className="w-[8%] h-full flex flex-col items-center justify-center">
+                                {requestParticipants.filter(participant => participant.ParticipantRole === 'Receiver' && !participant.deleted).map( ( participant, index ) => (
+                                    <div key={index} className="w-full flex items-center bg-[#00556620] border border-gray-300 p-4 mb-2 rounded shadow">
+                                        <div className="w-[8%] h-full flex flex-col items-center justify-center text-[#005566]">
                                             <p>Recipient</p>
-                                            <h2>{index + 1}</h2>
+                                            <p className="text-3xl font-bold">{index + 1}</p>
                                         </div>
                                         <div className="w-[88%] flex items-center">
                                             <div className="w-[65%] flex items-center">
                                                 {participant.ParticipantType === 'Individual' ? (
                                                     <>
                                                         <div className="w-[25%] flex flex-row items-center justify-center">
-                                                            <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#005566]"} title="Individual Task"></i>
-                                                            <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#DADADA]  hover:text-[#D58936]"} title="Entity Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Entity')}}></i>
+                                                            <i className={"fa-classic fa-regular fa-user text-3xl cursor-pointer text-[#005566]"} title="Individual Task"></i>
+                                                            <i className={"fa-classic fa-regular fa-building text-3xl cursor-pointer text-gray-400 hover:text-[#EB7100]"} title="Entity Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Entity')}}></i>
                                                         </div>
                                                         <div className="w-[75%] flex flex-row items-center justify-center">
                                                             <Input oKey='FirstName' oType='text' oLabel="First Name" oSize="col6" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.FirstName} />
@@ -658,8 +780,8 @@ function CreateRequest(props: Prop) {
                                                 ) : (
                                                     <>
                                                         <div className="w-[25%] flex flex-row items-center justify-center">
-                                                            <i className={"fa-classic fa-thin fa-user text-3xl cursor-pointer text-[#DADADA] hover:text-[#D58936]"} title="Individual Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Individual')}}></i>
-                                                            <i className={"fa-classic fa-thin fa-building text-3xl cursor-pointer text-[#005566]"} title="Entity Task"></i>
+                                                            <i className={"fa-classic fa-regular fa-user text-3xl cursor-pointer text-gray-400 hover:text-[#EB7100]"} title="Individual Task" onClick={() => {handleParticipantTypeChange(participant.id, 'Individual')}}></i>
+                                                            <i className={"fa-classic fa-regular fa-building text-3xl cursor-pointer text-[#005566]"} title="Entity Task"></i>
                                                         </div>
                                                         <div className="w-[75%] flex flex-row items-center justify-center">
                                                             <Input oKey='EntityName' oType='text' oLabel="Entity Name" oSize="col12" isRequired={false} isEditable={true} oChange={(e) => handleDataInputChangeFiltered(e, setRequestParticipants, participant.id)} oData={participant.EntityName} />
@@ -672,7 +794,7 @@ function CreateRequest(props: Prop) {
                                             </div>
                                         </div>
                                         <div className="w-[4%] h-full flex flex-col items-center justify-center">
-                                            <i className={"fa-classic fa-thin fa-xmark text-2xl cursor-pointer text-[#005566]  hover:text-[#D58936]"} title="Delete Task" onClick={() => {deleteParticipant(participant.id)}}></i>
+                                            <i className={"fa-sharp fa-regular fa-xmark text-2xl cursor-pointer text-[#005566]  hover:text-[#EB7100]"} title="Delete Task" onClick={() => {deleteParticipant(participant.id)}}></i>
                                         </div>
                                     </div>
                                 ))}

@@ -114,6 +114,7 @@ const schema = a.schema({
       Email: a.string(),
       ParticipantType: a.string(),
       ParticipantRole: a.string(),
+      SendSubmissionEmail: a.boolean(),
       Request: a.belongsTo('Request', 'RequestID'),
       RequestTask: a.belongsTo('RequestTasks', 'RequestTaskID'),
     })
@@ -153,6 +154,7 @@ const schema = a.schema({
     .model({
       RequestID: a.string(),
       RequestTaskID: a.string(),
+      Type: a.string(),
       Event: a.string(),
       Date: a.string(),
       User: a.string(),

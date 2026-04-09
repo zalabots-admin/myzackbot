@@ -191,7 +191,7 @@ function RequestQueue( props:Prop ) {
                         </div>
                         <div id="request-list-body" className='flex-1 flex flex-col overflow-y-auto'>
                             {filteredData.map((item: any) => (
-                                <div key={item.id} className="cursor-pointer transition-colors duration-200 ease-in-out even:bg-[#F4F4F4] hover:bg-[#00556640]" onClick={() => props.oOpenRequest(item.id, item.RequestedFor, item.RequestStatus, 'request')}>
+                                <div key={item.id} className="cursor-pointer transition-colors duration-200 ease-in-out even:bg-[#F4F4F4] hover:bg-[#00556640]" onClick={() => props.oOpenRequest(item.id, item.RequestedFor, item.RequestStatus, 1)}>
                                     {/* Desktop */}
                                     <div className="hidden lg:flex">
                                     <div className="w-[15%] h-[50px] p-2 flex items-center">

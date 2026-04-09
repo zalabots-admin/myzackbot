@@ -12,7 +12,6 @@ import RequestQueue from '../components/request-manager/RequestQueue';
 import TasksQueue from '../components/request-manager/TaskQueue';
 import CreateRequest from '../components/request-manager/CreateRequest';
 import ViewRequest from '../components/request-manager/ViewRequest';
-import ViewTask from '../components/request-manager/ViewTask';
 import ItemBuilder from '../components/admin-portal/ItemBulder';
 import FormBuilder from '../components/admin-portal/FormBuilder';
 import Organization from '../components/admin-portal/Organization';
@@ -35,7 +34,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
     const [currentUserDetails, setCurrentUserDetails] = useState({firstName:'', lastName:'', emailAddress:'', OrgId:'', Role:''});
     const [activeTab, setActiveTab] = useState(0);
     const [activeTabId, setActiveTabId] = useState('1');
-    const [requestTabs, setRequestTabs] = useState([{id:'1', name:'Request Queue', show:true, status:'N/A', type:'queue'}, {id:'2', name:'Tasks Queue', show:false, status:'N/A', type:'queue'}]); // Tabs for open requests and queues
+    const [requestTabs, setRequestTabs] = useState([{id:'1', name:'Request Queue', show:true, status:'N/A', taskId:undefined as number | undefined}, {id:'2', name:'Tasks Queue', show:false, status:'N/A', taskId:undefined as number | undefined}]); // Tabs for open requests and queues
     const [adminTabs] = useState([
         {id:'1', name:'Request Items', show:true}, 
         {id:'2', name:'Request Forms', show:true}, 
@@ -124,17 +123,17 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
     function createNewRequest() {
 
         const newTabId = uuid();
-        setRequestTabs( prevItems => [...prevItems, {id: newTabId, name: 'New Request', status: 'New', show:true, type: 'request'}] );
+        setRequestTabs( prevItems => [...prevItems, {id: newTabId, name: 'New Request', status: 'New', show:true, type: 'request', taskId: undefined}] );
         setActiveTab( requestTabs.length );
         setActiveTabId( newTabId );
 
     };
 
-    async function openNotification( oId:string, oRequestId:string, oType:string ) {
+    async function openNotification( oId:string, oRequestId:string ) {
 
         const oRequest = await client.models.Request.get( { id: oRequestId } );
         if ( oRequest.data && oRequest.data.id && oRequest.data.RequestedFor && oRequest.data.RequestStatus ) {
-            openRequest( oRequest.data.id, oRequest.data.RequestedFor, oRequest.data.RequestStatus, oType );
+            openRequest( oRequest.data.id, oRequest.data.RequestedFor, oRequest.data.RequestStatus );
         }
         await client.models.Notifications.update( {
             id: oId,
@@ -157,16 +156,16 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
 
     };
 
-    async function openRequest( oId:string, oName:string, oStatus:string, oType:string ) {
+    async function openRequest( oId:string, oName:string, oStatus:string, oTaskId?:number ) {
 
         const existingTab = requestTabs.find( ( tab ) => tab.id === oId );
         if ( existingTab ) {
-            setRequestTabs( prevItems => prevItems.map( tab => tab.id === oId ? { ...tab, show:true, status: oStatus } : tab ) );
+            setRequestTabs( prevItems => prevItems.map( tab => tab.id === oId ? { ...tab, show:true, status: oStatus, taskId: oTaskId } : tab ) );
             setActiveTab( requestTabs.findIndex( ( tab ) => tab.id === oId ) );
             setActiveTabId( requestTabs.find( ( tab ) => tab.id === oId )!.id );
             return;
         } else {
-            setRequestTabs( prevItems => [...prevItems, {id: oId, name: oName, status: oStatus, show:true, type: oType}] );
+            setRequestTabs( prevItems => [...prevItems, {id: oId, name: oName, status: oStatus, show:true, taskId: oTaskId}] );
             setActiveTab( requestTabs.length );
             setActiveTabId( oId );
         } 
@@ -452,29 +451,15 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                                                             oPanelId={panel.id}
                                                         />
                                                     ) : (
-                                                        <>
-                                                            {panel.type === 'request' ? (
-                                                                <ViewRequest 
-                                                                    oUser={currentUserDetails}
-                                                                    oCloseTab={closeTab}
-                                                                    oOpenTabs={requestTabs}
-                                                                    oActiveTabId={activeTabId}
-                                                                    oCurrentTab={activeTab}
-                                                                    oEvent={eventData}
-                                                                />
-                                                            ) : (
-                                                                <ViewTask
-                                                                    oUser={currentUserDetails}
-                                                                    oCloseTab={closeTab}
-                                                                    oOpenTabs={requestTabs}
-                                                                    oActiveTabId={activeTabId}
-                                                                    oCurrentTab={activeTab}
-                                                                    oEvent={eventData}
-                                                                />
-                                                            )}
-                                                        </>
-                                                        
-                                                
+                                                        <ViewRequest 
+                                                            oUser={currentUserDetails}
+                                                            oCloseTab={closeTab}
+                                                            oOpenTabs={requestTabs}
+                                                            oActiveTabId={activeTabId}
+                                                            oCurrentTab={activeTab}
+                                                            oEvent={eventData}
+                                                            oActiveTaskNumber={parseInt((panel.taskId ?? 0).toString())}
+                                                        />
                                                     )}
                                                 </Panel>
                                             )}
@@ -558,7 +543,7 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                         </div>
                         <div className="flex-1">
                             {notifications.map( ( notification ) => (
-                                <div key={notification.id} onClick={() => {openNotification(notification.id, notification.RequestID, notification.Type.toLowerCase() )}} className={`flex flex-row border rounded shadow p-4 gap-2 mb-4 ${ notification.Read ? 'border-gray-300 bg-gray-100 text-gray-600' : 'border-[#005566] bg-[#00556620] text-[#005566] hover:text-[#EB7100] hover:bg-gray-50 hover:border-[#EB7100] cursor-pointer'} `}>
+                                <div key={notification.id} onClick={() => {openNotification(notification.id, notification.RequestID )}} className={`flex flex-row border rounded shadow p-4 gap-2 mb-4 ${ notification.Read ? 'border-gray-300 bg-gray-100 text-gray-600' : 'border-[#005566] bg-[#00556620] text-[#005566] hover:text-[#EB7100] hover:bg-gray-50 hover:border-[#EB7100] cursor-pointer'} `}>
                                     <div className="flex items-center justify-center w-20">
                                         <i className="fa-sharp fa-regular fa-comments-question-check text-3xl"></i>
                                     </div>

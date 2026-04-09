@@ -55,12 +55,13 @@ export async function getRequestData( oId:string ) {
     var currentRequest = await client.models.Request.get({ id: oId },
     {
         selectionSet: ['id', 'AccountName', 'RequestedFor', 'createdAt', 'DueDate', 'RequestStatus', 'RequestType', 'FollowUpDate', 'DeliveryMethod', 'EmailResponse', 'AutoComplete', 'FollowUp', 'FollowUpType',
-            'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole', 'Participants.EntityName', 'Participants.ParticipantType', 'Participants.RequestTask.Instructions',
+            'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole', 'Participants.EntityName', 'Participants.ParticipantType', 'Participants.RequestTaskID',
+            'RequestTasks.*',
             'Questions.id', 'Questions.Name', 'Questions.Description', 'Questions.Label', 'Questions.Order', 'Questions.Options', 'Questions.Type',
             'History.Event','History.Date','History.User','History.Description']
     } );
 
-    if ( currentRequest.data && currentRequest.data.Participants !== undefined && currentRequest.data.Participants !== null ) {
+   /* if ( currentRequest.data && currentRequest.data.Participants !== undefined && currentRequest.data.Participants !== null ) {
         const participants = currentRequest.data.Participants.map(p => ({ ...p, Instructions: p.RequestTask?.Instructions ?? null}));
         return {
             ...currentRequest,
@@ -69,7 +70,7 @@ export async function getRequestData( oId:string ) {
                 Participants: participants
             }
         };
-    }
+    }*/
     return currentRequest;
 };
 
@@ -79,19 +80,23 @@ export async function getTasksData( oId:string ) {
     const currentTasks = await client.models.RequestTasks.list({
         limit:500,
         filter: {OrganizationID: { eq: oId }},
-        selectionSet: ['id', 'RequestID', 'Instructions', 'RequestTaskStatus', 'createdAt',
-            'Request.AccountName', 'Request.RequestedFor', 'Request.DueDate', 
-            'Participants.id','Participants.FirstName','Participants.LastName', 'Participants.EntityName','Participants.Email','Participants.ParticipantRole'
+        selectionSet: ['id', 'RequestID', 'Instructions', 'RequestTaskStatus', 'createdAt', 'Number',
+            'Request.AccountName', 'Request.RequestedFor', 'Request.DueDate', 'Request.RequestStatus', 'Request.id', 
+            'Participants.id','Participants.FirstName','Participants.LastName', 'Participants.EntityName','Participants.Email','Participants.ParticipantRole', 'Participants.ParticipantType',
         ]
     });  
 
     currentTasks.data.map( ( task ) => {
+        const currentAssignees = [];
         const filteredParticipants = task.Participants.filter( ( participant ) => participant.ParticipantRole === 'Recipient' );
-        if ( filteredParticipants[0].EntityName === '' ) {
-            (task as any).Assignee = filteredParticipants[0].FirstName + ' ' + filteredParticipants[0].LastName;
-        } else {
-            (task as any).Assignee = filteredParticipants[0].EntityName;
-        }
+        for ( const participant of filteredParticipants ) {
+            if ( participant.ParticipantType === 'Individual' ) {
+                currentAssignees.push( participant.FirstName + ' ' + participant.LastName );
+            } else {
+                currentAssignees.push( participant.EntityName );
+            };   
+        };
+        (task as any).Assignee = currentAssignees.join(', ');
     });
 
     return currentTasks.data;
@@ -134,9 +139,9 @@ export async function getRequestTaskData( oRequestId:string, oTaskId:string ) {
     
     const currentTask = await client.models.RequestTasks.get({ id: oTaskId },
     {
-        selectionSet: ['RequestTaskStatus', 
+        selectionSet: ['RequestTaskStatus', 'Instructions', 
             'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument', 'Responses.RequestQuestionID', 'Responses.Status',
-            'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole']
+            'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole', 'Participants.SendSubmissionEmail', 'Participants.ParticipantType']
     } );
 
     const enrichedRequest = {
@@ -160,24 +165,26 @@ export async function getRequestViewData( oRequestId:string ) {
             'Questions.id', 'Questions.Name', 'Questions.Type', 'Questions.Order',
             'History.Event','History.Date','History.User','History.Description', 'History.RequestTaskID']
     } );
-    const currentTasks = await client.models.RequestParticipants.list({
-        filter: {
-            RequestID: { eq: oRequestId },
-            ParticipantRole: { eq: 'Recipient' }
-        },
-        selectionSet: [
-            'id', 'FirstName', 'LastName', 'EntityName', 'Email', 'ParticipantRole','RequestTask.RequestTaskStatus', 'RequestTask.Instructions', 'RequestTask.id', 'RequestTask.Number', 'RequestTask.Responses.id', 'RequestTask.Responses.Name', 'RequestTask.Responses.Value', 'RequestTask.Responses.IsDocument', 'RequestTask.Responses.RequestQuestionID', 'RequestTask.Responses.Status',
-        ]
-    });
 
-    for ( const task of currentTasks.data ) {
-        if (task.EntityName === '' ) {
-            (task as any).Assignee = task.FirstName + ' ' + task.LastName;
-        } else {
-            (task as any).Assignee = task.EntityName;
-        }   
-    }
-
+     const currentTasks = await client.models.RequestTasks.list({
+            filter: {RequestID: { eq: oRequestId }},
+            selectionSet: ['id', 'Instructions', 'RequestTaskStatus', 'Number', 'createdAt',
+                'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole', 'Participants.EntityName', 'Participants.ParticipantType', 'Participants.RequestTaskID',
+                'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument', 'Responses.RequestQuestionID', 'Responses.Status',
+            ]
+        });
+        currentTasks.data.map( ( task ) => {
+            const currentAssignees = [];
+            const filteredParticipants = task.Participants.filter( ( participant ) => participant.ParticipantRole === 'Recipient' );
+            for ( const participant of filteredParticipants ) {
+                if ( participant.ParticipantType === 'Individual' ) {
+                    currentAssignees.push( participant.FirstName + ' ' + participant.LastName );
+                } else {
+                    currentAssignees.push( participant.EntityName );
+                }
+            }
+            (task as any).Assignee = currentAssignees.join(', ');
+        }); 
 
     const enrichedRequest = {
         ...currentRequest,
