@@ -390,8 +390,10 @@ function CreateRequest(props: Prop) {
         } else {
             request = await client.models.Request.update({ ...requestData, RequestStatus: 'New' });
         }
-
         const requestId = request.data?.id;
+        if (oStatus === 'Requested') {
+            await createHistoryEvent('Request', props.oUser.firstName + ' ' + props.oUser.lastName, 'Request Created for ' + requestData.AccountName, requestId ?? '', '', '', 'Request Created' );
+        }
         const copyRequestTasks = [...requestTasks];
         const copyParticipants = [...requestParticipants];
 
@@ -405,7 +407,7 @@ function CreateRequest(props: Prop) {
                 task.id = task.id.slice(4);
                 const newTask = await client.models.RequestTasks.create({ id: task.id, OrganizationID: props.oUser.OrgId, RequestID: requestId, RequestTaskStatus: 'New', Instructions: task.Instructions, Number: task.Number });
                 const taskId = newTask.data?.id;
-                createHistoryEvent('Task', 'ZackBot', 'Task Created', requestId ?? '', taskId ?? '');
+                await createHistoryEvent('Task', 'ZackBot', 'Task Created for ' + requestData.AccountName + "'s Request", requestId ?? '', task.id, '', 'Task Created' );
 
                 // ✅ match on originalTaskId (still has 'Temp' prefix), slice participant id only
                 await Promise.all(copyParticipants
@@ -414,7 +416,7 @@ function CreateRequest(props: Prop) {
                         if (participant.id.startsWith('Temp')) {
                             participant.id = participant.id.slice(4);
                             participant.RequestTaskID = taskId;
-                            await client.models.RequestParticipants.create({ id: participant.id, RequestID: requestId, RequestTaskID: taskId, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
+                            await client.models.RequestParticipants.create({ id: participant.id, RequestID: requestId, RequestTaskID: taskId, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType, Status: 'New' });
                         } else if (participant.deleted) {
                             await client.models.RequestParticipants.delete({ id: participant.id });
                         } else {
@@ -444,7 +446,7 @@ function CreateRequest(props: Prop) {
                         if (participant.id.startsWith('Temp')) {
                             participant.id = participant.id.slice(4);
                             participant.RequestTaskID = task.id;
-                            await client.models.RequestParticipants.create({ id: participant.id, RequestID: requestId, RequestTaskID: task.id, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
+                            await client.models.RequestParticipants.create({ id: participant.id, RequestID: requestId, RequestTaskID: task.id, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType, Status: 'New' });
                         } else if (participant.deleted) {
                             await client.models.RequestParticipants.delete({ id: participant.id });
                         } else {
@@ -461,7 +463,7 @@ function CreateRequest(props: Prop) {
             .map(async (participant) => {
                 if (participant.id.startsWith('Temp')) {
                     participant.id = participant.id.slice(4);
-                    await client.models.RequestParticipants.create({ id: participant.id, RequestID: requestId, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType });
+                    await client.models.RequestParticipants.create({ id: participant.id, RequestID: requestId, FirstName: participant.FirstName, LastName: participant.LastName, EntityName: participant.EntityName, Email: participant.Email, ParticipantRole: participant.ParticipantRole, ParticipantType: participant.ParticipantType, Status: 'New' });
                 } else if (participant.deleted) {
                     await client.models.RequestParticipants.delete({ id: participant.id });
                 } else {
@@ -489,7 +491,6 @@ function CreateRequest(props: Prop) {
         setRequestData({ ...requestData, id: requestId, RequestStatus: oStatus });
 
         if (oStatus === 'Requested') {
-            await createHistoryEvent('Request', props.oUser.firstName + ' ' + props.oUser.lastName, 'Request Created', requestId ?? '', '');
             props.oCloseTab(props.oCurrentTab);
         } else {
             notify();

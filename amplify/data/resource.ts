@@ -115,8 +115,10 @@ const schema = a.schema({
       ParticipantType: a.string(),
       ParticipantRole: a.string(),
       SendSubmissionEmail: a.boolean(),
+      Status: a.string(),
       Request: a.belongsTo('Request', 'RequestID'),
       RequestTask: a.belongsTo('RequestTasks', 'RequestTaskID'),
+      History: a.hasMany('RequestHistory', 'ParticipantID'),
     })
     .secondaryIndexes(index => [
       index('ParticipantRole').sortKeys(['RequestID']),
@@ -154,6 +156,7 @@ const schema = a.schema({
     .model({
       RequestID: a.string(),
       RequestTaskID: a.string(),
+      ParticipantID: a.string(),
       Type: a.string(),
       Event: a.string(),
       Date: a.string(),
@@ -161,6 +164,7 @@ const schema = a.schema({
       Description: a.string(),
       Request: a.belongsTo('Request', 'RequestID'),
       RequestTask: a.belongsTo('RequestTasks', 'RequestTaskID'),
+      RequestParticipant: a.belongsTo('RequestParticipants', 'ParticipantID'),
     }).authorization(allow => [allow.publicApiKey()]),
     Users: a
     .model({

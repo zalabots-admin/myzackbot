@@ -163,13 +163,13 @@ export async function getRequestViewData( oRequestId:string ) {
     {
         selectionSet: ['id', 'AccountName', 'RequestedFor', 'DueDate', 'RequestStatus', 'RequestType', 'FollowUpDate', 'createdAt',
             'Questions.id', 'Questions.Name', 'Questions.Type', 'Questions.Order',
-            'History.Event','History.Date','History.User','History.Description', 'History.RequestTaskID']
+            'History.Event','History.Date','History.User','History.Description', 'History.RequestTaskID', 'History.Type', 'History.ParticipantID', 'History.RequestID',]
     } );
 
      const currentTasks = await client.models.RequestTasks.list({
             filter: {RequestID: { eq: oRequestId }},
             selectionSet: ['id', 'Instructions', 'RequestTaskStatus', 'Number', 'createdAt',
-                'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole', 'Participants.EntityName', 'Participants.ParticipantType', 'Participants.RequestTaskID',
+                'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole', 'Participants.EntityName', 'Participants.ParticipantType', 'Participants.RequestTaskID', 'Participants.Status',
                 'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument', 'Responses.RequestQuestionID', 'Responses.Status',
             ]
         });
@@ -242,17 +242,22 @@ export async function getRequestFormsAndItemsData( oId:string ) {
 };
 
 // Create a history event for a request or task
-export async function createHistoryEvent( oEvent:string, oUser:string, oDescription:string, oRequestId:string, oTaskId:string ) {
+export async function createHistoryEvent( oType:string, oUser:string, oDescription:string, oRequestId:string, oTaskId:string, oParticipantId:string, oEvent:string ) {
 
     const item = {
+        Type: oType,
         Event: oEvent,
         User: oUser,
         Date: new Date().toISOString(),
         Description: oDescription,
         RequestID: oRequestId,
     };
-    if (oEvent === 'Task') {
+    if ( oType === 'Task' ) {
         (item as any).RequestTaskID = oTaskId;
+    }
+    if ( oType === 'Participant' ) {
+        (item as any).RequestTaskID = oTaskId;
+        (item as any).ParticipantID = oParticipantId;
     }
     const historyEvent = await client.models.RequestHistory.create(item);
 

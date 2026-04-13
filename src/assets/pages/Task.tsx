@@ -13,6 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 import ToggleSwitch from '../components/Toggle';
 
 import '../styles/Task.css';
+import RightSidePanel from '../components/SideBar';
 
 
 const client = generateClient<Schema>();
@@ -25,14 +26,17 @@ function Task () {
   const [requestDetails, setRequestDetails] = useState<any>( {} );
   const [requestQuestions, setRequestQuestions] = useState<any>( [] );
   const [requestSubmitter, setRequestSubmitter] = useState<any>( {} );
+  const [requestCollaborator, setRequestCollaborators] = useState<any>( { FirstName: '', LastName: '', Email: '' } );
   const [loading, setLoading] = useState( true );
   const [editable, setEditable] = useState( false );
+  const [allowInvite, setAllowInvite] = useState( true );
   const { requestId } = useParams<{ requestId: string }>();
   const { taskId } = useParams<{ taskId: string }>();    
   const params = new URLSearchParams(window.location.search);
   const first = params.get('first'); 
   const last = params.get('last');   
   const email = params.get('email');   
+  const [sidebarOpen, setSideBarOpen] = useState( false );
   //const [imgURL, setImgURL] = useState<string>( '' );
 
   const trayRef = useRef<HTMLDivElement>(null);
@@ -136,37 +140,54 @@ function Task () {
         return;
     }
 
-    if ( requestDetails.RequestTask.RequestTaskStatus !== 'In Progress' ) {
-      await client.models.RequestTasks.update({ id: taskId, RequestTaskStatus: 'In Progress' });
-      await createHistoryEvent('Task', requestSubmitter.FirstName + ' ' + requestSubmitter.LastName, 'Task In Progress', requestId ? requestId : '', taskId ? taskId : '');
-    };
-
-    if ( requestDetails.RequestTask.Participants.some( ( participant:any ) => ( participant.ParticipantRole === 'Submitter' || participant.ParticipantRole === 'Collaborator' ) && participant.Email === requestSubmitter.Email && participant.FirstName === requestSubmitter.FirstName && participant.LastName === requestSubmitter.LastName ) ) {
-      await client.models.RequestParticipants.update({ id: requestSubmitter.id, SendSubmissionEmail: requestSubmitter.SendEmailResponse });
+    if ( requestSubmitter.FirstName === '' || requestSubmitter.LastName === '' || requestSubmitter.Email === '' ) {
+      alert( 'Please fill out the submitter information before starting the form.' );
     } else {
-      await client.models.RequestParticipants.create({ RequestID: requestId!, RequestTaskID: taskId!, FirstName: requestSubmitter.FirstName, LastName: requestSubmitter.LastName, Email: requestSubmitter.Email, ParticipantRole: 'Submitter', ParticipantType: 'Individual', SendSubmissionEmail: requestSubmitter.SendEmailResponse });
-    };
-    setEditable( true );
-    setTranslateY( COLLAPSED_Y );
+      if ( requestDetails.RequestTask.RequestTaskStatus !== 'In Progress' ) {
+        await client.models.RequestTasks.update({ id: taskId, RequestTaskStatus: 'In Progress' });
+        await createHistoryEvent('Task', requestSubmitter.FirstName + ' ' + requestSubmitter.LastName, 'Request Form Has Been Started', requestId ? requestId : '', taskId ? taskId : '', '', 'Task In Progress' );
+      };
 
-  }
+      if ( requestDetails.RequestTask.Participants.some( ( participant:any ) => participant.ParticipantRole === 'Submitter' && participant.Email === requestSubmitter.Email && participant.FirstName === requestSubmitter.FirstName && participant.LastName === requestSubmitter.LastName ) ) {
+        await client.models.RequestParticipants.update({ id: requestSubmitter.id, SendSubmissionEmail: requestSubmitter.SendEmailResponse });
+      } else {
+        await client.models.RequestParticipants.create({ RequestID: requestId!, RequestTaskID: taskId!, FirstName: requestSubmitter.FirstName, LastName: requestSubmitter.LastName, Email: requestSubmitter.Email, ParticipantRole: 'Submitter', ParticipantType: 'Individual', SendSubmissionEmail: requestSubmitter.SendEmailResponse });
+      };
+      setEditable( true );
+      setTranslateY( COLLAPSED_Y );
+    };
+
+  };
 
   async function inviteCollaborator() {
 
-    if ( requestSubmitter.Email === '' || requestSubmitter.FirstName === '' || requestSubmitter.LastName === '' ) {
-        alert( 'Please fill out the submitter information before inviting a collaborator.' );
-        return;
+      setSideBarOpen( true );
+      setAllowInvite( false );
+
+  };
+
+  async function sendInvite() {
+
+    if ( requestCollaborator.Email === '' || requestCollaborator.FirstName === '' || requestCollaborator.LastName === '' ) {
+      alert( 'Please fill out all the collaborator information before sending the invite.' );
+    } else {
+      if ( !requestDetails.RequestTask.Participants.some( ( participant:any ) => participant.ParticipantRole === 'Collaborator' && participant.Email === requestCollaborator.Email && participant.FirstName === requestCollaborator.FirstName && participant.LastName === requestCollaborator.LastName ) ) {
+        const newCollaborator = await client.models.RequestParticipants.create({ RequestID: requestId!, RequestTaskID: taskId!, FirstName: requestCollaborator.FirstName, LastName: requestCollaborator.LastName, Email: requestCollaborator.Email, ParticipantRole: 'Collaborator', ParticipantType: 'Individual', Status: 'New', SendSubmissionEmail: false });
+        const collaboratorId = newCollaborator.data ? newCollaborator.data.id : '';
+        await createHistoryEvent('Participant', requestSubmitter.FirstName + ' ' + requestSubmitter.LastName, 'Invited ' + requestCollaborator.FirstName + ' ' + requestCollaborator.LastName + ' As A Collaborator', requestId ? requestId : '', taskId ? taskId : '', collaboratorId, 'Collaborator Invited' );
+        setSideBarOpen( false );
+        setAllowInvite( true );
+        setRequestCollaborators({ FirstName: '', LastName: '', Email: '' });
+      };
     };
 
-    //Create New Collaborator Participant Record if one doesn't already exist
-    requestDetails.RequestTask.Participants.some( ( participant:any ) => (participant.ParticipantRole === 'Collaborator' || participant.ParticipantRole === 'C' ) && participant.Email === requestSubmitter.Email && participant.FirstName === requestSubmitter.FirstName && participant.LastName === requestSubmitter.LastName ) || await client.models.RequestParticipants.create({ RequestID: requestId!, RequestTaskID: taskId!, FirstName: requestSubmitter.FirstName, LastName: requestSubmitter.LastName, Email: requestSubmitter.Email, ParticipantRole: 'Collaborator', ParticipantType: 'Individual' });
-    //Reset Form to Original Submitter
-    if ( requestDetails.RequestTask.Participants.some( ( participant:any ) => ( participant.ParticipantRole === 'Submitter' || participant.ParticipantRole === 'Collaborator' ) &&  participant.Email === email && participant.FirstName === first && participant.LastName === last ) ) {
-      const submitterData = requestDetails.RequestTask.Participants.find( ( participant:any ) => participant.ParticipantRole === 'Submitter' && participant.Email === email && participant.FirstName === first && participant.LastName === last );
-      setRequestSubmitter({ id: submitterData.id, FirstName: submitterData.FirstName, LastName: submitterData.LastName, Email: submitterData.Email, SendEmailResponse: submitterData.SendSubmissionEmail });
-    } else {
-      setRequestSubmitter({ FirstName: first, LastName: last, Email: email, ParticipantRole: 'Submitter', SendEmailResponse: false });
-    };
+  };
+
+  function cancelInvite() {
+
+    setSideBarOpen( false );
+    setAllowInvite( true );
+    setRequestCollaborators({ FirstName: '', LastName: '', Email: '' } );
 
   };
 
@@ -182,7 +203,7 @@ function Task () {
         const copyRequestDetails = { ...requestDetails };
         copyRequestDetails.RequestTask = { ...copyRequestDetails.RequestTask, RequestTaskStatus: 'Submitted' };
         setRequestDetails( copyRequestDetails );
-        await createHistoryEvent('Task', requestSubmitter.FirstName + ' ' + requestSubmitter.LastName, 'Task Submitted', requestId ? requestId : '', taskId ? taskId : '');
+        await createHistoryEvent('Task', requestSubmitter.FirstName + ' ' + requestSubmitter.LastName, 'Task Has Been Completed & Submitted', requestId ? requestId : '', taskId ? taskId : '', '', 'Task Submitted' );
     }
 
     requestQuestions.map( async ( item:any ) => {
@@ -285,14 +306,14 @@ function Task () {
                     {!editable ? (
                       <p>If the information below is correct, click 'Start' to unlock the form. Otherwise, please update the information first.</p>
                     ) : null} 
-                    <p>If you would like to invite a collaborator, please fill out their information below and click 'Invite'.</p>
+                    <p>If you would like to invite a collaborator and send them an invitation to help complete the request, click 'Invite'.</p>
                     <Input
                       oKey="FirstName"
                       oType="text"
                       oLabel="First Name"
                       oSize="col12"
                       isRequired={true}
-                      isEditable={true}
+                      isEditable={!editable}
                       oChange={(e) => handleGetDataInputChange(e, setRequestSubmitter)}
                       oData={requestSubmitter.FirstName}
                     />
@@ -302,7 +323,7 @@ function Task () {
                       oLabel="Last Name"
                       oSize="col12"
                       isRequired={true}
-                      isEditable={true}
+                      isEditable={!editable}
                       oChange={(e) => handleGetDataInputChange(e, setRequestSubmitter)}
                       oData={requestSubmitter.LastName}
                     />
@@ -312,26 +333,23 @@ function Task () {
                       oLabel="Email"
                       oSize="col12"
                       isRequired={true}
-                      isEditable={true}
+                      isEditable={!editable}
                       oChange={(e) => handleGetDataInputChange(e, setRequestSubmitter)}
                       oData={requestSubmitter.Email}
                     />
-                    <ToggleSwitch label="Email Submitter Response on Submit" checked={requestSubmitter.SendEmailResponse} onChange={handleToggleEmailResponse} onColor="#4E6E5D" offColor="#CCCCCC" />
+                    <ToggleSwitch label="Email Yourself Completed Response When Submitted" checked={requestSubmitter.SendEmailResponse} onChange={handleToggleEmailResponse} onColor="#4E6E5D" offColor="#CCCCCC" />
                         <div className="flex justify-center mt-4 gap-4">
-                          <button
-                            className="w-40 px-4 py-2 text-white font-semibold rounded-full shadow-md transition-colors duration-200 hover:brightness-90 hover:cursor-pointer"
-                            style={{ backgroundColor: primaryColor }}
-                            onClick={inviteCollaborator}
-                          >
-                            Invite
-                          </button>
+                          {allowInvite && (
+                            <button
+                              className="w-40 px-4 py-2 text-white font-semibold rounded-full shadow-md transition-colors duration-200 hover:brightness-90 hover:cursor-pointer"
+                              style={{ backgroundColor: primaryColor }} onClick={inviteCollaborator}>
+                              Invite
+                            </button>
+                          )}
                           {!editable ? (
                           <button
                             className="w-40 px-4 py-2 text-white font-semibold rounded-full shadow-md transition-colors duration-200 hover:brightness-90 hover:cursor-pointer"
-                            style={{ backgroundColor: primaryColor }}
-                            onClick={startForm}
-                            disabled={requestSubmitter.FirstName === '' || requestSubmitter.LastName === '' || requestSubmitter.Email === ''}
-                          >
+                            style={{ backgroundColor: primaryColor }} onClick={startForm}>
                             Start
                           </button>
                           ) : null}
@@ -493,6 +511,62 @@ function Task () {
           )}
         </>
       )}
+        {sidebarOpen && 
+            <RightSidePanel isOpen={sidebarOpen}>
+                <div className="flex flex-col h-full">
+                    <div className="flex flex-col h-[125px] w-full">
+                        <div className="font-bold mb-2 h2 text-4xl" style={{color: secondaryColor}}>Participant Manager</div>
+                        <div className="font-bold h2 text-xl" style={{color: secondaryColor}}>Invite Collaborator</div>
+                    </div>
+                    <div className="flex-1 w-full p-4 overflow-y-auto">
+                      <Input
+                        oKey="FirstName"
+                        oType="text"
+                        oLabel="First Name"
+                        oSize="col12"
+                        isRequired={true}
+                        isEditable={true}
+                        oChange={(e) => handleGetDataInputChange(e, setRequestCollaborators)}
+                        oData={requestCollaborator.FirstName}
+                      />
+                      <Input
+                        oKey="LastName"
+                        oType="text"
+                        oLabel="Last Name"
+                        oSize="col12"
+                        isRequired={true}
+                        isEditable={true}
+                        oChange={(e) => handleGetDataInputChange(e, setRequestCollaborators)}
+                        oData={requestCollaborator.LastName}
+                      />
+                      <Input
+                        oKey="Email"
+                        oType="text"
+                        oLabel="Email"
+                        oSize="col12"
+                        isRequired={true}
+                        isEditable={true}
+                        oChange={(e) => handleGetDataInputChange(e, setRequestCollaborators)}
+                        oData={requestCollaborator.Email}
+                      />
+                    </div>
+                    <div className="flex h-[100px] items-center justify-center w-full gap-4">
+                      <button
+                          className="w-40 px-4 py-2 text-white font-semibold rounded-full shadow-md transition-colors duration-200 hover:brightness-90 hover:cursor-pointer"
+                          style={{ backgroundColor: primaryColor }}
+                          onClick={cancelInvite}>
+                          Cancel
+                        </button>
+                      <button
+                          className="w-40 px-4 py-2 text-white font-semibold rounded-full shadow-md transition-colors duration-200 hover:brightness-90 hover:cursor-pointer"
+                          style={{ backgroundColor: primaryColor }}
+                          onClick={sendInvite}>
+                          Send
+                        </button>
+                    </div>
+                </div>
+            </RightSidePanel>
+        }
     </div>
   );
 };

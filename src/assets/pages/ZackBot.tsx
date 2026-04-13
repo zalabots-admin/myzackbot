@@ -263,6 +263,29 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
         }
         });
 
+        //PARTICIPANT SUBSCRIPTIONS
+        client.models.RequestParticipants.onCreate().subscribe({
+            next: (data) => { const newEvent = { event: 'New', type: 'Participant', data: JSON.stringify(data)}
+            setEventData( newEvent )
+            }
+        });
+        
+        client.models.RequestParticipants.onUpdate().subscribe({
+        next: (data) => {
+            if ( data != null && data != undefined ) {
+            const newEvent = { event: 'Update', type: 'Participant', data: JSON.stringify(data)}
+            setEventData( newEvent )
+            }
+        }
+        });
+
+        //HISTORY SUBSCRIPTIONS
+        client.models.RequestHistory.onCreate().subscribe({
+            next: (data) => { const newEvent = { event: 'New', type: 'History', data: JSON.stringify(data)}
+            setEventData( newEvent )
+            }
+        });
+
         //NOTIFICATION SUBSCRIPTIONS
         client.models.Notifications.onCreate().subscribe({
             next: (data) => { const newEvent = { event: 'New', type: 'Notification', data: JSON.stringify(data)}

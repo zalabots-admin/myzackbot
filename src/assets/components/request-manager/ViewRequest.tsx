@@ -30,6 +30,7 @@ function ViewRequest ( props:Prop ) {
   const [requestDetails, setRequestDetails] = useState<any>( {} );
   const [historyDetails, setHistoryDetails] = useState<any>( [] );
   const [questionDetails, setQuestionDetails] = useState<any>( [] );
+  const [participantDetails, setParticipantDetails] = useState<any>( [] );
   const [loading, setLoading] = useState( true );
   const [activeTask, setActiveTask] = useState( '' );
   const [historySteps, setHistorySteps] = useState<any>( [] );
@@ -40,50 +41,61 @@ function ViewRequest ( props:Prop ) {
   //const [taskAssigneeEmail, setTaskAssigneeEmail] = useState( '' );
   const [taskInstructions, setTaskInstructions] = useState( '' );
   const [taskStatus, setTaskStatus] = useState( '' );
+  const [filterHistory, setFilterHistory] = useState( {requests: true, tasks: true, participants: true, questions: true} );
   
   const getRequest = async () => {
 
+    const oParticipants: any[] = [];
     const currentRequest = await getRequestViewData( props.oOpenTabs[props.oCurrentTab].id );
-console.log( 'Current Request Data:', currentRequest.data, props.oActiveTaskNumber );
     setRequestDetails( currentRequest.data );
     setHistoryDetails( currentRequest.data?.History );
     setQuestionDetails( currentRequest.data?.Questions );
+    currentRequest.data?.RequestTasks?.forEach((task:any) => {
+      task.Participants?.forEach((participant:any) => {
+        const existingParticipant = oParticipants.find((p:any) => p.Email === participant.Email && p.FirstName === participant.FirstName && p.LastName === participant.LastName);
+        if ( existingParticipant ) {
+          existingParticipant.ParticipantRole = existingParticipant.ParticipantRole + ', ' + participant.ParticipantRole;
+        } else {
+          oParticipants.push(participant);
+        }
+      });
+    });
+    setParticipantDetails( oParticipants );
     setActiveTask(
       currentRequest.data?.RequestTasks?.find(
         (t: any) => t.Number === props.oActiveTaskNumber
       )?.id
     );
     setLoading( false );
-
+console.log(currentRequest.data?.History )
   };
 
   function validateHistoryEvents() {
 
     let  steps = [
       { completed:'false', date: '', time:'', user: '', description: 'Request Created' },
-      { completed:'false', date: '', time:'', user: '', description: 'Task Sent' }, 
-      { completed:'false', date: '', time:'', user: '', description: 'Task Delivered' }, 
-      { completed:'false', date: '', time:'', user: '', description: 'Email Opened' }, 
+      { completed:'false', date: '', time:'', user: '', description: 'Task Pending' }, 
       { completed:'false', date: '', time:'', user: '', description: 'Task In Progress' }, 
-      { completed:'false', date: '', time:'', user: '', description: 'Task Submitted' }
+      { completed:'false', date: '', time:'', user: '', description: 'Task Submitted' },
+      { completed:'false', date: '', time:'', user: '', description: 'Request Completed' }
     ]
 
       historyDetails.filter(( event:any ) => event.RequestTaskID === activeTask || event.RequestTaskID === null ).forEach(( item:any ) => {
 
           steps.forEach(( step:any ) => {
-              if ( item.Description === step.description ) {
+              if ( item.Event === step.description ) {
                   step.completed = 'true';
                   step.date = formatUTCDate( item.Date );
                   step.time = formatToLocalTime( item.Date );
                   step.user = item.User;
-                  step.description = item.Description;
+                  step.description = item.Event;
               }
-              if ( item.Description === 'Task is Undeliverable' ) {
+              if ( item.Event === 'Task is Undeliverable' ) {
                   steps[2].completed = 'error';
                   steps[2].date = formatUTCDate( item.Date );
                   steps[2].time = formatToLocalTime( item.Date );
                   steps[2].user = item.User;
-                  steps[2].description = item.Description;
+                  steps[2].description = item.Event;
               }
           });
 
@@ -92,6 +104,13 @@ console.log( 'Current Request Data:', currentRequest.data, props.oActiveTaskNumb
       setHistorySteps( steps );
 
   };
+
+  function handleCheckbox(filterType: string) {
+    setFilterHistory({
+      ...filterHistory,
+      [filterType]: !filterHistory[filterType as keyof typeof filterHistory]
+    });
+  }
 
   async function handleDownload( oName:string, oId:string ) {
     
@@ -171,7 +190,7 @@ console.log( 'Current Request Data:', currentRequest.data, props.oActiveTaskNumb
   async function completeRequest() {
     
     await client.models.Request.update({ id: requestDetails.id, RequestStatus: 'Closed' });
-    await createHistoryEvent( 'Request', props.oUser.Username, 'Request Completed', requestDetails.id, '',  );
+    await createHistoryEvent( 'Request', props.oUser.Username, 'Request was Manually Completed', requestDetails.id, '', '', 'Request Completed' );
     setRequestDetails( { ...requestDetails, RequestStatus: 'Closed' } );
 
   };
@@ -209,6 +228,12 @@ console.log( 'Current Request Data:', currentRequest.data, props.oActiveTaskNumb
 
   useEffect(() => {
 
+    validateHistoryEvents();
+
+  }, [historyDetails]);
+
+  useEffect(() => {
+
     if ( props.oEvent != '' && props.oEvent != null && props.oEvent != undefined ) {
       if ( props.oEvent.type === 'Task' ) {
         const eventData = JSON.parse( props.oEvent.data );
@@ -222,6 +247,33 @@ console.log( 'Current Request Data:', currentRequest.data, props.oActiveTaskNumb
              return copyDetails;
             })
         };
+      } else if ( props.oEvent.type === 'History' ) {
+        const eventData = JSON.parse( props.oEvent.data );
+        if ( props.oEvent.event === 'New') {
+          setHistoryDetails( ( prevDetails:any ) => {
+            const copyDetails = [ ...prevDetails ];
+            copyDetails.push( eventData );
+            return copyDetails;
+          });
+        }
+      } else if ( props.oEvent.type === 'Participant' ) {
+        const eventData = JSON.parse( props.oEvent.data );
+        if ( props.oEvent.event === 'New') {
+          setParticipantDetails( ( prevDetails:any ) => {
+            const copyDetails = [ ...prevDetails ];
+            copyDetails.push( eventData );
+            return copyDetails;
+          });
+        } else if ( props.oEvent.event === 'Update') {
+          setParticipantDetails( ( prevDetails:any ) => {
+            const copyDetails = [ ...prevDetails ];
+            const index = copyDetails.findIndex((participant:any) => participant.id === eventData.id);
+            if (index !== -1) {
+              copyDetails[index].Status = eventData.Status;
+            }
+            return copyDetails;
+          });
+        }
       };
     };
 
@@ -329,7 +381,7 @@ console.log( 'Current Request Data:', currentRequest.data, props.oActiveTaskNumb
                 </div>*/}
                 <div className="flex flex-col w-1/4">
                   <p>Instructions:</p>
-                  <p>{taskInstructions ? taskInstructions : "No instructions provided"}</p>
+                  <p>{taskInstructions ? taskInstructions : "No Instructions Provided"}</p>
                 </div>
                 <div className="flex flex-col w-1/4">
                   <p>Task Status:</p>
@@ -339,8 +391,8 @@ console.log( 'Current Request Data:', currentRequest.data, props.oActiveTaskNumb
               <div className="flex-1 flex flex-row gap-4 min-h-0 w-full">
                 <div className="flex-1 flex flex-col min-h-0 gap-4 min-h-0 w-1/3">
                   {/* Request History */}
-                    <div id="request-history" className="flex-1 flex flex-col min-h-0  bg-white border border-gray-300 rounded shadow gap-4 p-4">
-                      <div className="flex-1 flex flex-col min-h-0 gap-4 min-h-0"> 
+                    <div id="request-history" className="flex-1 flex flex-col min-h-0 bg-white border border-gray-300 rounded shadow gap-4 p-4">
+                      <div className="flex-1 flex flex-col min-h-0 min-h-0"> 
                         <div className="flex justify-center items-center"><h3>Request &amp; Task Progress</h3></div>
                           <div id="request-history-steps" className='flex-1 flex flex-col overflow-y-auto'>
                               {historySteps.map(( item:any, index:number ) => ( 
@@ -357,10 +409,10 @@ console.log( 'Current Request Data:', currentRequest.data, props.oActiveTaskNumb
                                                       </div>
                                                   )}
                                                   <div className='progress-step-complete'><i className={"fa-sharp fa-thin fa-check "}></i></div>
-                                                  {index === 5 && ( 
+                                                  {index === 4 && ( 
                                                       <div className="align-top-center" style={{height:'20px'}}></div>
                                                   )}
-                                                  {index != 5 && ( 
+                                                  {index != 4 && ( 
                                                       <div className="align-top-center" style={{height:'20px'}}>
                                                           <div className="progress-line-complete"></div>
                                                       </div>
@@ -385,10 +437,10 @@ console.log( 'Current Request Data:', currentRequest.data, props.oActiveTaskNumb
                                                       </div>
                                                   )}
                                                   <div className='progress-step'><i className={"fa-sharp fa-thin fa-minus "}></i></div>
-                                                  {index === 5 && ( 
+                                                  {index === 4 && ( 
                                                       <div className="align-top-center" style={{height:'20px'}}></div>
                                                   )}
-                                                  {index != 5 && ( 
+                                                  {index != 4 && ( 
                                                       <div className="align-top-center" style={{height:'20px'}}>
                                                           <div className="progress-line"></div>
                                                       </div>
@@ -411,10 +463,10 @@ console.log( 'Current Request Data:', currentRequest.data, props.oActiveTaskNumb
                                                       </div>
                                                   )}
                                                   <div className='progress-step-error'><i className={"fa-sharp fa-thin fa-xmark "}></i></div>
-                                                  {index === 5 && ( 
+                                                  {index === 4 && ( 
                                                       <div className="align-top-center" style={{height:'20px'}}></div>
                                                   )}
-                                                  {index != 5 && ( 
+                                                  {index != 4 && ( 
                                                       <div className="align-top-center" style={{height:'20px'}}>
                                                           <div className="progress-line"></div>
                                                       </div>
@@ -517,14 +569,14 @@ console.log( 'Current Request Data:', currentRequest.data, props.oActiveTaskNumb
                     <Panel oIsActive={activeTabId === '2'} oIndex={'2'} oState={tabs.find(tab => tab.id === '2')?.show}>
                       <div id="request-participants" className="flex flex-col min-h-0 w-full bg-white border border-gray-300 rounded shadow gap-4 p-2">
                         <div id="participants-list" className="flex-1 flex flex-col min-h-0 gap-4 min-h-0 p-2 overflow-y-auto"> 
-                            {requestDetails.RequestTasks?.filter((task:any) => task.id === activeTask).map((task:any) => ( 
+                            {participantDetails?.filter((task:any) => task.RequestTaskID === activeTask).map((participant:any) => ( 
                               <>
-                                {task.Participants?.sort((a:any, b:any) => a.Email.localeCompare(b.Email)).map((participant:any) => (
-                                  <div className="flex flex-row items-center bg-gray-100 rounded-tl rounded-bl p-2 gap-4" key={participant.id}>
-                                    <div className="w-[10%] flex flex-col justify-center items-center ">
+
+                                  <div className="flex flex-row items-center bg-gray-100 rounded-tl rounded-bl p-2" key={participant.id}>
+                                    <div className="w-[5%] flex justify-center items-center h-full">
                                       <i className={`fa-classic fa-regular text-[#4E6E5D] text-3xl ${participant.ParticipantType === 'Individual' ? 'fa-user' : 'fa-building'}`}></i>
                                     </div>
-                                    <div className="w-[70%] flex flex-col p-2 pl-4">
+                                    <div className="w-[43%] flex flex-col pl-2 h-full">
                                       <div className="flex flex-row gap-2 items-center">
                                         <div className="font-bold">{participant.EntityName ? participant.EntityName : participant.FirstName + ' ' + participant.LastName}</div>
                                       </div>
@@ -532,13 +584,17 @@ console.log( 'Current Request Data:', currentRequest.data, props.oActiveTaskNumb
                                           <div>{participant.Email}</div>
                                       </div>
                                     </div>
-                                    <div className="w-[20%] flex flex-col h-full p-2">
-                                      <div className="flex justify-center items-start border-l border-gray-300 p-2 h-full w-full">
+                                    <div className="w-[30%] flex flex-col h-full p-2">
+                                      <div className="flex justify-start items-center border-l border-gray-300 h-full w-full px-2">
                                         {participant.ParticipantRole}
                                       </div>    
                                     </div>  
+                                    <div className="w-[22%] flex flex-col h-full p-2">
+                                      <div className="flex justify-start items-center border-l border-gray-300 p-2 h-full w-full px-2">
+                                        <WorkflowStatusIndicator status={participant.Status ? participant.Status : 'Unknown'} showLabel={true} />
+                                      </div>    
+                                    </div>  
                                   </div>
-                                ))}
                               </>
                             ))}
                         </div>
@@ -546,7 +602,52 @@ console.log( 'Current Request Data:', currentRequest.data, props.oActiveTaskNumb
                     </Panel>
                     {/* History */}
                     <Panel oIsActive={activeTabId === '3'} oIndex={'3'} oState={tabs.find(tab => tab.id === '3')?.show}>
-                      
+                      <div id="request-participants" className="flex flex-col min-h-0 w-full bg-white border border-gray-300 rounded shadow gap-4 p-2">
+                        <div className="flex flex-row items-center gap-4 p-2">
+                          <div className="w-1/4 flex flex-row items-center gap-2">
+                            <input type="checkbox" id="toggle-history-requests" className="appearance-none" checked={filterHistory.requests} />
+                            <div className={`flex justify-center items-center w-8 h-8 rounded-md shadow border-2 cursor-pointer ${filterHistory.requests ? 'bg-[#4E6E5D] border-[#4E6E5D]' : 'bg-white border-gray-300'}`} onClick={() => {handleCheckbox('requests')}}>
+                              <i className="fa-sharp fa-regular fa-check text-white"></i>
+                            </div>
+                            <label htmlFor="toggle-history-requests">Requests</label>
+                          </div>
+                          <div className="w-1/4 flex flex-row items-center gap-2">
+                            <input type="checkbox" id="toggle-history-tasks" className="appearance-none" checked={filterHistory.tasks} />
+                            <div className={`flex justify-center items-center w-8 h-8 rounded-md shadow border-2 cursor-pointer ${filterHistory.tasks ? 'bg-[#005566] border-[#005566]' : 'bg-white border-gray-300'}`} onClick={() => {handleCheckbox('tasks')}}>
+                              <i className="fa-sharp fa-regular fa-check text-white"></i>
+                            </div>
+                            <label htmlFor="toggle-history-tasks">Tasks</label>
+                          </div>
+                          <div className="w-1/4 flex flex-row items-center gap-2">
+                            <input type="checkbox" id="toggle-history-participants" className="appearance-none" checked={filterHistory.participants} />
+                            <div className={`flex justify-center items-center w-8 h-8 rounded-md shadow border-2 cursor-pointer ${filterHistory.participants ? 'bg-[#003399] border-[#003399]' : 'bg-white border-gray-300'}`} onClick={() => {handleCheckbox('participants')}}>
+                              <i className="fa-sharp fa-regular fa-check text-white"></i>
+                            </div>
+                            <label htmlFor="toggle-history-participants">Participants</label>
+                          </div>
+                          <div className="w-1/4 flex flex-row items-center gap-2">
+                            <input type="checkbox" id="toggle-history-questions" className="appearance-none" checked={filterHistory.questions} />
+                            <div className={`flex justify-center items-center w-8 h-8 rounded-md shadow border-2 cursor-pointer ${filterHistory.questions ? 'bg-[#00213D] border-[#00213D]' : 'bg-white border-gray-300'}`} onClick={() => {handleCheckbox('questions')}}>
+                              <i className="fa-sharp fa-regular fa-check text-white"></i>
+                            </div>
+                            <label htmlFor="toggle-history-questions">Questions</label>
+                          </div>
+                        </div>
+                        <div id="participants-list" className="flex-1 flex flex-col min-h-0 gap-4 min-h-0 px-2 overflow-y-auto"> 
+                          {historyDetails?.filter((event:any) => ( event.RequestTaskID === activeTask || event.Type === 'Request') && (event.Type === 'Request' ? filterHistory.requests : event.Type === 'Task' ? filterHistory.tasks : filterHistory.participants)).sort((a:any, b:any) => new Date(b.Date).getTime() - new Date(a.Date).getTime()).map((event:any) => (
+                            <div  className={`flex flex-row items-center bg-gray-100 rounded-lg p-2 border ${event.Type === 'Task' ? 'border-[#005566]' : event.Type === 'Request' ? 'border-[#4E6E5D]' : 'border-[#003399]'}`} key={event.id}>
+                              <div className="w-[10%] flex justify-center items-center h-full">
+                                <i className={`fa-classic fa-regular text-3xl ${event.Type === 'Task' ? 'fa-clipboard-list-check  text-[#005566]' : event.Type === 'Request' ? 'fa-comments-question-check  text-[#4E6E5D]' : 'fa-user text-[#003399]'}`}></i>
+                              </div>
+                              <div className="align-center-left font-family-roboto">
+                                  <div className="col12 font-bold">{event.Description}</div>
+                                  <div className="col12">{formatUTCDate( event.Date )} at {formatToLocalTime( event.Date )}</div>
+                                  <div className="col12">By: {event.User}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </Panel>
                   </div>
                 </div>
