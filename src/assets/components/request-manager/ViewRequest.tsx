@@ -99,7 +99,7 @@ function ViewRequest ( props:Prop ) {
     const oParticipants: any[] = [];
     oParticipantsList?.forEach((task:any) => {
       task.Participants?.forEach((participant:any) => {
-        const existingParticipant = oParticipants.find((p:any) => p.Email === participant.Email && p.FirstName === participant.FirstName && p.LastName === participant.LastName);
+        const existingParticipant = oParticipants.find((p:any) => p.Email === participant.Email && p.FirstName === participant.FirstName && p.LastName === participant.LastName && p.RequestTaskID === participant.RequestTaskID);
         if ( existingParticipant ) {
           existingParticipant.ParticipantRole = existingParticipant.ParticipantRole + ', ' + participant.ParticipantRole;
         } else {
@@ -325,19 +325,19 @@ function ViewRequest ( props:Prop ) {
                   <IconButtonMedium
                     oAction={completeRequest}
                     oTitle="Complete Request"
-                    oIcon="fa-sharp fa-thin fa-check"
+                    oIcon="fa-regular fa-classic fa-check"
                   />
                   <IconButtonMedium
                     oAction={openTaskForm}
                     oTitle="Open Task Form"
-                    oIcon="fa-sharp fa-thin fa-arrow-up-right-from-square"
+                    oIcon="fa-regular fa-classic fa-arrow-up-right-from-square"
                   />
                 </>
               )}
               <IconButtonMedium
                 oAction={() => {props.oCloseTab( props.oCurrentTab )}}
                 oTitle="Close Request"
-                oIcon="fa-sharp fa-thin fa-xmark"
+                oIcon="fa-regular fa-classic fa-xmark"
               />
             </div>
           </div>

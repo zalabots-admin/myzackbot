@@ -391,7 +391,7 @@ function CreateRequest(props: Prop) {
             request = await client.models.Request.update({ ...requestData, RequestStatus: 'New' });
         }
         const requestId = request.data?.id;
-        if (oStatus === 'Requested') {
+        if (oStatus === 'Active') {
             await createHistoryEvent('Request', props.oUser.firstName + ' ' + props.oUser.lastName, 'Request Created for ' + requestData.AccountName, requestId ?? '', '', '', 'Request Created' );
         }
         const copyRequestTasks = [...requestTasks];
@@ -407,7 +407,7 @@ function CreateRequest(props: Prop) {
                 task.id = task.id.slice(4);
                 const newTask = await client.models.RequestTasks.create({ id: task.id, OrganizationID: props.oUser.OrgId, RequestID: requestId, RequestTaskStatus: 'New', Instructions: task.Instructions, Number: task.Number });
                 const taskId = newTask.data?.id;
-                await createHistoryEvent('Task', 'ZackBot', 'Task Created for ' + requestData.AccountName + "'s Request", requestId ?? '', task.id, '', 'Task Created' );
+                await createHistoryEvent('Task', 'ZackBot', 'Task ' + (task.Instructions === '' ? '' : '(' + task.Instructions + ')') + ' Created for ' + requestData.AccountName + "'s Request", requestId ?? '', task.id, '', 'Task Created' );
 
                 // ✅ match on originalTaskId (still has 'Temp' prefix), slice participant id only
                 await Promise.all(copyParticipants
@@ -490,7 +490,7 @@ function CreateRequest(props: Prop) {
         setRequestTasks(copyRequestTasks);
         setRequestData({ ...requestData, id: requestId, RequestStatus: oStatus });
 
-        if (oStatus === 'Requested') {
+        if (oStatus === 'Active') {
             props.oCloseTab(props.oCurrentTab);
         } else {
             notify();
@@ -589,11 +589,7 @@ function CreateRequest(props: Prop) {
                         <p className="h2 text-xl">Request Builder</p>
                     </div>
                     <div className="w-[20%] flex justify-end items-center">
-                        <IconButtonMedium
-                            oAction={() => {props.oCloseTab( props.oCurrentTab )}}
-                            oTitle="Close Request"
-                            oIcon="fa-sharp fa-regular fa-xmark"
-                        />
+                        
                         { requestData.RequestStatus === 'Draft' && (
                             <IconButtonMedium
                                 oAction={deleteDraftRequest}
@@ -602,14 +598,19 @@ function CreateRequest(props: Prop) {
                             />
                         )}
                         <IconButtonMedium
+                            oAction={() => {saveRequest( 'Active' )}}
+                            oTitle="Send Request"
+                            oIcon="fa-sharp fa-regular fa-paper-plane-top"
+                        />
+                        <IconButtonMedium
                             oAction={() => {saveRequest( 'Draft' )}}
                             oTitle="Save Request"
                             oIcon="fa-sharp fa-regular fa-floppy-disk"
                         />
                         <IconButtonMedium
-                            oAction={() => {saveRequest( 'Requested' )}}
-                            oTitle="Send Request"
-                            oIcon="fa-sharp fa-regular fa-paper-plane-top"
+                            oAction={() => {props.oCloseTab( props.oCurrentTab )}}
+                            oTitle="Close Request"
+                            oIcon="fa-sharp fa-regular fa-xmark"
                         />
                     </div> 
                 </div>
