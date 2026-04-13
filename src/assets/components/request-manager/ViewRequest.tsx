@@ -140,7 +140,7 @@ function ViewRequest ( props:Prop ) {
     copyRequestDetails.find((task:any) => task.id === activeTask).Responses[responseIndex].Status = 'Pending';
     copyRequestDetails.find((task:any) => task.id === activeTask).Responses[responseIndex].Value = '';
     setRequestDetails( { ...requestDetails, RequestTasks: [...copyRequestDetails] } );
-    //await createHistoryEvent( 'Request Task Response', props.oUser.Username, 'Question Reset', requestDetails.id, activeTask, oResponseId );
+    await createHistoryEvent( 'Question', props.oUser.Username, 'Question Reset - ' + copyRequestDetails.find((task:any) => task.id === activeTask).Name, requestDetails.id, activeTask, oResponseId, 'Question Reset' );
 
   };
 
@@ -158,13 +158,13 @@ function ViewRequest ( props:Prop ) {
       const copyRequestDetails = [ ...requestDetails.RequestTasks ];
       copyRequestDetails.find((task:any) => task.id === activeTask).Responses.push( { id: newResponse.data?.id, RequestTaskID: activeTask, RequestQuestionID: oQuestionId, Status: 'Waived' } );
       setRequestDetails( { ...requestDetails, RequestTasks: [...copyRequestDetails] } );
-      //await createHistoryEvent( 'Request Task Response', props.oUser.Username, 'Question Waived', requestDetails.id, activeTask, 'n/a' );
+      await createHistoryEvent( 'Question', props.oUser.Username, 'Question Waived - ' + copyRequestDetails.find((task:any) => task.id === activeTask).Name, requestDetails.id, activeTask, '', 'Question Waived' );
     } else {
       await client.models.RequestResponses.update({ id: oResponseId, Status: 'Waived' });
       const copyRequestDetails = [ ...requestDetails.RequestTasks ];
       copyRequestDetails.find((task:any) => task.id === activeTask).Responses.find((response:any) => response.id === oResponseId).Status = 'Waived';
       setRequestDetails( { ...requestDetails, RequestTasks: [...copyRequestDetails] } );
-      //await createHistoryEvent( 'Request Task Response', props.oUser.Username, 'Question Waived', requestDetails.id, activeTask, oResponseId );
+      await createHistoryEvent( 'Question', props.oUser.Username, 'Question Waived - ' + copyRequestDetails.find((task:any) => task.id === activeTask).Name, requestDetails.id, activeTask, oResponseId, 'Question Waived' );
     }
 
   }
