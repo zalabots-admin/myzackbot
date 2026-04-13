@@ -140,7 +140,7 @@ function ViewRequest ( props:Prop ) {
     copyRequestDetails.find((task:any) => task.id === activeTask).Responses[responseIndex].Status = 'Pending';
     copyRequestDetails.find((task:any) => task.id === activeTask).Responses[responseIndex].Value = '';
     setRequestDetails( { ...requestDetails, RequestTasks: [...copyRequestDetails] } );
-    await createHistoryEvent( 'Question', props.oUser.Username, 'Question Reset - ' + copyRequestDetails.find((task:any) => task.id === activeTask).Name, requestDetails.id, activeTask, oResponseId, 'Question Reset' );
+    await createHistoryEvent( 'Question', props.oUser.firstName + ' ' + props.oUser.lastName, 'Question Reset - ' + copyRequestDetails.find((task:any) => task.id === activeTask).Name, requestDetails.id, activeTask, oResponseId, 'Question Reset' );
 
   };
 
@@ -158,13 +158,13 @@ function ViewRequest ( props:Prop ) {
       const copyRequestDetails = [ ...requestDetails.RequestTasks ];
       copyRequestDetails.find((task:any) => task.id === activeTask).Responses.push( { id: newResponse.data?.id, RequestTaskID: activeTask, RequestQuestionID: oQuestionId, Status: 'Waived' } );
       setRequestDetails( { ...requestDetails, RequestTasks: [...copyRequestDetails] } );
-      await createHistoryEvent( 'Question', props.oUser.Username, 'Question Waived - ' + copyRequestDetails.find((task:any) => task.id === activeTask).Name, requestDetails.id, activeTask, '', 'Question Waived' );
+      await createHistoryEvent( 'Question', props.oUser.firstName + ' ' + props.oUser.lastName, 'Question Waived - ' + questionDetails.find((question:any) => question.id === oQuestionId).Name, requestDetails.id, activeTask, '', 'Question Waived' );
     } else {
       await client.models.RequestResponses.update({ id: oResponseId, Status: 'Waived' });
       const copyRequestDetails = [ ...requestDetails.RequestTasks ];
       copyRequestDetails.find((task:any) => task.id === activeTask).Responses.find((response:any) => response.id === oResponseId).Status = 'Waived';
       setRequestDetails( { ...requestDetails, RequestTasks: [...copyRequestDetails] } );
-      await createHistoryEvent( 'Question', props.oUser.Username, 'Question Waived - ' + copyRequestDetails.find((task:any) => task.id === activeTask).Name, requestDetails.id, activeTask, oResponseId, 'Question Waived' );
+      await createHistoryEvent( 'Question', props.oUser.firstName + ' ' + props.oUser.lastName, 'Question Waived - ' + questionDetails.find((question:any) => question.id === oQuestionId).Name, requestDetails.id, activeTask, '', 'Question Waived' );
     }
 
   }
@@ -640,7 +640,7 @@ function ViewRequest ( props:Prop ) {
                           {historyDetails?.filter((event:any) => ( event.RequestTaskID === activeTask || event.Type === 'Request') && (event.Type === 'Request' ? filterHistory.requests : event.Type === 'Task' ? filterHistory.tasks : filterHistory.participants)).sort((a:any, b:any) => new Date(b.Date).getTime() - new Date(a.Date).getTime()).map((event:any) => (
                             <div  className={`flex flex-row items-center bg-gray-100 rounded-lg p-2 border ${event.Type === 'Task' ? 'border-[#005566]' : event.Type === 'Request' ? 'border-[#4E6E5D]' : 'border-[#003399]'}`} key={event.id}>
                               <div className="w-[10%] flex justify-center items-center h-full">
-                                <i className={`fa-classic fa-regular text-3xl ${event.Type === 'Task' ? 'fa-clipboard-list-check  text-[#005566]' : event.Type === 'Request' ? 'fa-comments-question-check  text-[#4E6E5D]' : 'fa-user text-[#003399]'}`}></i>
+                                <i className={`fa-classic fa-regular text-3xl ${event.Type === 'Task' ? 'fa-clipboard-list-check  text-[#005566]' : event.Type === 'Request' ? 'fa-comments-question-check  text-[#4E6E5D]' : event.Type ==='Participant' ? 'fa-user text-[#003399]' : 'fa-question text-[#00213D]'}`}></i>
                               </div>
                               <div className="align-center-left font-family-roboto">
                                   <div className="col12 font-bold">{event.Description}</div>

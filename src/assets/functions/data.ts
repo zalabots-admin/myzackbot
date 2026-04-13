@@ -254,10 +254,11 @@ export async function createHistoryEvent( oType:string, oUser:string, oDescripti
     };
     if ( oType === 'Task' ) {
         (item as any).RequestTaskID = oTaskId;
-    }
-    if ( oType === 'Participant' ) {
+    } else if ( oType === 'Participant' ) {
         (item as any).RequestTaskID = oTaskId;
         (item as any).ParticipantID = oParticipantId;
+    } else if ( oType === 'Question' ) {
+        (item as any).RequestTaskID = oTaskId;
     }
     const historyEvent = await client.models.RequestHistory.create(item);
 
