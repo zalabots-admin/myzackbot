@@ -132,7 +132,7 @@ function ViewRequest ( props:Prop ) {
 
   };
 
-  async function handleReset( oResponseId:string ) {
+  async function handleReset( oResponseId:string, oQuestionId:string ) {
     
     await client.models.RequestResponses.update({ id: oResponseId, Status: 'Pending', Value: '' });
     const copyRequestDetails = [ ...requestDetails.RequestTasks ];
@@ -140,7 +140,7 @@ function ViewRequest ( props:Prop ) {
     copyRequestDetails.find((task:any) => task.id === activeTask).Responses[responseIndex].Status = 'Pending';
     copyRequestDetails.find((task:any) => task.id === activeTask).Responses[responseIndex].Value = '';
     setRequestDetails( { ...requestDetails, RequestTasks: [...copyRequestDetails] } );
-    await createHistoryEvent( 'Question', props.oUser.firstName + ' ' + props.oUser.lastName, 'Question Reset - ' + copyRequestDetails.find((task:any) => task.id === activeTask).Name, requestDetails.id, activeTask, oResponseId, 'Question Reset' );
+    await createHistoryEvent( 'Question', props.oUser.firstName + ' ' + props.oUser.lastName, 'Question Reset - ' + questionDetails.find((question:any) => question.id === oQuestionId).Name, requestDetails.id, activeTask, oResponseId, 'Question Reset' );
 
   };
 
@@ -531,7 +531,7 @@ function ViewRequest ( props:Prop ) {
                                       <div className="flex justify-center items-start border-l border-gray-300 p-2 h-full w-full">
                                         {response?.Status === 'Waived' || response?.Status === 'Closed' ? ( 
                                           <div className="flex flex-row justify-center items-center gap-3 h-full"> 
-                                            <i title="Reset Question" className="fa-sharp fa-rotate-left text-[#4E6E5D] text-xl cursor-pointer" onClick={() => handleReset(response?.id)}></i>
+                                            <i title="Reset Question" className="fa-sharp fa-rotate-left text-[#4E6E5D] text-xl cursor-pointer" onClick={() => handleReset(response?.id, question.id)}></i>
                                           </div> 
                                         ) : response?.Status === 'Completed' ? ( 
                                           <> 
@@ -637,10 +637,10 @@ function ViewRequest ( props:Prop ) {
                           </div>
                         </div>
                         <div id="participants-list" className="flex-1 flex flex-col min-h-0 gap-4 min-h-0 px-2 overflow-y-auto"> 
-                          {historyDetails?.filter((event:any) => ( event.RequestTaskID === activeTask || event.Type === 'Request') && (event.Type === 'Request' ? filterHistory.requests : event.Type === 'Task' ? filterHistory.tasks : filterHistory.participants)).sort((a:any, b:any) => new Date(b.Date).getTime() - new Date(a.Date).getTime()).map((event:any) => (
-                            <div  className={`flex flex-row items-center bg-gray-100 rounded-lg p-2 border ${event.Type === 'Task' ? 'border-[#005566]' : event.Type === 'Request' ? 'border-[#4E6E5D]' : 'border-[#003399]'}`} key={event.id}>
+                          {historyDetails?.filter((event:any) => ( event.RequestTaskID === activeTask || event.Type === 'Request') && (event.Type === 'Request' ? filterHistory.requests : event.Type === 'Task' ? filterHistory.tasks : event.Type === 'Participant' ? filterHistory.participants : filterHistory.questions)).sort((a:any, b:any) => new Date(b.Date).getTime() - new Date(a.Date).getTime()).map((event:any) => (
+                            <div  className={`flex flex-row items-center bg-gray-100 rounded-lg p-2 border ${event.Type === 'Task' ? 'border-[#005566]' : event.Type === 'Request' ? 'border-[#4E6E5D]' : event.Type === 'Participant' ? 'border-[#003399]' : 'border-[#00213D]'}`} key={event.id}>
                               <div className="w-[10%] flex justify-center items-center h-full">
-                                <i className={`fa-classic fa-regular text-3xl ${event.Type === 'Task' ? 'fa-clipboard-list-check  text-[#005566]' : event.Type === 'Request' ? 'fa-comments-question-check  text-[#4E6E5D]' : event.Type ==='Participant' ? 'fa-user text-[#003399]' : 'fa-question text-[#00213D]'}`}></i>
+                                <i className={`fa-classic fa-regular text-3xl ${event.Type === 'Task' ? 'fa-clipboard-list-check text-[#005566]' : event.Type === 'Request' ? 'fa-comments-question-check  text-[#4E6E5D]' : event.Type ==='Participant' ? 'fa-user text-[#003399]' : 'fa-question text-[#00213D]'}`}></i>
                               </div>
                               <div className="align-center-left font-family-roboto">
                                   <div className="col12 font-bold">{event.Description}</div>
