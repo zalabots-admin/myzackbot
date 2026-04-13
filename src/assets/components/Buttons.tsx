@@ -59,6 +59,19 @@ export const StandardButton: React.FC<ButtonProps> = ({ oAction, oText }) => {
 
 };
 
+export const DisableableStandardButton: React.FC<ButtonProps> = ({ oAction, oText, oState }) => {
+  
+    return (
+
+                <div className={`flex items-center justify-center border border-[#4E6E5D] rounded-[20px] text-[#4E6E5D] h-[40px] w-[215px] mx-[5px] ${oState ? 'opacity-50 cursor-not-allowed' : 'hover:border-[#EB7100] hover:text-[#EB7100] cursor-pointer'}`} onClick={oState ? undefined : oAction} >
+                    <p>{oText}</p>
+                </div>  
+
+        
+    ); 
+
+};
+
 export const NavigationButton: React.FC<ButtonProps> = ({ oAction, oTitle, oIcon, oState }) => {
 
     return (

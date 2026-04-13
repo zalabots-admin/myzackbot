@@ -4,8 +4,9 @@ import { generateClient } from 'aws-amplify/data';
 import { type Schema } from '../../../../amplify/data/resource'
 import BeatLoader from "react-spinners/BeatLoader";
 import  SearchBar from '../SearchBar'
-import { formatDate, formatToLocalTime } from '../../functions/data';
+import { formatDate, formatDateTime } from '../../functions/data';
 import ZackBot from "../../images/ZBT_Logo_Default.png";
+import { WorkflowStatusIndicator } from "./StatusIndicator";
 
 
 interface Prop {
@@ -70,17 +71,9 @@ function RequestQueue( props:Prop ) {
         setFilteredData(sortedData);
     };
 
-    useEffect(() => { 
+    function filterData( oData:any ) {
 
-        if (props.oUserOrg != '' ) {
-            getRequests();
-        }
-
-    },[props.oUserOrg]);
-
-    useEffect(() => { 
-
-        const filteringData = requestData.filter(item => {
+        const filteringData = oData.filter((item: any) => {
             const lowerCaseSearchTerm = searchedValue.toLowerCase();
             return (
                 item.AccountName.toLowerCase().includes(lowerCaseSearchTerm) ||
@@ -98,35 +91,50 @@ function RequestQueue( props:Prop ) {
         });
         setFilteredData( sortedData );
 
+    }
+
+    useEffect(() => { 
+
+        if (props.oUserOrg != '' ) {
+            getRequests();
+        }
+
+    },[props.oUserOrg]);
+
+    useEffect(() => { 
+
+        filterData( requestData );
+
     },[searchedValue]);
 
     useEffect(() => {
 
         if ( props.oEvent != '' && props.oEvent != null && props.oEvent != undefined ) {
-            const eventData = JSON.parse( props.oEvent.data );
-            if ( props.oEvent.event === 'New') {
-                const currentRequests = [...requestData];
-                currentRequests.push( eventData );
-                setRequestData( currentRequests );
-                setFilteredData( currentRequests );
-                setNoRequests( false );
-            } else if ( props.oEvent.event === 'Update' ) {
-                const currentRequests = [...requestData];
-                const index = currentRequests.findIndex( (item) => item.id === eventData.id );
-                if ( index !== -1 ) {
-                    currentRequests[index] = eventData;
+            if ( props.oEvent.type === 'Request' ) {
+                const eventData = JSON.parse( props.oEvent.data );
+                if ( props.oEvent.event === 'New') {
+                    const currentRequests = [...requestData];
+                    currentRequests.push( eventData );
                     setRequestData( currentRequests );
-                    setFilteredData( currentRequests );
+                    filterData( currentRequests );
+                    setNoRequests( false );
+                } else if ( props.oEvent.event === 'Update' ) {
+                    const currentRequests = [...requestData];
+                    const index = currentRequests.findIndex( (item) => item.id === eventData.id );
+                    if ( index !== -1 ) {
+                        currentRequests[index] = eventData;
+                        setRequestData( currentRequests );
+                        filterData( currentRequests );
+                    };
+                } else if ( props.oEvent.event === 'Delete' ) {
+                    const currentRequests = requestData.filter( (item) => item.id !== eventData.id )
+                    setRequestData( currentRequests );
+                    filterData( currentRequests );
+                    if ( currentRequests.length === 0 ) {
+                        setNoRequests( true );
+                    }
                 };
-            } else if ( props.oEvent.event === 'Delete' ) {
-                
-                const currentRequests = requestData.filter( (item) => item.id !== eventData.id )
-                setRequestData( currentRequests );
-                setFilteredData( currentRequests );
-                if ( currentRequests.length === 0 ) {
-                    setNoRequests( true );
-                }
-            };
+            }
         
         };
 
@@ -183,11 +191,11 @@ function RequestQueue( props:Prop ) {
                         </div>
                         <div id="request-list-body" className='flex-1 flex flex-col overflow-y-auto'>
                             {filteredData.map((item: any) => (
-                                <div key={item.id} className="cursor-pointer transition-colors duration-200 ease-in-out even:bg-[#F4F4F4] hover:bg-[#00556640]" onClick={() => props.oOpenRequest(item.id, item.RequestedFor, item.RequestStatus, 'request')}>
+                                <div key={item.id} className="cursor-pointer transition-colors duration-200 ease-in-out even:bg-[#F4F4F4] hover:bg-[#00556640]" onClick={() => props.oOpenRequest(item.id, item.RequestedFor, item.RequestStatus, 1)}>
                                     {/* Desktop */}
                                     <div className="hidden lg:flex">
                                     <div className="w-[15%] h-[50px] p-2 flex items-center">
-                                        {formatDate(item.createdAt)} {formatToLocalTime(item.createdAt)}
+                                        {formatDateTime(item.createdAt)}
                                     </div>
                                     <div className="w-[15%] h-[50px] p-2 flex items-center">
                                         {formatDate(item.DueDate)}
@@ -199,7 +207,7 @@ function RequestQueue( props:Prop ) {
                                         {item.RequestedFor}
                                     </div>
                                     <div className="w-[10%] h-[50px] p-2 flex items-center">
-                                        {item.RequestStatus.toUpperCase()}
+                                        <WorkflowStatusIndicator status={item.RequestStatus} showLabel={true} pulse={false} />
                                     </div>
                                     </div>
 
@@ -207,7 +215,7 @@ function RequestQueue( props:Prop ) {
                                     <div className="flex flex-col lg:hidden border-b">
                                     <div className="flex justify-between p-2">
                                         <span className="font-semibold">Created On:</span>
-                                        {formatDate(item.createdAt)} {formatToLocalTime(item.createdAt)}
+                                        {formatDateTime(item.createdAt)}
                                     </div>
                                     <div className="flex justify-between p-2">
                                         <span className="font-semibold">Due Date:</span>

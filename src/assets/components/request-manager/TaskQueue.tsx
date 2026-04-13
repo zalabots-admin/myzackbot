@@ -2,15 +2,15 @@
 import { useState, useEffect } from "react";
 import BeatLoader from "react-spinners/BeatLoader";
 import  SearchBar from '../SearchBar'
-import { getTasksData, formatDate } from '../../functions/data';
-//import { ViewTask } from './ViewTask';
+import { getTasksData, formatDate, getNewTasksData } from '../../functions/data';
 import ZackBot from "../../images/ZBT_Logo_Default.png";
+import { WorkflowStatusIndicator } from "./StatusIndicator";
 
 
 interface Prop {
   oUserOrg: string;
   oOpenRequest: any;
-  //oEvent: any;
+  oEvent: any;
 }
 
 
@@ -98,37 +98,60 @@ function TaskQueue( props:Prop ) {
 
     },[searchedValue]);
 
-    /*useEffect(() => {
+    useEffect(() => {
 
-        if ( props.oEvent != '' && props.oEvent != null && props.oEvent != undefined ) {
-            const eventData = JSON.parse( props.oEvent.data );
-            if ( props.oEvent.event === 'New') {
-                const currentTasks = [...taskData];
-                currentTasks.push( eventData );
-                setTaskData( currentTasks );
-                setFilteredData( currentTasks );
-                setNoTasks( false );
-            } else if ( props.oEvent.event === 'Update' ) {
-                const currentTasks = [...taskData];
-                const index = currentTasks.findIndex( (item) => item.id === eventData.id );
-                if ( index !== -1 ) {
-                    currentTasks[index] = eventData;
-                    setTaskData( currentTasks );
-                    setFilteredData( currentTasks );
-                };
-            } else if ( props.oEvent.event === 'Delete' ) {
-                
-                const currentTasks = taskData.filter( (item) => item.id !== eventData.id )
-                setTaskData( currentTasks );
-                setFilteredData( currentTasks );
-                if ( currentTasks.length === 0 ) {
-                    setNoTasks( true );
-                }
-            };
-        
-        };
+        const handleEvent = async () => {
+        if (!props.oEvent || props.oEvent === '') return;
 
-    },[props.oEvent]);*/
+        if (props.oEvent.type === 'Task') {
+            const eventData = JSON.parse(props.oEvent.data);
+
+            if (props.oEvent.event === 'New') {
+                const taskRequestData = await getNewTasksData(eventData.id);
+                setTaskData(prev => [...prev, taskRequestData]);
+                setFilteredData(prev => [...prev, taskRequestData]);
+                setNoTasks(false);
+
+            } else if (props.oEvent.event === 'Update') {
+
+                setTaskData(prev => {
+                    const updated = [...prev];
+                    const index = updated.findIndex((item) => item.id === eventData.id);
+                    if (index !== -1) {
+                        updated[index] = {
+                            ...updated[index],
+                            RequestTaskStatus: eventData.RequestTaskStatus,
+                        };
+                    }
+                    return updated;
+                });
+
+                setFilteredData(prev => {
+                    const updated = [...prev];
+                    const index = updated.findIndex((item) => item.id === eventData.id);
+                    if (index !== -1) {
+                        updated[index] = {
+                            ...updated[index],
+                            RequestTaskStatus: eventData.RequestTaskStatus,
+                        };
+                    }
+                    return updated;
+                });
+
+            } else if (props.oEvent.event === 'Delete') {
+                setTaskData(prev => {
+                    const filtered = prev.filter((item) => item.id !== eventData.id);
+                    if (filtered.length === 0) setNoTasks(true);
+                    return filtered;
+                });
+                setFilteredData(prev => prev.filter((item) => item.id !== eventData.id));
+            }
+        }
+    };
+
+    handleEvent();
+    
+}, [props.oEvent]); 
 
 
   return (
@@ -186,7 +209,7 @@ function TaskQueue( props:Prop ) {
                         </div>
                         <div id="task-list-body" className='flex-1 flex flex-col overflow-y-auto'>
                             {filteredData.map((item:any) => (
-                                <div key={item.id} className="cursor-pointer transition-colors duration-200 ease-in-out even:bg-[#F4F4F4] hover:bg-[#00556640]" onClick={() => props.oOpenRequest(item.id, item.Request.RequestedFor + ' - ' + item.Assignee, item.Request.RequestStatus, 'task')}>
+                                <div key={item.id} className="cursor-pointer transition-colors duration-200 ease-in-out even:bg-[#F4F4F4] hover:bg-[#00556640]" onClick={() => props.oOpenRequest(item.Request.id, item.Request.RequestedFor, item.Request.RequestStatus, item.Number)}>
                                     {/* Desktop View */}
                                     <div className="hidden lg:flex">
                                         <div className='w-[10%] flex items-center h-[50px] p-2'>{formatDate(item.Request.DueDate)}</div>
@@ -194,7 +217,7 @@ function TaskQueue( props:Prop ) {
                                         <div className='w-[20%] flex items-center h-[50px] p-2'>{item.Request.RequestedFor}</div>
                                         <div className='w-[20%] flex items-center h-[50px] p-2'>{item.Assignee}</div>
                                         <div className='w-[20%] flex items-center h-[50px] p-2'>{item.Instructions}</div>
-                                        <div className='w-[10%] flex items-center h-[50px] p-2'>{item.RequestTaskStatus.toUpperCase()}</div>
+                                        <WorkflowStatusIndicator status={item.RequestTaskStatus} showLabel={true} pulse={false} />
                                     </div>
                                     {/* Mobile View */}
                                     <div className="flex flex-col lg:hidden border-b">

@@ -17,6 +17,7 @@ const schema = a.schema({
       PrimaryColor: a.string(),
       SecondaryColor: a.string(),
       Logo: a.string(),
+      LogoWidth: a.string(),
       NewRequestTemplate: a.string(),
       FollowUpTemplate: a.string(),
       EmailContent: a.string(),
@@ -24,6 +25,7 @@ const schema = a.schema({
       Items: a.hasMany('Items', 'OrganizationID'),
       Forms: a.hasMany('Forms', 'OrganizationID'),
       Users: a.hasMany('Users', 'OrganizationID'),
+      Notifications: a.hasMany('Notifications', 'OrganizationID'),
     }).authorization((allow) => [allow.publicApiKey()]),
     Items: a
     .model({
@@ -49,6 +51,7 @@ const schema = a.schema({
     FormItems: a
     .model({
       FormID: a.string().required(),
+      ItemID: a.string(),
       Name: a.string().required(),
       Type: a.string().required(),
       Label: a.string().required(),
@@ -71,12 +74,14 @@ const schema = a.schema({
       DeliveryMethod: a.string(),
       DueDate: a.string(),
       RequestStatus: a.string(),
+      FollowUpType: a.string(),
       FollowUpDate: a.string(),
       Organization: a.belongsTo('Organization', 'OrganizationID'),
       History: a.hasMany('RequestHistory', 'RequestID'),
       Participants: a.hasMany('RequestParticipants', 'RequestID'),
       RequestTasks: a.hasMany('RequestTasks', 'RequestID'),
       Questions: a.hasMany('RequestQuestions', 'RequestID'),
+      Notifications: a.hasMany('Notifications', 'RequestID'),
     })
     .secondaryIndexes(index => [
       index('FollowUpDate').sortKeys(['RequestStatus'])
@@ -86,12 +91,14 @@ const schema = a.schema({
     .model({
       OrganizationID: a.string().required(),
       RequestID: a.string().required(),
+      Number: a.integer(),
       Instructions: a.string(),
       RequestTaskStatus: a.string(),
       Request: a.belongsTo('Request', 'RequestID'),
       History: a.hasMany('RequestHistory', 'RequestTaskID'),
       Participants: a.hasMany('RequestParticipants', 'RequestTaskID'),
       Responses: a.hasMany('RequestResponses', 'RequestTaskID'),
+      Notifications: a.hasMany('Notifications', 'RequestTaskID'),
     })
     .secondaryIndexes(index => [
       index('RequestTaskStatus').sortKeys(['RequestID']),
@@ -107,8 +114,11 @@ const schema = a.schema({
       Email: a.string(),
       ParticipantType: a.string(),
       ParticipantRole: a.string(),
+      SendSubmissionEmail: a.boolean(),
+      Status: a.string(),
       Request: a.belongsTo('Request', 'RequestID'),
       RequestTask: a.belongsTo('RequestTasks', 'RequestTaskID'),
+      History: a.hasMany('RequestHistory', 'ParticipantID'),
     })
     .secondaryIndexes(index => [
       index('ParticipantRole').sortKeys(['RequestID']),
@@ -118,6 +128,7 @@ const schema = a.schema({
     RequestQuestions: a
     .model({
       RequestID: a.string(),
+      ItemID: a.string(),
       Name: a.string(),
       Type: a.string(),
       Label: a.string(),
@@ -127,26 +138,33 @@ const schema = a.schema({
       DocumentId: a.string(),
       Order: a.integer(),
       Request: a.belongsTo('Request', 'RequestID'),
+      Responses: a.hasMany('RequestResponses', 'RequestQuestionID'),
     }).authorization(allow => [allow.publicApiKey()]),
     RequestResponses: a
     .model({
       RequestID: a.string(),
       RequestTaskID: a.string(),
+      RequestQuestionID: a.string(),
       Name: a.string(),
       Value: a.string(),
       IsDocument: a.boolean(),
+      Status: a.string(),
       RequestTask: a.belongsTo('RequestTasks', 'RequestTaskID'),
+      RequestQuestion: a.belongsTo('RequestQuestions', 'RequestQuestionID'),
     }).authorization(allow => [allow.publicApiKey()]),
     RequestHistory: a
     .model({
       RequestID: a.string(),
       RequestTaskID: a.string(),
+      ParticipantID: a.string(),
+      Type: a.string(),
       Event: a.string(),
       Date: a.string(),
       User: a.string(),
       Description: a.string(),
       Request: a.belongsTo('Request', 'RequestID'),
       RequestTask: a.belongsTo('RequestTasks', 'RequestTaskID'),
+      RequestParticipant: a.belongsTo('RequestParticipants', 'ParticipantID'),
     }).authorization(allow => [allow.publicApiKey()]),
     Users: a
     .model({
@@ -156,6 +174,20 @@ const schema = a.schema({
       Role: a.string(),
       Active: a.boolean(),
       Organization: a.belongsTo('Organization', 'OrganizationID'),
+    })  
+    .authorization(allow => [allow.publicApiKey()]),
+    Notifications: a
+    .model({
+      OrganizationID: a.string().required(),
+      RequestID: a.string().required(),
+      RequestTaskID: a.string(),
+      Type: a.string(),
+      Message: a.string(),
+      Read: a.boolean(),
+      Date: a.string(),
+      Organization: a.belongsTo('Organization', 'OrganizationID'),
+      Request: a.belongsTo('Request', 'RequestID'),
+      RequestTask: a.belongsTo('RequestTasks', 'RequestTaskID'),
     })  
     .authorization(allow => [allow.publicApiKey()]),
 });

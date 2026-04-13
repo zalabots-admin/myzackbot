@@ -54,13 +54,14 @@ export async function getRequestData( oId:string ) {
 
     var currentRequest = await client.models.Request.get({ id: oId },
     {
-        selectionSet: ['id', 'AccountName', 'RequestedFor', 'createdAt', 'DueDate', 'RequestStatus', 'RequestType', 'FollowUpDate', 'DeliveryMethod', 'EmailResponse', 'AutoComplete', 'FollowUp',
-            'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole', 'Participants.EntityName', 'Participants.ParticipantType', 'Participants.RequestTask.Instructions',
+        selectionSet: ['id', 'AccountName', 'RequestedFor', 'createdAt', 'DueDate', 'RequestStatus', 'RequestType', 'FollowUpDate', 'DeliveryMethod', 'EmailResponse', 'AutoComplete', 'FollowUp', 'FollowUpType',
+            'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole', 'Participants.EntityName', 'Participants.ParticipantType', 'Participants.RequestTaskID',
+            'RequestTasks.*',
             'Questions.id', 'Questions.Name', 'Questions.Description', 'Questions.Label', 'Questions.Order', 'Questions.Options', 'Questions.Type',
             'History.Event','History.Date','History.User','History.Description']
     } );
 
-    if ( currentRequest.data && currentRequest.data.Participants !== undefined && currentRequest.data.Participants !== null ) {
+   /* if ( currentRequest.data && currentRequest.data.Participants !== undefined && currentRequest.data.Participants !== null ) {
         const participants = currentRequest.data.Participants.map(p => ({ ...p, Instructions: p.RequestTask?.Instructions ?? null}));
         return {
             ...currentRequest,
@@ -69,7 +70,7 @@ export async function getRequestData( oId:string ) {
                 Participants: participants
             }
         };
-    }
+    }*/
     return currentRequest;
 };
 
@@ -79,26 +80,54 @@ export async function getTasksData( oId:string ) {
     const currentTasks = await client.models.RequestTasks.list({
         limit:500,
         filter: {OrganizationID: { eq: oId }},
-        selectionSet: ['id', 'RequestID', 'Instructions', 'RequestTaskStatus', 'createdAt',
-            'Request.AccountName', 'Request.RequestedFor', 'Request.DueDate', 
-            'Participants.id','Participants.FirstName','Participants.LastName', 'Participants.EntityName','Participants.Email','Participants.ParticipantRole'
+        selectionSet: ['id', 'RequestID', 'Instructions', 'RequestTaskStatus', 'createdAt', 'Number',
+            'Request.AccountName', 'Request.RequestedFor', 'Request.DueDate', 'Request.RequestStatus', 'Request.id', 
+            'Participants.id','Participants.FirstName','Participants.LastName', 'Participants.EntityName','Participants.Email','Participants.ParticipantRole', 'Participants.ParticipantType',
         ]
     });  
 
     currentTasks.data.map( ( task ) => {
+        const currentAssignees = [];
         const filteredParticipants = task.Participants.filter( ( participant ) => participant.ParticipantRole === 'Recipient' );
-        if ( filteredParticipants[0].EntityName === '' ) {
-            (task as any).Assignee = filteredParticipants[0].FirstName + ' ' + filteredParticipants[0].LastName;
-        } else {
-            (task as any).Assignee = filteredParticipants[0].EntityName;
-        }
+        for ( const participant of filteredParticipants ) {
+            if ( participant.ParticipantType === 'Individual' ) {
+                currentAssignees.push( participant.FirstName + ' ' + participant.LastName );
+            } else {
+                currentAssignees.push( participant.EntityName );
+            };   
+        };
+        (task as any).Assignee = currentAssignees.join(', ');
     });
 
     return currentTasks.data;
 
 };
 
-// Get all data for a specific request and task - Populates Task in Request View
+export async function getNewTasksData( oId:string ) {
+
+    const currentTask = await client.models.RequestTasks.get({ id: oId },
+    {
+        selectionSet: ['id', 'RequestID', 'Instructions', 'RequestTaskStatus', 'createdAt',
+            'Request.AccountName', 'Request.RequestedFor', 'Request.DueDate', 
+            'Participants.id','Participants.FirstName','Participants.LastName', 'Participants.EntityName','Participants.Email','Participants.ParticipantRole'
+        ]
+    });  
+
+        const filteredParticipants = currentTask.data?.Participants?.filter( ( participant ) => participant.ParticipantRole === 'Recipient' );
+        if ( filteredParticipants && filteredParticipants[0] ) {
+            if ( filteredParticipants[0].EntityName === '' ) {
+                (currentTask.data as any).Assignee = filteredParticipants[0].FirstName + ' ' + filteredParticipants[0].LastName;
+            } else {
+                (currentTask.data as any).Assignee = filteredParticipants[0].EntityName;
+            }
+        }
+
+
+    return currentTask.data;
+
+};
+
+// Get all data for a specific request and task - Populates Task in Request View & Task Form
 export async function getRequestTaskData( oRequestId:string, oTaskId:string ) {
 
     const currentRequest = await client.models.Request.get({ id: oRequestId },
@@ -110,9 +139,9 @@ export async function getRequestTaskData( oRequestId:string, oTaskId:string ) {
     
     const currentTask = await client.models.RequestTasks.get({ id: oTaskId },
     {
-        selectionSet: ['RequestTaskStatus', 
-            'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument',
-            'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole']
+        selectionSet: ['RequestTaskStatus', 'Instructions', 
+            'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument', 'Responses.RequestQuestionID', 'Responses.Status',
+            'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole', 'Participants.SendSubmissionEmail', 'Participants.ParticipantType']
     } );
 
     const enrichedRequest = {
@@ -134,18 +163,28 @@ export async function getRequestViewData( oRequestId:string ) {
     {
         selectionSet: ['id', 'AccountName', 'RequestedFor', 'DueDate', 'RequestStatus', 'RequestType', 'FollowUpDate', 'createdAt',
             'Questions.id', 'Questions.Name', 'Questions.Type', 'Questions.Order',
-            'History.Event','History.Date','History.User','History.Description', 'History.RequestTaskID']
+            'History.Event','History.Date','History.User','History.Description', 'History.RequestTaskID', 'History.Type', 'History.ParticipantID', 'History.RequestID',]
     } );
-    const currentTasks = await client.models.RequestParticipants.list({
-        filter: {
-            RequestID: { eq: oRequestId },
-            ParticipantRole: { eq: 'Recipient' }
-        },
-        selectionSet: [
-            'id', 'FirstName', 'LastName', 'EntityName', 'Email', 'ParticipantRole','RequestTask.RequestTaskStatus', 'RequestTask.Instructions', 'RequestTask.id', 'RequestTask.Responses.id', 'RequestTask.Responses.Name', 'RequestTask.Responses.Value', 'RequestTask.Responses.IsDocument'
-        ]
-    });
 
+     const currentTasks = await client.models.RequestTasks.list({
+            filter: {RequestID: { eq: oRequestId }},
+            selectionSet: ['id', 'Instructions', 'RequestTaskStatus', 'Number', 'createdAt',
+                'Participants.id','Participants.FirstName','Participants.LastName','Participants.Email','Participants.ParticipantRole', 'Participants.EntityName', 'Participants.ParticipantType', 'Participants.RequestTaskID', 'Participants.Status',
+                'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument', 'Responses.RequestQuestionID', 'Responses.Status',
+            ]
+        });
+        currentTasks.data.map( ( task ) => {
+            const currentAssignees = [];
+            const filteredParticipants = task.Participants.filter( ( participant ) => participant.ParticipantRole === 'Recipient' );
+            for ( const participant of filteredParticipants ) {
+                if ( participant.ParticipantType === 'Individual' ) {
+                    currentAssignees.push( participant.FirstName + ' ' + participant.LastName );
+                } else {
+                    currentAssignees.push( participant.EntityName );
+                }
+            }
+            (task as any).Assignee = currentAssignees.join(', ');
+        }); 
 
     const enrichedRequest = {
         ...currentRequest,
@@ -167,7 +206,7 @@ export async function getTaskViewData( oTaskId:string ) {
         selectionSet: ['id', 'RequestID', 'Instructions', 'RequestTaskStatus', 'createdAt',
             'Request.AccountName', 'Request.RequestedFor', 'Request.DueDate', 'Request.RequestStatus', 'Request.RequestType', 'Request.FollowUpDate',
             'Participants.id','Participants.FirstName','Participants.LastName', 'Participants.EntityName','Participants.Email','Participants.ParticipantRole',
-            'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument',
+            'Responses.id', 'Responses.Name', 'Responses.Value', 'Responses.IsDocument', 'Responses.RequestQuestionID',
             'Request.Questions.id', 'Request.Questions.Name', 'Request.Questions.Type', 'Request.Questions.Order',
             'Request.History.Event','Request.History.Date','Request.History.User','Request.History.Description', 'Request.History.RequestTaskID'
         ]
@@ -194,7 +233,7 @@ export async function getRequestFormsAndItemsData( oId:string ) {
             'id', 'Name',
             'Items.id', 'Items.Name', 'Items.Type', 'Items.Label', 'Items.Description', 'Items.Options', 'Items.Layout', 'Items.DocumentId',
             'Forms.id', 'Forms.Name', 'Forms.Type', 'Forms.Description',
-            'Forms.FormItems.id', 'Forms.FormItems.Name', 'Forms.FormItems.Type', 'Forms.FormItems.Label', 'Forms.FormItems.Description', 'Forms.FormItems.Options', 'Forms.FormItems.Layout', 'Forms.FormItems.DocumentId', 'Forms.FormItems.Order'
+            'Forms.FormItems.id', 'Forms.FormItems.Name', 'Forms.FormItems.Type', 'Forms.FormItems.Label', 'Forms.FormItems.Description', 'Forms.FormItems.Options', 'Forms.FormItems.Layout', 'Forms.FormItems.DocumentId', 'Forms.FormItems.Order', 'Forms.FormItems.ItemID'
             ]
     });
 
@@ -203,17 +242,22 @@ export async function getRequestFormsAndItemsData( oId:string ) {
 };
 
 // Create a history event for a request or task
-export async function createHistoryEvent( oEvent:string, oUser:string, oDescription:string, oRequestId:string, oTaskId:string ) {
+export async function createHistoryEvent( oType:string, oUser:string, oDescription:string, oRequestId:string, oTaskId:string, oParticipantId:string, oEvent:string ) {
 
     const item = {
+        Type: oType,
         Event: oEvent,
         User: oUser,
         Date: new Date().toISOString(),
         Description: oDescription,
         RequestID: oRequestId,
     };
-    if (oEvent === 'Task') {
+    if ( oType === 'Task' ) {
         (item as any).RequestTaskID = oTaskId;
+    }
+    if ( oType === 'Participant' ) {
+        (item as any).RequestTaskID = oTaskId;
+        (item as any).ParticipantID = oParticipantId;
     }
     const historyEvent = await client.models.RequestHistory.create(item);
 
@@ -221,14 +265,18 @@ export async function createHistoryEvent( oEvent:string, oUser:string, oDescript
 };
 
 // Format date to MM/DD/YYYY
-export function formatDate( dateString:string ) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-    });
-};
+export function formatDate(dateString: string) {
+
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day); // local time
+
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+
+}
 
 // Format UTC time to local time with AM/PM
 export function formatToLocalTime( utcString:string ) {
@@ -239,3 +287,38 @@ export function formatToLocalTime( utcString:string ) {
         hour12: true
     });
 };
+
+// Format UTC time to local date & time with AM/PM
+export function formatDateTime(dateString: string) {
+
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12; // convert 0 → 12
+    const formattedHours = String(hours).padStart(2, '0');
+
+    return `${month}/${day}/${year} ${formattedHours}:${minutes} ${ampm}`;
+
+}
+
+// Format UTC time to local date
+export function formatUTCDate(utcDate: string | Date): string {
+
+  const date = typeof utcDate === "string"
+    ? new Date(utcDate)
+    : utcDate;
+
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  }).format(date);
+
+}
