@@ -45,29 +45,18 @@ function ViewRequest ( props:Prop ) {
   
   const getRequest = async () => {
 
-    const oParticipants: any[] = [];
     const currentRequest = await getRequestViewData( props.oOpenTabs[props.oCurrentTab].id );
     setRequestDetails( currentRequest.data );
     setHistoryDetails( currentRequest.data?.History );
     setQuestionDetails( currentRequest.data?.Questions );
-    currentRequest.data?.RequestTasks?.forEach((task:any) => {
-      task.Participants?.forEach((participant:any) => {
-        const existingParticipant = oParticipants.find((p:any) => p.Email === participant.Email && p.FirstName === participant.FirstName && p.LastName === participant.LastName);
-        if ( existingParticipant ) {
-          existingParticipant.ParticipantRole = existingParticipant.ParticipantRole + ', ' + participant.ParticipantRole;
-        } else {
-          oParticipants.push(participant);
-        }
-      });
-    });
-    setParticipantDetails( oParticipants );
+    validateParticipants( currentRequest.data?.RequestTasks );
     setActiveTask(
       currentRequest.data?.RequestTasks?.find(
         (t: any) => t.Number === props.oActiveTaskNumber
       )?.id
     );
     setLoading( false );
-console.log(currentRequest.data?.History )
+
   };
 
   function validateHistoryEvents() {
@@ -102,6 +91,23 @@ console.log(currentRequest.data?.History )
       });
 
       setHistorySteps( steps );
+
+  };
+
+  function validateParticipants( oParticipantsList:any ) {
+
+    const oParticipants: any[] = [];
+    oParticipantsList?.forEach((task:any) => {
+      task.Participants?.forEach((participant:any) => {
+        const existingParticipant = oParticipants.find((p:any) => p.Email === participant.Email && p.FirstName === participant.FirstName && p.LastName === participant.LastName);
+        if ( existingParticipant ) {
+          existingParticipant.ParticipantRole = existingParticipant.ParticipantRole + ', ' + participant.ParticipantRole;
+        } else {
+          oParticipants.push(participant);
+        }
+      });
+    });
+    setParticipantDetails( oParticipants );
 
   };
 
@@ -259,11 +265,7 @@ console.log(currentRequest.data?.History )
       } else if ( props.oEvent.type === 'Participant' ) {
         const eventData = JSON.parse( props.oEvent.data );
         if ( props.oEvent.event === 'New') {
-          setParticipantDetails( ( prevDetails:any ) => {
-            const copyDetails = [ ...prevDetails ];
-            copyDetails.push( eventData );
-            return copyDetails;
-          });
+
         } else if ( props.oEvent.event === 'Update') {
           setParticipantDetails( ( prevDetails:any ) => {
             const copyDetails = [ ...prevDetails ];
@@ -274,6 +276,7 @@ console.log(currentRequest.data?.History )
             return copyDetails;
           });
         }
+
       };
     };
 

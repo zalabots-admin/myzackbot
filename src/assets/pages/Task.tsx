@@ -151,7 +151,7 @@ function Task () {
       if ( requestDetails.RequestTask.Participants.some( ( participant:any ) => participant.ParticipantRole === 'Submitter' && participant.Email === requestSubmitter.Email && participant.FirstName === requestSubmitter.FirstName && participant.LastName === requestSubmitter.LastName ) ) {
         await client.models.RequestParticipants.update({ id: requestSubmitter.id, SendSubmissionEmail: requestSubmitter.SendEmailResponse });
       } else {
-        await client.models.RequestParticipants.create({ RequestID: requestId!, RequestTaskID: taskId!, FirstName: requestSubmitter.FirstName, LastName: requestSubmitter.LastName, Email: requestSubmitter.Email, ParticipantRole: 'Submitter', ParticipantType: 'Individual', SendSubmissionEmail: requestSubmitter.SendEmailResponse });
+        await client.models.RequestParticipants.create({ RequestID: requestId!, RequestTaskID: taskId!, FirstName: requestSubmitter.FirstName, LastName: requestSubmitter.LastName, Email: requestSubmitter.Email, ParticipantRole: 'Submitter', ParticipantType: 'Individual', SendSubmissionEmail: requestSubmitter.SendEmailResponse, Status: 'New' });
       };
       setEditable( true );
       setTranslateY( COLLAPSED_Y );
