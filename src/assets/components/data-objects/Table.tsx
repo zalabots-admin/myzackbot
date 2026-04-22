@@ -54,7 +54,11 @@ function Table ( props:Prop ) {
   };
 
   const handleDocumentUpload = ( event: React.ChangeEvent<HTMLInputElement> ) => {
-    // Handle document upload logic here
+    const oEvent = event;
+    return oEvent;
+    // Handle file upload logic here, e.g., read the file and update the table data
+    // You can use FileReader API to read the file content and then parse it as needed
+    // After processing the file, you can call props.oValueChange to update the table data
   };
 
   return (
