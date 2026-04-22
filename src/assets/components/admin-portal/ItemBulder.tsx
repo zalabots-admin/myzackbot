@@ -17,7 +17,7 @@ interface Prop {
   oUserOrg: string;
 }
 
-const typeSelect = ['Text Field|text','Date Field|date','Number Field|number','Dropdown Menu|select','Document Upload|file'/*'Single Choice Option|radio','Multiple Choice Option|checkbox','Y/N Question|question','Large Text Field|textarea'*/]
+const typeSelect = ['Text Field|text','Date Field|date','Number Field|number','Dropdown Menu|select','Document Upload|file','Table/Grid|table'/*,'Single Choice Option|radio','Multiple Choice Option|checkbox','Y/N Question|question','Large Text Field|textarea'*/]
 const client = generateClient<Schema>();
 
 
@@ -211,6 +211,11 @@ function ItemBuilder ( props:Prop ) {
                             { itemData.find(item => item.id === activeItem)?.Type === "select" && (
                                 <>
                                     <Input oKey='Options' oType='text' oLabel='Enter Options' oSize='col12' oDescription='Seperate each value with a comma. For ex: Option 1,Option 2,Option 3' isRequired={true} isEditable={isEditMode} oChange={(e) => handleDataInputChangeFiltered(e, setItemData, activeItem)} oData={itemData.find(item => item.id === activeItem)?.Options} />
+                                </>
+                            ) }
+                            { itemData.find(item => item.id === activeItem)?.Type === "table" && (
+                                <>
+                                    <Input oKey='Options' oType='text' oLabel='Enter Column Names' oSize='col12' oDescription='Seperate each column name with a comma. For ex: Column 1,Column 2,Column 3' isRequired={true} isEditable={isEditMode} oChange={(e) => handleDataInputChangeFiltered(e, setItemData, activeItem)} oData={itemData.find(item => item.id === activeItem)?.Options} />
                                 </>
                             )}
                             <div className="col11 align-top-center" style={{marginTop:'25px'}}>

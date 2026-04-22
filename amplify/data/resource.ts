@@ -87,6 +87,15 @@ const schema = a.schema({
       index('FollowUpDate').sortKeys(['RequestStatus'])
     ])
     .authorization(allow => [allow.publicApiKey()]),
+    MessageQueue: a
+    .model({
+      OrganizationID: a.string().required(),
+      Type: a.string(),
+      Event: a.string().required(),
+      RecordID: a.string(),
+      Comment: a.string(),
+    })
+    .authorization(allow => [allow.publicApiKey()]),
     RequestTasks: a
     .model({
       OrganizationID: a.string().required(),

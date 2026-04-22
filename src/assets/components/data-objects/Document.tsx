@@ -4,9 +4,9 @@ import { FileUploader } from "react-drag-drop-files";
 import '../../styles/Task.css'
 
 interface Prop {
-    isRequired: boolean;
-    isEditable: boolean;
-    oSize: string;
+    isRequired?: boolean;
+    isEditable?: boolean;
+    oSize?: string;
     oData: any;
     oChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }

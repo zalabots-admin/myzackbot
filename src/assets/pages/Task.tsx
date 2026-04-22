@@ -219,8 +219,10 @@ function Task () {
                         return updatedQuestions;
                     });
                 }
+            } else if (item.Type === 'table') {
+              await client.models.RequestResponses.update({ id: item.answerId, Name: item.Name, Value: JSON.stringify(item.Value), IsDocument: false, Status: 'Completed' });
             } else {
-                await client.models.RequestResponses.update({ id: item.answerId, Name: item.Name, Value: item.Value, IsDocument: false, Status: 'Completed' });
+              await client.models.RequestResponses.update({ id: item.answerId, Name: item.Name, Value: item.Value, IsDocument: false, Status: 'Completed' });
             }
         } else if ( item.Value !== '' && item.Value !== null ) {
             if ( item.Type === 'file' ) {
@@ -253,6 +255,30 @@ function Task () {
       });
   
   }
+
+function handleRowAdd( oId: number, oValue: any ) {
+  setRequestQuestions((prev: any) => {
+    const oIndex = prev.findIndex((i: any) => i.id === oId);
+    const updatedQuestionsState = [...prev];
+    updatedQuestionsState[oIndex] = {
+      ...updatedQuestionsState[oIndex],
+      Value: [...updatedQuestionsState[oIndex].Value, oValue]
+    };
+    return updatedQuestionsState;
+  });
+}
+
+function handleTableChange( oId: number, oValue: any) {
+  setRequestQuestions((prev: any) => {
+    const oIndex = prev.findIndex((i: any) => i.id === oId);
+    const updatedQuestionsState = [...prev];
+    updatedQuestionsState[oIndex] = {
+      ...updatedQuestionsState[oIndex],
+      Value: oValue
+    };
+    return updatedQuestionsState;
+  });
+}
 
   function handleToggleEmailResponse(checked: boolean) {
 
@@ -376,6 +402,9 @@ function Task () {
                             key={index}
                             oEditable={editable}
                             oChange={(e: any) => handleFormDataInputChange(e, setRequestQuestions, index)}
+                            oUpdate={handleRowAdd}
+                            oValueChange={handleTableChange}
+                            oSecondaryColor={secondaryColor}
                           />
                         )}
                       </div>

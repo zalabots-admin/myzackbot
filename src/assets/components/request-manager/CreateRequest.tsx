@@ -386,9 +386,9 @@ function CreateRequest(props: Prop) {
 
         var request: string | any = {};
         if (requestData.id === undefined) {
-            request = await client.models.Request.create({ ...requestData, RequestStatus: 'New', OrganizationID: props.oUser.OrgId });
+            request = await client.models.Request.create({ ...requestData, RequestStatus: oStatus, OrganizationID: props.oUser.OrgId });
         } else {
-            request = await client.models.Request.update({ ...requestData, RequestStatus: 'New' });
+            request = await client.models.Request.update({ ...requestData, RequestStatus: oStatus });
         }
         const requestId = request.data?.id;
         if (oStatus === 'Active') {
@@ -491,6 +491,7 @@ function CreateRequest(props: Prop) {
         setRequestData({ ...requestData, id: requestId, RequestStatus: oStatus });
 
         if (oStatus === 'Active') {
+            await client.models.MessageQueue.create({ RecordID: requestId, Type: 'Request', Event: 'New_Request', OrganizationID: props.oUser.OrgId });
             props.oCloseTab(props.oCurrentTab);
         } else {
             notify();
@@ -501,7 +502,7 @@ function CreateRequest(props: Prop) {
             });
         }
 
-        await client.models.Request.update({ id: requestId, RequestStatus: oStatus });
+        //await client.models.Request.update({ id: requestId, RequestStatus: oStatus });
     };
 
     async function deleteDraftRequest() {

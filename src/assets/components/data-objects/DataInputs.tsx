@@ -3,14 +3,22 @@
 import Input from './Input'
 import Select from './Select'
 import Document from './Document'
+import Table from './Table'
 
 interface Prop {
     oData: any;
     oChange: any;
     oEditable: boolean;
+    oUpdate?: any;
+    oValueChange?: any;
+    oSecondaryColor?: string;
 }
 
 function DataInputs ( props:Prop ) {
+
+    if ( typeof props.oData.Value !== 'string' ) {
+        props.oData.Value = JSON.stringify(props.oData.Value);
+    }
 
     return (
         <>
@@ -35,6 +43,15 @@ function DataInputs ( props:Prop ) {
                             isEditable={props.oEditable} 
                             oChange={props.oChange} 
                             oData={props.oData} 
+                        />;
+                    case 'table':
+                        return <Table
+                            oData={props.oData} 
+                            oChange={props.oChange}
+                            oUpdate={props.oUpdate}
+                            oValueChange={props.oValueChange}
+                            oEditable={props.oEditable}
+                            oSecondaryColor={props.oSecondaryColor}
                         />;
                     default:
                         return <Input 

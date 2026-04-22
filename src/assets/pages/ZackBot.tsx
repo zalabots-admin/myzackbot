@@ -423,11 +423,11 @@ function ZackBot( { oSignOut, oSetShowLogIn, oSetMainLayout }: Prop ) {
                 {/*Request Dashboard*/}
                 {(activeItem['Request Queue'] || activeItem['Tasks Queue']) && 
                     <>
-                        <div className='w-full flex items-center justify-center my-2'>
+                        <div className='w-full flex items-center justify-center my-2 pt-2'>
                             <div className='w-full flex items-center justify-center lg:w-3/4 lg:justify-start'>
                                 <p className="h2 text-3xl">Request Dashboard</p>
                             </div>
-                            <div className='hidden lg:w-1/4 lg:flex lg:items-center lg:justify-end'>
+                            <div className='hidden lg:w-1/4 lg:flex lg:items-end lg:justify-end h-full'>
                                 <StandardButton
                                     oAction={createNewRequest}
                                     oText="Create New Request"
